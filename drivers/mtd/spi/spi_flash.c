@@ -537,6 +537,50 @@ int spi_flash_cmd_read_ops(struct spi_flash *flash, u32 offset,
 	return ret;
 }
 
+int spi_flash_cmd_4B_addr_switch(struct spi_flash *flash,
+				int enable, u8 idcode0)
+{
+	int ret;
+	u8 cmd, bar;
+	bool need_wren = false;
+
+	ret = spi_claim_bus(flash->spi);
+	if (ret) {
+		debug("SF: unable to claim SPI bus\n");
+		return ret;
+	}
+
+	switch (idcode0) {
+	case SPI_FLASH_CFI_MFR_STMICRO:
+		/* Some Micron need WREN command; all will accept it */
+		need_wren = true;
+	case SPI_FLASH_CFI_MFR_MACRONIX:
+	case SPI_FLASH_CFI_MFR_WINBOND:
+		if (need_wren)
+			spi_flash_cmd_write_enable(flash);
+
+		cmd = enable ? CMD_ENTER_4B_ADDR : CMD_EXIT_4B_ADDR;
+		ret = spi_flash_cmd(flash->spi, cmd, NULL, 0);
+		if (need_wren)
+			spi_flash_cmd_write_disable(flash);
+
+		break;
+	case SPI_FLASH_CFI_MFR_SPANSION:
+		bar = enable << 7;
+		cmd = CMD_BANKADDR_BRWR;
+		ret = spi_flash_cmd_write(flash->spi, &cmd, 1, &bar, 1);
+
+	default:
+		debug("SF: unsupported manufacturer\n");
+		ret = -1;
+		break;
+	}
+
+	spi_release_bus(flash->spi);
+
+	return ret;
+}
+
 #ifdef CONFIG_SPI_FLASH_SST
 static int sst_byte_write(struct spi_flash *flash, u32 offset, const void *buf)
 {
@@ -1161,6 +1205,17 @@ int spi_flash_scan(struct spi_flash *flash)
 	if (flash->dual_flash & SF_DUAL_STACKED_FLASH)
 		flash->size <<= 1;
 #endif
+
+	/*
+	 * So far, the 4-byte address mode haven't been supported in U-Boot,
+	 * and make sure the chip (> 16MiB) in default 3-byte address mode,
+	 * in case of warm bootup, the chip was set to 4-byte mode in kernel.
+	 */
+	if (flash->size >> (flash->dual_flash & SF_DUAL_STACKED_FLASH ? 1 : 0)
+		> SPI_FLASH_16MB_BOUN) {
+		if (spi_flash_cmd_4B_addr_switch(flash, false, idcode[0]) < 0)
+			debug("SF: enter 3B address mode failed\n");
+	}
 
 	/* Compute erase sector and command */
 	if (params->flags & SECT_4K) {
