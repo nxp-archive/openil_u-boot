@@ -94,9 +94,9 @@ enum spi_nor_option_flags {
 #define CMD_READ_EVCR			0x65
 
 /* Bank addr access commands */
-#ifdef CONFIG_SPI_FLASH_BAR
 # define CMD_BANKADDR_BRWR		0x17
 # define CMD_BANKADDR_BRRD		0x16
+#ifdef CONFIG_SPI_FLASH_BAR
 # define CMD_EXTNADDR_WREAR		0xC5
 # define CMD_EXTNADDR_RDEAR		0xC8
 #endif
