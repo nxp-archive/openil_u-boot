@@ -158,6 +158,9 @@ void get_sys_info(struct sys_info *sys_info)
 
 	sys_info->freq_localbus = sys_info->freq_systembus / ccr;
 #endif
+#ifdef CONFIG_SYS_DPAA_QBMAN
+	sys_info->freq_qman = sys_info->freq_systembus;
+#endif
 }
 
 int get_clocks(void)

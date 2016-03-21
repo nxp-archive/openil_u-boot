@@ -25,12 +25,88 @@
 #ifdef CONFIG_ARMV8_SEC_FIRMWARE_SUPPORT
 #include <asm/armv8/sec_firmware.h>
 #endif
+#include <asm/io.h>
+#include <asm/arch/speed.h>
 
 int fdt_fixup_phy_connection(void *blob, int offset, phy_interface_t phyc)
 {
 	return fdt_setprop_string(blob, offset, "phy-connection-type",
 					 phy_string_for_interface(phyc));
 }
+
+#if defined(CONFIG_SYS_DPAA_QBMAN)
+
+#define BMAN_IP_REV_1 0xBF8
+#define BMAN_IP_REV_2 0xBFC
+void fdt_fixup_bportals(void *blob)
+{
+	int off, err;
+	unsigned int maj, min;
+	unsigned int ip_cfg;
+
+	u32 rev_1 = in_be32(CONFIG_SYS_FSL_BMAN_ADDR + BMAN_IP_REV_1);
+	u32 rev_2 = in_be32(CONFIG_SYS_FSL_BMAN_ADDR + BMAN_IP_REV_2);
+	char compat[64];
+	int compat_len;
+
+	maj = (rev_1 >> 8) & 0xff;
+	min = rev_1 & 0xff;
+
+	ip_cfg = rev_2 & 0xff;
+
+	compat_len = sprintf(compat, "fsl,bman-portal-%u.%u.%u",
+			     maj, min, ip_cfg) + 1;
+	compat_len += sprintf(compat + compat_len, "fsl,bman-portal") + 1;
+
+	off = fdt_node_offset_by_compatible(blob, -1, "fsl,bman-portal");
+	while (off != -FDT_ERR_NOTFOUND) {
+		err = fdt_setprop(blob, off, "compatible", compat, compat_len);
+		if (err < 0) {
+			printf("ERROR: unable to create props for %s: %s\n",
+			       fdt_get_name(blob, off, NULL),
+			       fdt_strerror(err));
+			return;
+		}
+
+		off = fdt_node_offset_by_compatible(blob, off,
+						    "fsl,bman-portal");
+	}
+}
+
+#define QMAN_IP_REV_1 0xBF8
+#define QMAN_IP_REV_2 0xBFC
+void fdt_fixup_qportals(void *blob)
+{
+	int off, err;
+	unsigned int maj, min;
+	unsigned int ip_cfg;
+	u32 rev_1 = in_be32(CONFIG_SYS_FSL_QMAN_ADDR + QMAN_IP_REV_1);
+	u32 rev_2 = in_be32(CONFIG_SYS_FSL_QMAN_ADDR + QMAN_IP_REV_2);
+	char compat[64];
+	int compat_len;
+
+	maj = (rev_1 >> 8) & 0xff;
+	min = rev_1 & 0xff;
+	ip_cfg = rev_2 & 0xff;
+
+	compat_len = sprintf(compat, "fsl,qman-portal-%u.%u.%u",
+			     maj, min, ip_cfg) + 1;
+	compat_len += sprintf(compat + compat_len, "fsl,qman-portal") + 1;
+
+	off = fdt_node_offset_by_compatible(blob, -1, "fsl,qman-portal");
+	while (off != -FDT_ERR_NOTFOUND) {
+		err = fdt_setprop(blob, off, "compatible", compat, compat_len);
+		if (err < 0) {
+			printf("ERROR: unable to create props for %s: %s\n",
+			       fdt_get_name(blob, off, NULL),
+			       fdt_strerror(err));
+			return;
+		}
+		off = fdt_node_offset_by_compatible(blob, off,
+						    "fsl,qman-portal");
+	}
+}
+#endif
 
 #ifdef CONFIG_MP
 void ft_fixup_cpu(void *blob)
@@ -145,6 +221,12 @@ void ft_cpu_setup(void *blob, bd_t *bd)
 #endif
 #endif
 
+#if defined(CONFIG_SYS_DPAA_QBMAN)
+	struct sys_info sysinfo;
+
+	get_sys_info(&sysinfo);
+#endif
+
 #ifdef CONFIG_MP
 	ft_fixup_cpu(blob);
 #endif
@@ -163,6 +245,13 @@ void ft_cpu_setup(void *blob, bd_t *bd)
 
 #ifdef CONFIG_FSL_ESDHC
 	fdt_fixup_esdhc(blob, bd);
+#endif
+
+#if defined(CONFIG_SYS_DPAA_QBMAN)
+	fdt_fixup_bportals(blob);
+	fdt_fixup_qportals(blob);
+	do_fixup_by_compat_u32(blob, "fsl,qman",
+			       "clock-frequency", sysinfo.freq_qman, 1);
 #endif
 
 #ifdef CONFIG_SYS_DPAA_FMAN
