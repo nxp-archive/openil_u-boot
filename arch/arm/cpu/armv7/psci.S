@@ -152,7 +152,7 @@ _psci_table:
 	.word	0
 
 _smc_psci:
-	push	{r4-r7,lr}
+	push	{r4-r12,lr}
 
 	@ Switch to secure
 	mrc	p15, 0, r7, c1, c1, 0
@@ -175,7 +175,7 @@ _smc_psci:
 	@ Switch back to non-secure
 2:	mcr	p15, 0, r7, c1, c1, 0
 
-	pop	{r4-r7, lr}
+	pop	{r4-r12, lr}
 	movs	pc, lr			@ Return to the kernel
 
 @ Requires dense and single-cluster CPU ID space
