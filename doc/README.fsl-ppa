@@ -1,0 +1,26 @@
+PPA FW for U-boot
+
+Summary
+=======
+PPA is a trusted firmware for ARMv8 , that handles smc calls from lower
+exception levels, like power state co-ordination interface call or
+smc calls to trusted OS from the Linux kernel.
+
+Notes
+=====
+
+1. Currenly, u-boot run at the highest exception level processor
+   supported, which is EL3 in case of ARMv8, if PPA FW is incorporated
+   U-boot copies it to secure location in DDR.
+2. During init U-boot passes control to PPA FW and before returning
+   the core jumps to EL2.
+
+Using PPA
+=========
+1. Ensure CONFIG_FSL_LS_PPA is set for your platform
+2. Program PPA binary on address CONFIG_SYS_LS_PPA_FW_ADDR on flash
+
+Contributors
+============
+   Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
+   Abhimanyu Saini <abhimanyu.saini@nxp.com>
