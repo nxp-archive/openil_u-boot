@@ -50,7 +50,7 @@ int pfe_recv(unsigned int *pkt_ptr, int *phy_port)
 	dprint("Pkt recv'd: Pkt ptr(%p), len(%d), gemac_port(%d) status(%08x)\n",
 				hif_header, len, hif_header->port_no, bd->status);
 
-#if DEBUG
+#ifdef DEBUG
 	{
 		int i;
 		unsigned char *p = (unsigned char *)hif_header;
