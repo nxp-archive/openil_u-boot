@@ -329,7 +329,7 @@ struct mii_dev *ls1012a_mdio_init(struct mdio_info *mdio_info)
 
 	/*configure mdio speed */
 	mdio_speed = (DIV_ROUND_UP(pclk, 4000000) << EMAC_MII_SPEED_SHIFT);
-	mdio_speed |= EMAC_HOLDTIME(0x4);
+	mdio_speed |= EMAC_HOLDTIME(0x5);
 	writel(mdio_speed, mdio_info->reg_base + EMAC_MII_CTRL_REG);
 
         ret = mdio_register(bus);
