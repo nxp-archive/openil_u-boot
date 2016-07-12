@@ -1,8 +1,7 @@
-/*
-* Copyright (C) 2016 Freescale Semiconductor Inc.
-*
-* SPDX-License-Identifier:GPL-2.0+
-*/
+/* Copyright (C) 2016 Freescale Semiconductor Inc.
+ *
+ * SPDX-License-Identifier:GPL-2.0+
+ */
 #ifndef _EMAC_H_
 #define _EMAC_H_
 
@@ -160,13 +159,13 @@ typedef enum {SPEED_10M, SPEED_100M, SPEED_1000M, SPEED_1000M_PCS} MAC_SPEED;
 
 
 /* Default configuration */
-#define EMAC0_DEFAULT_DUPLEX_MODE	FULLDUPLEX 
-#define EMAC0_DEFAULT_EMAC_MODE		RGMII      
-#define EMAC0_DEFAULT_EMAC_SPEED	SPEED_1000M   
+#define EMAC0_DEFAULT_DUPLEX_MODE	FULLDUPLEX
+#define EMAC0_DEFAULT_EMAC_MODE		RGMII
+#define EMAC0_DEFAULT_EMAC_SPEED	SPEED_1000M
 
-#define EMAC1_DEFAULT_DUPLEX_MODE	FULLDUPLEX 
-#define EMAC1_DEFAULT_EMAC_MODE		SGMII      
-#define EMAC1_DEFAULT_EMAC_SPEED	SPEED_1000M   
+#define EMAC1_DEFAULT_DUPLEX_MODE	FULLDUPLEX
+#define EMAC1_DEFAULT_EMAC_MODE		SGMII
+#define EMAC1_DEFAULT_EMAC_SPEED	SPEED_1000M
 
 /* MII-related definitios */
 #define EMAC_MII_DATA_ST         0x40000000      /* Start of frame delimiter */
@@ -182,14 +181,16 @@ typedef enum {SPEED_10M, SPEED_100M, SPEED_1000M, SPEED_1000M_PCS} MAC_SPEED;
 #define EMAC_MII_DATA_PA_SHIFT   23      /* MII PHY address bits */
 #define EMAC_MII_DATA_PA_MASK    0x1F      /* MII PHY address mask */
 
-#define EMAC_MII_DATA_RA(v) ((v & EMAC_MII_DATA_RA_MASK) << EMAC_MII_DATA_RA_SHIFT)
-#define EMAC_MII_DATA_PA(v) ((v & EMAC_MII_DATA_RA_MASK) << EMAC_MII_DATA_PA_SHIFT)
+#define EMAC_MII_DATA_RA(v) ((v & EMAC_MII_DATA_RA_MASK) <<\
+				EMAC_MII_DATA_RA_SHIFT)
+#define EMAC_MII_DATA_PA(v) ((v & EMAC_MII_DATA_RA_MASK) <<\
+				EMAC_MII_DATA_PA_SHIFT)
 #define EMAC_MII_DATA(v)    (v & 0xffff)
 
 #define EMAC_MII_SPEED_SHIFT	1
 #define EMAC_HOLDTIME_SHIFT	8
 #define EMAC_HOLDTIME_MASK	0x7
-#define EMAC_HOLDTIME(v)	((v & EMAC_HOLDTIME_MASK) << EMAC_HOLDTIME_SHIFT)
+#define EMAC_HOLDTIME(v)    ((v & EMAC_HOLDTIME_MASK) << EMAC_HOLDTIME_SHIFT)
 
 /* The Address organisation for the MAC device.  All addresses are split into
  * two 32-bit register fields.  The first one (bottom) is the lower 32-bits of
@@ -220,7 +221,7 @@ typedef struct {
 } SPEC_ADDR;
 
 typedef struct {
-	u32 mode; 
+	u32 mode;
 	u32 speed;
 	u32 duplex;
 } GEMAC_CFG;

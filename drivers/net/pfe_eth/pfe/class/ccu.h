@@ -1,8 +1,7 @@
-/*
-* Copyright (C) 2016 Freescale Semiconductor Inc.
-*
-* SPDX-License-Identifier:GPL-2.0+
-*/
+/* Copyright (C) 2016 Freescale Semiconductor Inc.
+ *
+ * SPDX-License-Identifier:GPL-2.0+
+ */
 #ifndef _CCU_H_
 #define _CCU_H_
 

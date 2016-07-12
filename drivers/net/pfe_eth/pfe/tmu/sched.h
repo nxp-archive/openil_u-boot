@@ -1,8 +1,7 @@
-/*
-* Copyright (C) 2016 Freescale Semiconductor Inc.
-*
-* SPDX-License-Identifier:GPL-2.0+
-*/
+/* Copyright (C) 2016 Freescale Semiconductor Inc.
+ *
+ * SPDX-License-Identifier:GPL-2.0+
+ */
 #ifndef _SCHED_H_
 #define _SCHED_H_
 
@@ -33,11 +32,11 @@
 #define SCHED_QUE7_DEFICIT_CNT		0x5c
 #define SCHED_PKT_LEN			0x60
 
-#define SCHED_CTRL_ALGOTYPE(x) 		(((x) & 0xf) << 0)
-#define SCHED_CTRL_CALQUOTA(x) 		(((x) & 0x1) << 4)
-#define SCHED_CTRL_ACTIVE_Q(x) 		(((x) & 0xff) << 8)
-#define SCHED_CTRL_SHARE_BW(x) 		(((x) & 0xff) << 16)
-#define SCHED_CTRL_BARROW_BW(x) 	(((x) & 0xff) << 24)
+#define SCHED_CTRL_ALGOTYPE(x)		(((x) & 0xf) << 0)
+#define SCHED_CTRL_CALQUOTA(x)		(((x) & 0x1) << 4)
+#define SCHED_CTRL_ACTIVE_Q(x)		(((x) & 0xff) << 8)
+#define SCHED_CTRL_SHARE_BW(x)		(((x) & 0xff) << 16)
+#define SCHED_CTRL_BARROW_BW(x)	(((x) & 0xff) << 24)
 
 #define SCHED_QUEUE_ALLOC0_QUEUEA(x)	(((x) & 0x1f) << 0)
 #define SCHED_QUEUE_ALLOC0_QUEUEB(x)	(((x) & 0x1f) << 8)

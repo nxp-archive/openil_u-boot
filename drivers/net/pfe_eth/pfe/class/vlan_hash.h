@@ -1,8 +1,7 @@
-/*
-* Copyright (C) 2016 Freescale Semiconductor Inc.
-*
-* SPDX-License-Identifier:GPL-2.0+
-*/
+/* Copyright (C) 2016 Freescale Semiconductor Inc.
+ *
+ * SPDX-License-Identifier:GPL-2.0+
+ */
 #ifndef _VLAN_HASH_H_
 #define _VLAN_HASH_H_
 

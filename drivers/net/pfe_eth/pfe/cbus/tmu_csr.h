@@ -1,8 +1,7 @@
-/*
-* Copyright (C) 2016 Freescale Semiconductor Inc.
-*
-* SPDX-License-Identifier:GPL-2.0+
-*/
+/* Copyright (C) 2016 Freescale Semiconductor Inc.
+ *
+ * SPDX-License-Identifier:GPL-2.0+
+ */
 #ifndef _TMU_CSR_H_
 #define _TMU_CSR_H_
 
@@ -52,7 +51,10 @@
 #define TMU_TEQ_HW_PROB_CFG24		(TMU_CSR_BASE_ADDR + 0x0ac)
 #define TMU_TEQ_HW_PROB_CFG25		(TMU_CSR_BASE_ADDR + 0x0b0)
 #define TMU_TDQ_IIFG_CFG		(TMU_CSR_BASE_ADDR + 0x0b4)
-#define TMU_TDQ0_SCH_CTRL		(TMU_CSR_BASE_ADDR + 0x0b8)	/**< [9:0] Scheduler Enable for each of the scheduler in the TDQ. This is a global Enable for all schedulers in PHY0 */
+/**< [9:0] Scheduler Enable for each of the scheduler in the TDQ.
+ * This is a global Enable for all schedulers in PHY0
+ */
+#define TMU_TDQ0_SCH_CTRL		(TMU_CSR_BASE_ADDR + 0x0b8)
 #define TMU_LLM_CTRL			(TMU_CSR_BASE_ADDR + 0x0bc)
 #define TMU_LLM_BASE_ADDR		(TMU_CSR_BASE_ADDR + 0x0c0)
 #define TMU_LLM_QUE_LEN			(TMU_CSR_BASE_ADDR + 0x0c4)
@@ -64,14 +66,35 @@
 #define TMU_INQ_STAT			(TMU_CSR_BASE_ADDR + 0x0dc)
 #define TMU_CTRL			(TMU_CSR_BASE_ADDR + 0x0e0)
 
-#define TMU_MEM_ACCESS_ADDR		(TMU_CSR_BASE_ADDR + 0x0e4)	/**< [31] Mem Access Command. 0 = Internal Memory Read, 1 = Internal memory Write [27:24] Byte Enables of the Internal memory access [23:0] Address of the internal memory. This address is used to access both the PM and DM of all the PE's */
-#define TMU_MEM_ACCESS_WDATA		(TMU_CSR_BASE_ADDR + 0x0e8)	/**< Internal Memory Access Write Data */
-#define TMU_MEM_ACCESS_RDATA		(TMU_CSR_BASE_ADDR + 0x0ec)	/**< Internal Memory Access Read Data. The commands are blocked at the mem_access only */
+/**< [31] Mem Access Command. 0 = Internal Memory Read, 1 = Internal
+ * memory Write [27:24] Byte Enables of the Internal memory access [23:0]
+ * Address of the internal memory. This address is used to access both the
+ * PM and DM of all the PE's
+ */
+#define TMU_MEM_ACCESS_ADDR		(TMU_CSR_BASE_ADDR + 0x0e4)
+/**< Internal Memory Access Write Data */
+#define TMU_MEM_ACCESS_WDATA		(TMU_CSR_BASE_ADDR + 0x0e8)
+/**< Internal Memory Access Read Data. The commands are blocked at the
+ * mem_access only
+ */
+#define TMU_MEM_ACCESS_RDATA		(TMU_CSR_BASE_ADDR + 0x0ec)
 
-#define TMU_PHY0_INQ_ADDR		(TMU_CSR_BASE_ADDR + 0x0f0)	/**< [31:0] PHY0 in queue address (must be initialized with one of the xxx_INQ_PKTPTR cbus addresses) */
-#define TMU_PHY1_INQ_ADDR		(TMU_CSR_BASE_ADDR + 0x0f4)	/**< [31:0] PHY1 in queue address (must be initialized with one of the xxx_INQ_PKTPTR cbus addresses) */
-#define TMU_PHY2_INQ_ADDR		(TMU_CSR_BASE_ADDR + 0x0f8)	/**< [31:0] PHY2 in queue address (must be initialized with one of the xxx_INQ_PKTPTR cbus addresses) */
-#define TMU_PHY3_INQ_ADDR		(TMU_CSR_BASE_ADDR + 0x0fc)	/**< [31:0] PHY3 in queue address (must be initialized with one of the xxx_INQ_PKTPTR cbus addresses) */
+/**< [31:0] PHY0 in queue address (must be initialized with one of the
+ * xxx_INQ_PKTPTR cbus addresses)
+ */
+#define TMU_PHY0_INQ_ADDR		(TMU_CSR_BASE_ADDR + 0x0f0)
+/**< [31:0] PHY1 in queue address (must be initialized with one of the
+ * xxx_INQ_PKTPTR cbus addresses)
+ */
+#define TMU_PHY1_INQ_ADDR		(TMU_CSR_BASE_ADDR + 0x0f4)
+/**< [31:0] PHY2 in queue address (must be initialized with one of the
+ * xxx_INQ_PKTPTR cbus addresses)
+ */
+#define TMU_PHY2_INQ_ADDR		(TMU_CSR_BASE_ADDR + 0x0f8)
+/**< [31:0] PHY3 in queue address (must be initialized with one of the
+ * xxx_INQ_PKTPTR cbus addresses)
+ */
+#define TMU_PHY3_INQ_ADDR		(TMU_CSR_BASE_ADDR + 0x0fc)
 #define TMU_BMU_INQ_ADDR		(TMU_CSR_BASE_ADDR + 0x100)
 #define TMU_TX_CTRL			(TMU_CSR_BASE_ADDR + 0x104)
 
@@ -82,12 +105,27 @@
 #define TMU_PE_SYS_CLK_RATIO		(TMU_CSR_BASE_ADDR + 0x114)
 #define TMU_PE_STATUS			(TMU_CSR_BASE_ADDR + 0x118)
 #define TMU_TEQ_MAX_THRESHOLD		(TMU_CSR_BASE_ADDR + 0x11c)
-#define TMU_PHY4_INQ_ADDR		(TMU_CSR_BASE_ADDR + 0x134)	/**< [31:0] PHY4 in queue address (must be initialized with one of the xxx_INQ_PKTPTR cbus addresses) */
-#define TMU_TDQ1_SCH_CTRL		(TMU_CSR_BASE_ADDR + 0x138)	/**< [9:0] Scheduler Enable for each of the scheduler in the TDQ. This is a global Enable for all schedulers in PHY1 */
-#define TMU_TDQ2_SCH_CTRL		(TMU_CSR_BASE_ADDR + 0x13c)	/**< [9:0] Scheduler Enable for each of the scheduler in the TDQ. This is a global Enable for all schedulers in PHY2 */
-#define TMU_TDQ3_SCH_CTRL		(TMU_CSR_BASE_ADDR + 0x140)	/**< [9:0] Scheduler Enable for each of the scheduler in the TDQ. This is a global Enable for all schedulers in PHY3 */
+/**< [31:0] PHY4 in queue address (must be initialized with one of the
+ * xxx_INQ_PKTPTR cbus addresses)
+ */
+#define TMU_PHY4_INQ_ADDR		(TMU_CSR_BASE_ADDR + 0x134)
+/**< [9:0] Scheduler Enable for each of the scheduler in the TDQ. This
+ * is a global Enable for all schedulers in PHY1
+ */
+#define TMU_TDQ1_SCH_CTRL		(TMU_CSR_BASE_ADDR + 0x138)
+/**< [9:0] Scheduler Enable for each of the scheduler in the TDQ. This
+ * is a global Enable for all schedulers in PHY2
+ */
+#define TMU_TDQ2_SCH_CTRL		(TMU_CSR_BASE_ADDR + 0x13c)
+/**< [9:0] Scheduler Enable for each of the scheduler in the TDQ. This
+ * is a global Enable for all schedulers in PHY3
+ */
+#define TMU_TDQ3_SCH_CTRL		(TMU_CSR_BASE_ADDR + 0x140)
 #define TMU_BMU_BUF_SIZE		(TMU_CSR_BASE_ADDR + 0x144)
-#define TMU_PHY5_INQ_ADDR		(TMU_CSR_BASE_ADDR + 0x148)	/**< [31:0] PHY5 in queue address (must be initialized with one of the xxx_INQ_PKTPTR cbus addresses) */
+/**< [31:0] PHY5 in queue address (must be initialized with one of the
+ * xxx_INQ_PKTPTR cbus addresses)
+ */
+#define TMU_PHY5_INQ_ADDR		(TMU_CSR_BASE_ADDR + 0x148)
 
 #define SW_RESET	(1 << 0)	/**< Global software reset */
 #define INQ_RESET	(1 << 2)
@@ -107,7 +145,7 @@ typedef struct {
 
 /* Not HW related for pfe_ctrl / pfe common defines */
 #define DEFAULT_MAX_QDEPTH	80
-#define DEFAULT_Q0_QDEPTH	511 //We keep one large queue for host tx qos
+#define DEFAULT_Q0_QDEPTH	511 /* We keep 1 large queue for host tx qos */
 #define DEFAULT_TMU3_QDEPTH	127
 
 

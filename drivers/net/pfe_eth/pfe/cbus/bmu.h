@@ -1,8 +1,7 @@
-/*
-* Copyright (C) 2016 Freescale Semiconductor Inc.
-*
-* SPDX-License-Identifier:GPL-2.0+
-*/
+/* Copyright (C) 2016 Freescale Semiconductor Inc.
+ *
+ * SPDX-License-Identifier:GPL-2.0+
+ */
 #ifndef _BMU_H_
 #define _BMU_H_
 
@@ -36,7 +35,7 @@ typedef struct {
 #define BMU1_BUF_SIZE	LMEM_BUF_SIZE_LN2
 #define BMU2_BUF_SIZE	DDR_BUF_SIZE_LN2
 
-#define BMU2_MCAST_ALLOC_CTRL	BMU2_BASE_ADDR + BMU_MCAST_ALLOC_CTRL
+#define BMU2_MCAST_ALLOC_CTRL	(BMU2_BASE_ADDR + BMU_MCAST_ALLOC_CTRL)
 
 #endif /* _BMU_H_ */
 

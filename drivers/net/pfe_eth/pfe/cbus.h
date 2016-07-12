@@ -1,8 +1,7 @@
-/*
-* Copyright (C) 2016 Freescale Semiconductor Inc.
-*
-* SPDX-License-Identifier:GPL-2.0+
-*/
+/* Copyright (C) 2016 Freescale Semiconductor Inc.
+ *
+ * SPDX-License-Identifier:GPL-2.0+
+ */
 #ifndef _CBUS_H_
 #define _CBUS_H_
 
@@ -12,8 +11,11 @@
 #define EGPI2_BASE_ADDR		(CBUS_BASE_ADDR + 0x230000)
 #define BMU1_BASE_ADDR		(CBUS_BASE_ADDR + 0x240000)
 #define BMU2_BASE_ADDR		(CBUS_BASE_ADDR + 0x250000)
-#define ARB_BASE_ADDR		(CBUS_BASE_ADDR + 0x260000) /* FIXME not documented */
-#define DDR_CONFIG_BASE_ADDR	(CBUS_BASE_ADDR + 0x270000) /* FIXME not documented */
+/* FIXME not documented */
+#define ARB_BASE_ADDR		(CBUS_BASE_ADDR + 0x260000)
+/* FIXME not documented */
+#define DDR_CONFIG_BASE_ADDR	(CBUS_BASE_ADDR + 0x270000)
+
 #define HIF_BASE_ADDR		(CBUS_BASE_ADDR + 0x280000)
 #define HGPI_BASE_ADDR		(CBUS_BASE_ADDR + 0x290000)
 #define LMEM_BASE_ADDR		(CBUS_BASE_ADDR + 0x300000)
@@ -29,19 +31,25 @@
 #define UTIL_CSR_BASE_ADDR	(CBUS_BASE_ADDR + 0x360000)
 #define CBUS_GPT_BASE_ADDR	(CBUS_BASE_ADDR + 0x370000)
 
-#define IS_LMEM(addr, len)	(((unsigned long)(addr) >= LMEM_BASE_ADDR) && (((unsigned long)(addr) + (len)) <= LMEM_END))
+#define IS_LMEM(addr, len)	(((unsigned long)(addr) >= LMEM_BASE_ADDR)\
+					&& (((unsigned long)(addr) +\
+					(len)) <= LMEM_END))
 
-/** 
-* \defgroup XXX_MEM_ACCESS_ADDR PE memory access through CSR 
-* XXX_MEM_ACCESS_ADDR register bit definitions. 
-* @{
-*/
-#define PE_MEM_ACCESS_WRITE		(1<<31)			/**< Internal Memory Write. */
-#define PE_MEM_ACCESS_READ		(0<<31)			/**< Internal Memory Read. */
+/**
+ * \defgroup XXX_MEM_ACCESS_ADDR PE memory access through CSR
+ * XXX_MEM_ACCESS_ADDR register bit definitions.
+ */
+/**< Internal Memory Write. */
+#define PE_MEM_ACCESS_WRITE		(1<<31)
+/**< Internal Memory Read. */
+#define PE_MEM_ACCESS_READ		(0<<31)
+
 #define PE_MEM_ACCESS_IMEM		(1<<15)
 #define PE_MEM_ACCESS_DMEM		(1<<16)
-#define PE_MEM_ACCESS_BYTE_ENABLE(offset,size)	(((((1 << (size)) - 1) << (4 - (offset) - (size))) & 0xf) << 24)	/**< Byte Enables of the Internal memory access. These are interpred in BE */
-// @}
+/**< Byte Enables of the Internal memory access. These are interpred in BE */
+#define PE_MEM_ACCESS_BYTE_ENABLE(offset, size)	(((((1 << (size)) - 1) << (4 \
+							- (offset) - (size)))\
+							& 0xf) << 24)
 #include "cbus/emac.h"
 #include "cbus/gpi.h"
 #include "cbus/bmu.h"
@@ -54,7 +62,7 @@
 
 
 /* PFE cores states */
-#define CORE_DISABLE	0x00000000 
+#define CORE_DISABLE	0x00000000
 #define CORE_ENABLE	0x00000001
 #define CORE_SW_RESET	0x00000002
 

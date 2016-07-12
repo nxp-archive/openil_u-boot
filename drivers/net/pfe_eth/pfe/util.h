@@ -5,7 +5,9 @@
 #define UTIL_DMEM_SIZE		0x00002000
 #define UTIL_DMEM_END		(UTIL_DMEM_BASE_ADDR + UTIL_DMEM_SIZE)
 
-#define IS_DMEM(addr, len)	(((unsigned long)(addr) >= UTIL_DMEM_BASE_ADDR) && (((unsigned long)(addr) + (len)) <= UTIL_DMEM_END))
+#define IS_DMEM(addr, len)	(((unsigned long)(addr) >= UTIL_DMEM_BASE_ADDR)\
+					&& (((unsigned long)(addr) +\
+					(len)) <= UTIL_DMEM_END))
 
 #define CBUS_BASE_ADDR		0xc0000000
 #define UTIL_APB_BASE_ADDR	0xc1000000

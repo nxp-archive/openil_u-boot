@@ -1,8 +1,7 @@
-/*
-* Copyright (C) 2016 Freescale Semiconductor Inc.
-*
-* SPDX-License-Identifier:GPL-2.0+
-*/
+/* Copyright (C) 2016 Freescale Semiconductor Inc.
+ *
+ * SPDX-License-Identifier:GPL-2.0+
+ */
 #ifndef _GPI_H_
 #define _GPI_H_
 
@@ -38,26 +37,26 @@ typedef struct {
 } GPI_CFG;
 
 
-/* GPI commons defines */ 
+/* GPI commons defines */
 #define GPI_LMEM_BUF_EN		0x1
 #define GPI_DDR_BUF_EN		0x1
 
-/* EGPI 1 defines */ 
+/* EGPI 1 defines */
 #define EGPI1_LMEM_RTRY_CNT	0x40
 #define EGPI1_TMLF_TXTHRES	0xBC
 #define EGPI1_ASEQ_LEN		0x50
 
-/* EGPI 2 defines */ 
+/* EGPI 2 defines */
 #define EGPI2_LMEM_RTRY_CNT	0x40
 #define EGPI2_TMLF_TXTHRES	0xBC
 #define EGPI2_ASEQ_LEN		0x40
 
-/* EGPI 3 defines */ 
+/* EGPI 3 defines */
 #define EGPI3_LMEM_RTRY_CNT	0x40
 #define EGPI3_TMLF_TXTHRES	0xBC
 #define EGPI3_ASEQ_LEN		0x40
 
-/* HGPI defines */ 
+/* HGPI defines */
 #define HGPI_LMEM_RTRY_CNT	0x40
 #define HGPI_TMLF_TXTHRES	0xBC
 #define HGPI_ASEQ_LEN		0x40

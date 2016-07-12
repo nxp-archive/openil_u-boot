@@ -1,36 +1,51 @@
-/*
-* Copyright (C) 2016 Freescale Semiconductor Inc.
-*
-* SPDX-License-Identifier:GPL-2.0+
-*/
+/* Copyright (C) 2016 Freescale Semiconductor Inc.
+ *
+ * SPDX-License-Identifier:GPL-2.0+
+ */
 #ifndef _CLASS_CSR_H_
 #define _CLASS_CSR_H_
 
 /** @file class_csr.h.
- * class_csr - block containing all the classifier control and status register. Mapped on CBUS and accessible from all PE's and ARM.
+ * class_csr - block containing all the classifier control and status register.
+ * Mapped on CBUS and accessible from all PE's and ARM.
  */
 
 
 #define CLASS_VERSION			(CLASS_CSR_BASE_ADDR + 0x000)
 #define CLASS_TX_CTRL			(CLASS_CSR_BASE_ADDR + 0x004)
 #define CLASS_INQ_PKTPTR		(CLASS_CSR_BASE_ADDR + 0x010)
-#define CLASS_HDR_SIZE			(CLASS_CSR_BASE_ADDR + 0x014)	/**< (ddr_hdr_size[24:16], lmem_hdr_size[5:0]) */
-#define CLASS_HDR_SIZE_LMEM(off)	((off) & 0x3f)			/**< LMEM header size for the Classifier block.\ Data in the LMEM is written from this offset. */
-#define CLASS_HDR_SIZE_DDR(off)		(((off) & 0x1ff) << 16)		/**< DDR header size for the Classifier block.\ Data in the DDR is written from this offset. */
-
-#define CLASS_PE0_QB_DM_ADDR0		(CLASS_CSR_BASE_ADDR + 0x020)	/**< DMEM address of first [15:0] and second [31:16] buffers on QB side. */
-#define CLASS_PE0_QB_DM_ADDR1		(CLASS_CSR_BASE_ADDR + 0x024)	/**< DMEM address of third [15:0] and fourth [31:16] buffers on QB side. */
-
-#define CLASS_PE0_RO_DM_ADDR0		(CLASS_CSR_BASE_ADDR + 0x060)	/**< DMEM address of first [15:0] and second [31:16] buffers on RO side. */
-#define CLASS_PE0_RO_DM_ADDR1		(CLASS_CSR_BASE_ADDR + 0x064)	/**< DMEM address of third [15:0] and fourth [31:16] buffers on RO side. */
-
-/** @name Class PE memory access. Allows external PE's and HOST to read/write PMEM/DMEM memory ranges for each classifier PE.
+/**< (ddr_hdr_size[24:16], lmem_hdr_size[5:0]) */
+#define CLASS_HDR_SIZE			(CLASS_CSR_BASE_ADDR + 0x014)
+/**< LMEM header size for the Classifier block.
+ * Data in the LMEM is written from this offset.
  */
-//@{
-#define CLASS_MEM_ACCESS_ADDR		(CLASS_CSR_BASE_ADDR + 0x100)	/**< {sr_pe_mem_cmd[31], csr_pe_mem_wren[27:24], csr_pe_mem_addr[23:0]}, See \ref XXX_MEM_ACCESS_ADDR for details. */ 
-#define CLASS_MEM_ACCESS_WDATA		(CLASS_CSR_BASE_ADDR + 0x104)	/**< Internal Memory Access Write Data [31:0] */
-#define CLASS_MEM_ACCESS_RDATA		(CLASS_CSR_BASE_ADDR + 0x108)	/**< Internal Memory Access Read Data [31:0] */
-//@}
+#define CLASS_HDR_SIZE_LMEM(off)	((off) & 0x3f)
+/**< DDR header size for the Classifier block.
+ * Data in the DDR is written from this offset.
+ */
+#define CLASS_HDR_SIZE_DDR(off)		(((off) & 0x1ff) << 16)
+
+/**< DMEM address of first [15:0] and second [31:16] buffers on QB side. */
+#define CLASS_PE0_QB_DM_ADDR0		(CLASS_CSR_BASE_ADDR + 0x020)
+/**< DMEM address of third [15:0] and fourth [31:16] buffers on QB side. */
+#define CLASS_PE0_QB_DM_ADDR1		(CLASS_CSR_BASE_ADDR + 0x024)
+
+/**< DMEM address of first [15:0] and second [31:16] buffers on RO side. */
+#define CLASS_PE0_RO_DM_ADDR0		(CLASS_CSR_BASE_ADDR + 0x060)
+/**< DMEM address of third [15:0] and fourth [31:16] buffers on RO side. */
+#define CLASS_PE0_RO_DM_ADDR1		(CLASS_CSR_BASE_ADDR + 0x064)
+
+/** @name Class PE memory access. Allows external PE's and HOST to
+ * read/write PMEM/DMEM memory ranges for each classifier PE.
+ */
+/**< {sr_pe_mem_cmd[31], csr_pe_mem_wren[27:24], csr_pe_mem_addr[23:0]},
+ * See \ref XXX_MEM_ACCESS_ADDR for details.
+ */
+#define CLASS_MEM_ACCESS_ADDR		(CLASS_CSR_BASE_ADDR + 0x100)
+/**< Internal Memory Access Write Data [31:0] */
+#define CLASS_MEM_ACCESS_WDATA		(CLASS_CSR_BASE_ADDR + 0x104)
+/**< Internal Memory Access Read Data [31:0] */
+#define CLASS_MEM_ACCESS_RDATA		(CLASS_CSR_BASE_ADDR + 0x108)
 #define CLASS_TM_INQ_ADDR		(CLASS_CSR_BASE_ADDR + 0x114)
 #define CLASS_PE_STATUS			(CLASS_CSR_BASE_ADDR + 0x118)
 
@@ -103,12 +118,16 @@
 #define CLASS_IRAM_DATA_3		(CLASS_CSR_BASE_ADDR + 0x224)
 
 #define CLASS_BUS_ACCESS_ADDR		(CLASS_CSR_BASE_ADDR + 0x228)
-#define CLASS_BUS_ACCESS_ADDR_MASK	(0x0001FFFF)	//bit 23:0 of PE peripheral address are stored in CLASS_BUS_ACCESS_ADDR
+/* bit 23:0 of PE peripheral address are stored in CLASS_BUS_ACCESS_ADDR */
+#define CLASS_BUS_ACCESS_ADDR_MASK	(0x0001FFFF)
 
 #define CLASS_BUS_ACCESS_WDATA		(CLASS_CSR_BASE_ADDR + 0x22c)
 #define CLASS_BUS_ACCESS_RDATA		(CLASS_CSR_BASE_ADDR + 0x230)
 
-#define CLASS_ROUTE_HASH_ENTRY_SIZE	(CLASS_CSR_BASE_ADDR + 0x234)		/**< (route_entry_size[9:0], route_hash_size[23:16] (this is actually ln2(size))) */
+/**< (route_entry_size[9:0], route_hash_size[23:16]
+ * (this is actually ln2(size)))
+ */
+#define CLASS_ROUTE_HASH_ENTRY_SIZE	(CLASS_CSR_BASE_ADDR + 0x234)
 #define CLASS_ROUTE_ENTRY_SIZE(size)	 ((size) & 0x1ff)
 #define CLASS_ROUTE_HASH_SIZE(hash_bits) (((hash_bits) & 0xff) << 16)
 
@@ -123,7 +142,8 @@
 #define CLASS_VLAN_ID1			(CLASS_CSR_BASE_ADDR + 0x254)
 
 #define CLASS_BUS_ACCESS_BASE		(CLASS_CSR_BASE_ADDR + 0x258)
-#define CLASS_BUS_ACCESS_BASE_MASK	(0xFF000000)	//bit 31:24 of PE peripheral address are stored in CLASS_BUS_ACCESS_BASE
+/* bit 31:24 of PE peripheral address are stored in CLASS_BUS_ACCESS_BASE */
+#define CLASS_BUS_ACCESS_BASE_MASK	(0xFF000000)
 
 #define CLASS_HIF_PARSE			(CLASS_CSR_BASE_ADDR + 0x25c)
 
@@ -161,30 +181,44 @@
 #define CLASS_PBUF_SIZE			0x100	/* Fixed by hardware */
 #define CLASS_PBUF_HEADER_OFFSET	0x80	/* Can be configured */
 
-#define CLASS_PBUF0_BASE_ADDR		0x000						/* Can be configured */
-#define CLASS_PBUF1_BASE_ADDR		(CLASS_PBUF0_BASE_ADDR + CLASS_PBUF_SIZE)	/* Can be configured */
-#define CLASS_PBUF2_BASE_ADDR		(CLASS_PBUF1_BASE_ADDR + CLASS_PBUF_SIZE)	/* Can be configured */
-#define CLASS_PBUF3_BASE_ADDR		(CLASS_PBUF2_BASE_ADDR + CLASS_PBUF_SIZE)	/* Can be configured */
+#define CLASS_PBUF0_BASE_ADDR		0x000  /* Can be configured */
+/* Can be configured */
+#define CLASS_PBUF1_BASE_ADDR	(CLASS_PBUF0_BASE_ADDR + CLASS_PBUF_SIZE)
+/* Can be configured */
+#define CLASS_PBUF2_BASE_ADDR	(CLASS_PBUF1_BASE_ADDR + CLASS_PBUF_SIZE)
+/* Can be configured */
+#define CLASS_PBUF3_BASE_ADDR	(CLASS_PBUF2_BASE_ADDR + CLASS_PBUF_SIZE)
 
-#define CLASS_PBUF0_HEADER_BASE_ADDR	(CLASS_PBUF0_BASE_ADDR + CLASS_PBUF_HEADER_OFFSET)
-#define CLASS_PBUF1_HEADER_BASE_ADDR	(CLASS_PBUF1_BASE_ADDR + CLASS_PBUF_HEADER_OFFSET)
-#define CLASS_PBUF2_HEADER_BASE_ADDR	(CLASS_PBUF2_BASE_ADDR + CLASS_PBUF_HEADER_OFFSET)
-#define CLASS_PBUF3_HEADER_BASE_ADDR	(CLASS_PBUF3_BASE_ADDR + CLASS_PBUF_HEADER_OFFSET)
+#define CLASS_PBUF0_HEADER_BASE_ADDR	(CLASS_PBUF0_BASE_ADDR +\
+						CLASS_PBUF_HEADER_OFFSET)
+#define CLASS_PBUF1_HEADER_BASE_ADDR	(CLASS_PBUF1_BASE_ADDR +\
+						CLASS_PBUF_HEADER_OFFSET)
+#define CLASS_PBUF2_HEADER_BASE_ADDR	(CLASS_PBUF2_BASE_ADDR +\
+						CLASS_PBUF_HEADER_OFFSET)
+#define CLASS_PBUF3_HEADER_BASE_ADDR	(CLASS_PBUF3_BASE_ADDR +\
+						CLASS_PBUF_HEADER_OFFSET)
 
-#define CLASS_PE0_RO_DM_ADDR0_VAL	((CLASS_PBUF1_BASE_ADDR << 16) | CLASS_PBUF0_BASE_ADDR)
-#define CLASS_PE0_RO_DM_ADDR1_VAL	((CLASS_PBUF3_BASE_ADDR << 16) | CLASS_PBUF2_BASE_ADDR)
+#define CLASS_PE0_RO_DM_ADDR0_VAL	((CLASS_PBUF1_BASE_ADDR << 16) |\
+						CLASS_PBUF0_BASE_ADDR)
+#define CLASS_PE0_RO_DM_ADDR1_VAL	((CLASS_PBUF3_BASE_ADDR << 16) |\
+						CLASS_PBUF2_BASE_ADDR)
 
-#define CLASS_PE0_QB_DM_ADDR0_VAL	((CLASS_PBUF1_HEADER_BASE_ADDR << 16) | CLASS_PBUF0_HEADER_BASE_ADDR)
-#define CLASS_PE0_QB_DM_ADDR1_VAL	((CLASS_PBUF3_HEADER_BASE_ADDR << 16) | CLASS_PBUF2_HEADER_BASE_ADDR)
+#define CLASS_PE0_QB_DM_ADDR0_VAL	((CLASS_PBUF1_HEADER_BASE_ADDR << 16)\
+						| CLASS_PBUF0_HEADER_BASE_ADDR)
+#define CLASS_PE0_QB_DM_ADDR1_VAL	((CLASS_PBUF3_HEADER_BASE_ADDR << 16)\
+						| CLASS_PBUF2_HEADER_BASE_ADDR)
 
 #define CLASS_ROUTE_SIZE		128
 #define CLASS_ROUTE_HASH_BITS		20
 #define CLASS_ROUTE_HASH_MASK		((1 << CLASS_ROUTE_HASH_BITS) - 1)
 
-#define	CLASS_ROUTE0_BASE_ADDR	0x400						/* Can be configured */
-#define CLASS_ROUTE1_BASE_ADDR	(CLASS_ROUTE0_BASE_ADDR + CLASS_ROUTE_SIZE)	/* Can be configured */
-#define CLASS_ROUTE2_BASE_ADDR	(CLASS_ROUTE1_BASE_ADDR + CLASS_ROUTE_SIZE)	/* Can be configured */
-#define CLASS_ROUTE3_BASE_ADDR	(CLASS_ROUTE2_BASE_ADDR + CLASS_ROUTE_SIZE)	/* Can be configured */
+#define	CLASS_ROUTE0_BASE_ADDR	0x400		/* Can be configured */
+/* Can be configured */
+#define CLASS_ROUTE1_BASE_ADDR	(CLASS_ROUTE0_BASE_ADDR + CLASS_ROUTE_SIZE)
+/* Can be configured */
+#define CLASS_ROUTE2_BASE_ADDR	(CLASS_ROUTE1_BASE_ADDR + CLASS_ROUTE_SIZE)
+/* Can be configured */
+#define CLASS_ROUTE3_BASE_ADDR	(CLASS_ROUTE2_BASE_ADDR + CLASS_ROUTE_SIZE)
 
 #define TWO_LEVEL_ROUTE		(1 << 0)
 #define PHYNO_IN_HASH		(1 << 1)

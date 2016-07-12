@@ -1,20 +1,21 @@
-/*
-* Copyright (C) 2016 Freescale Semiconductor Inc.
-*
-* SPDX-License-Identifier:GPL-2.0+
-*/
+/* Copyright (C) 2016 Freescale Semiconductor Inc.
+ *
+ * SPDX-License-Identifier:GPL-2.0+
+ */
 #ifndef _PFE_H_
 #define _PFE_H_
 
 #define PFE_LS1012A_RESET_WA
 
 #define CLASS_DMEM_BASE_ADDR(i)	(0x00000000 | ((i) << 20))
-#define CLASS_IMEM_BASE_ADDR(i)	(0x00000000 | ((i) << 20)) /* Only valid for mem access register interface */
+/* Only valid for mem access register interface */
+#define CLASS_IMEM_BASE_ADDR(i)	(0x00000000 | ((i) << 20))
 #define CLASS_DMEM_SIZE		0x00002000
 #define CLASS_IMEM_SIZE		0x00008000
 
 #define TMU_DMEM_BASE_ADDR(i)	(0x00000000 + ((i) << 20))
-#define TMU_IMEM_BASE_ADDR(i)	(0x00000000 + ((i) << 20)) /* Only valid for mem access register interface */
+/* Only valid for mem access register interface */
+#define TMU_IMEM_BASE_ADDR(i)	(0x00000000 + ((i) << 20))
 #define TMU_DMEM_SIZE		0x00000800
 #define TMU_IMEM_SIZE		0x00002000
 
@@ -35,12 +36,24 @@
 
 
 /* Memory ranges check from PE point of view/memory map */
-#define IS_DMEM(addr, len)	(((unsigned long)(addr) >= DMEM_BASE_ADDR) && (((unsigned long)(addr) + (len)) <= DMEM_END))
-#define IS_PMEM(addr, len)	(((unsigned long)(addr) >= PMEM_BASE_ADDR) && (((unsigned long)(addr) + (len)) <= PMEM_END))
-#define IS_PE_LMEM(addr, len)	(((unsigned long)(addr) >= PE_LMEM_BASE_ADDR) && (((unsigned long)(addr) + (len)) <= PE_LMEM_END))
+#define IS_DMEM(addr, len)	(((unsigned long)(addr) >= DMEM_BASE_ADDR) &&\
+					(((unsigned long)(addr) +\
+					(len)) <= DMEM_END))
+#define IS_PMEM(addr, len)	(((unsigned long)(addr) >= PMEM_BASE_ADDR) &&\
+					(((unsigned long)(addr) +\
+					(len)) <= PMEM_END))
+#define IS_PE_LMEM(addr, len)	(((unsigned long)(addr) >= PE_LMEM_BASE_ADDR\
+					) && (((unsigned long)(addr)\
+					+ (len)) <= PE_LMEM_END))
 
-#define IS_PFE_LMEM(addr, len)	(((unsigned long)(addr) >= CBUS_VIRT_TO_PFE(LMEM_BASE_ADDR)) && (((unsigned long)(addr) + (len)) <= CBUS_VIRT_TO_PFE(LMEM_END)))
-#define IS_PHYS_DDR(addr, len)	(((unsigned long)(addr) >= PFE_DDR_PHYS_BASE_ADDR) && (((unsigned long)(addr) + (len)) <= PFE_DDR_PHYS_END))
+#define IS_PFE_LMEM(addr, len)	(((unsigned long)(addr) >=\
+					CBUS_VIRT_TO_PFE(LMEM_BASE_ADDR)) &&\
+					(((unsigned long)(addr) + (len)) <=\
+					CBUS_VIRT_TO_PFE(LMEM_END)))
+#define IS_PHYS_DDR(addr, len)	(((unsigned long)(addr) >=\
+					PFE_DDR_PHYS_BASE_ADDR) &&\
+					(((unsigned long)(addr) + (len)) <=\
+					PFE_DDR_PHYS_END))
 
 /* Host View Address */
 extern void *cbus_base_addr;
@@ -49,15 +62,19 @@ extern void *ddr_base_addr;
 #define DDR_BASE_ADDR		ddr_base_addr
 
 /* PFE View Address */
-#define PFE_DDR_PHYS_BASE_ADDR	0x03800000      /**< DDR physical base address as seen by PE's. */
+/**< DDR physical base address as seen by PE's. */
+#define PFE_DDR_PHYS_BASE_ADDR	0x03800000
 #define PFE_DDR_PHYS_SIZE	0xC000000
 #define PFE_DDR_PHYS_END	(PFE_DDR_PHYS_BASE_ADDR + PFE_DDR_PHYS_SIZE)
-#define PFE_CBUS_PHYS_BASE_ADDR	0xc0000000	/**< CBUS physical base address as seen by PE's. */
+/**< CBUS physical base address as seen by PE's. */
+#define PFE_CBUS_PHYS_BASE_ADDR	0xc0000000
 
 /* Host<->PFE Mapping */
-#define DDR_PFE_TO_VIRT(p)	((unsigned long int)((p ) + 0x80000000))
-#define CBUS_VIRT_TO_PFE(v)	(((v) - CBUS_BASE_ADDR) + PFE_CBUS_PHYS_BASE_ADDR)
-#define CBUS_PFE_TO_VIRT(p)	(((p) - PFE_CBUS_PHYS_BASE_ADDR) + CBUS_BASE_ADDR)
+#define DDR_PFE_TO_VIRT(p)	((unsigned long int)((p) + 0x80000000))
+#define CBUS_VIRT_TO_PFE(v)	(((v) - CBUS_BASE_ADDR) +\
+					PFE_CBUS_PHYS_BASE_ADDR)
+#define CBUS_PFE_TO_VIRT(p)	(((p) - PFE_CBUS_PHYS_BASE_ADDR) +\
+					CBUS_BASE_ADDR)
 
 #include "cbus.h"
 
@@ -85,10 +102,13 @@ enum {
 };
 
 #if !defined(CONFIG_PLATFORM_PCI)
-#define CLASS_MASK	((1 << CLASS0_ID) | (1 << CLASS1_ID) | (1 << CLASS2_ID) | (1 << CLASS3_ID) | (1 << CLASS4_ID) | (1 << CLASS5_ID))
+#define CLASS_MASK	((1 << CLASS0_ID) | (1 << CLASS1_ID) | (1 << CLASS2_ID)\
+				| (1 << CLASS3_ID) | (1 << CLASS4_ID) |\
+				(1 << CLASS5_ID))
 #define CLASS_MAX_ID	CLASS5_ID
 #else
-#define CLASS_MASK      ((1 << CLASS0_ID) | (1 << CLASS1_ID) | (1 << CLASS2_ID) | (1 << CLASS3_ID))
+#define CLASS_MASK      ((1 << CLASS0_ID) | (1 << CLASS1_ID) |\
+				(1 << CLASS2_ID) | (1 << CLASS3_ID))
 #define CLASS_MAX_ID	CLASS3_ID
 #endif
 
@@ -96,11 +116,12 @@ enum {
 #if defined(CONFIG_LS1012A)
 #define TMU_MASK	((1 << TMU0_ID) | (1 << TMU1_ID) | (1 << TMU3_ID))
 #else
-#define TMU_MASK	((1 << TMU0_ID) | (1 << TMU1_ID) | (1 << TMU2_ID) | (1 << TMU3_ID))
+#define TMU_MASK	((1 << TMU0_ID) | (1 << TMU1_ID) | (1 << TMU2_ID) |\
+				(1 << TMU3_ID))
 #endif
 #define TMU_MAX_ID	TMU3_ID
 #else
-#define TMU_MASK	(1 << TMU0_ID) 
+#define TMU_MASK	(1 << TMU0_ID)
 #define TMU_MAX_ID	TMU0_ID
 #endif
 
@@ -108,14 +129,12 @@ enum {
 #define UTIL_MASK	(1 << UTIL_ID)
 #endif
 
-struct pe_sync_mailbox
-{
+struct pe_sync_mailbox {
 	u32 stop;
 	u32 stopped;
 };
 
-struct pe_msg_mailbox
-{
+struct pe_msg_mailbox {
 	u32 dst;
 	u32 src;
 	u32 len;
@@ -125,19 +144,26 @@ struct pe_msg_mailbox
 /** PE information.
  * Structure containing PE's specific information. It is used to create
  * generic C functions common to all PE's.
- * Before using the library functions this structure needs to be initialized with the different registers virtual addresses
- * (according to the ARM MMU mmaping). The default initialization supports a virtual == physical mapping.
+ * Before using the library functions this structure needs to be
+ * initialized with the different registers virtual addresses
+ * (according to the ARM MMU mmaping). The default initialization supports a
+ * virtual == physical mapping.
  *
  */
-struct pe_info
-{
+struct pe_info {
 	u32 dmem_base_addr;		/**< PE's dmem base address */
 	u32 pmem_base_addr;		/**< PE's pmem base address */
 	u32 pmem_size;			/**< PE's pmem size */
 
-	void *mem_access_wdata;		/**< PE's _MEM_ACCESS_WDATA register address */
-	void *mem_access_addr;		/**< PE's _MEM_ACCESS_ADDR register address */
-	void *mem_access_rdata;		/**< PE's _MEM_ACCESS_RDATA register address */
+	void *mem_access_wdata;	       /**< PE's _MEM_ACCESS_WDATA
+					* register address
+					*/
+	void *mem_access_addr;	       /**< PE's _MEM_ACCESS_ADDR
+					* register address
+					*/
+	void *mem_access_rdata;	       /**< PE's _MEM_ACCESS_RDATA
+					* register address
+					*/
 };
 
 
@@ -174,7 +200,8 @@ u32 util_bus_read(u32 addr, u8 size);
 
 int pe_load_elf_section(int id, const void *data, Elf32_Shdr *shdr);
 
-void pfe_lib_init(void *cbus_base, void *ddr_base, unsigned long ddr_phys_base);
+void pfe_lib_init(void *cbus_base, void *ddr_base, unsigned long
+			ddr_phys_base);
 void bmu_init(void *base, BMU_CFG *cfg);
 void bmu_reset(void *base);
 void bmu_enable(void *base);
@@ -223,7 +250,7 @@ void gemac_enable_pause_rx(void *base);
 void gemac_disable_pause_rx(void *base);
 void gemac_enable_rx_checksum_offload(void *base);
 void gemac_disable_rx_checksum_offload(void *base);
-unsigned int * gemac_get_stats(void *base);
+unsigned int *gemac_get_stats(void *base);
 void gemac_set_bus_width(void *base, int width);
 #endif
 

@@ -1,8 +1,7 @@
-/*
-* Copyright (C) 2016 Freescale Semiconductor Inc.
-*
-* SPDX-License-Identifier:GPL-2.0+
-*/
+/* Copyright (C) 2016 Freescale Semiconductor Inc.
+ *
+ * SPDX-License-Identifier:GPL-2.0+
+ */
 #ifndef _TMU_H_
 #define _TMU_H_
 
@@ -41,7 +40,8 @@
 
 
 #define PHY_QUEUE_BASE_ADDR	(TMU_APB_BASE_ADDR + 0x260000)
-#define SHAPER_STATUS		(TMU_APB_BASE_ADDR + 0x270000) /**< [9:0] bitmask of shapers that have positive credit */
+/**< [9:0] bitmask of shapers that have positive credit */
+#define SHAPER_STATUS		(TMU_APB_BASE_ADDR + 0x270000)
 
 
 #include "gpt.h"
