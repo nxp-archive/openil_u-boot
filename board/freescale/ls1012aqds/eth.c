@@ -156,12 +156,6 @@ int board_eth_init(bd_t *bis)
 	data8 |= 0x2;
 	QIXIS_WRITE(rst_frc[0], data8);
 	data8 = QIXIS_READ(rst_frc[0]);
-
-	data8 = QIXIS_READ(res8[6]);
-	data8 |= 0xff;
-	QIXIS_WRITE(res8[6], data8);
-	data8 = QIXIS_READ(res8[6]);
-
 #endif
 
 	mac1_mdio_info.reg_base = (void *)0x04200000; /*EMAC1_BASE_ADDR*/
