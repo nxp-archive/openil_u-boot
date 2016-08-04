@@ -362,6 +362,7 @@ struct fsg_common {
 	char inquiry_string[8 + 16 + 4 + 1];
 
 	struct kref		ref;
+	unsigned int controller_index;
 };
 
 struct fsg_config {
@@ -691,7 +692,7 @@ static int sleep_thread(struct fsg_common *common)
 			k = 0;
 		}
 
-		usb_gadget_handle_interrupts(0);
+		usb_gadget_handle_interrupts(common->controller_index);
 	}
 	common->thread_wakeup_needed = 0;
 	return rc;
@@ -2402,10 +2403,14 @@ static void handle_exception(struct fsg_common *common)
 
 /*-------------------------------------------------------------------------*/
 
-int fsg_main_thread(void *common_)
+int fsg_main_thread(unsigned int controller_index)
 {
 	int ret;
 	struct fsg_common	*common = the_fsg_common;
+
+	/* update the controller_index */
+	common->controller_index = controller_index;
+
 	/* The main loop */
 	do {
 		if (exception_in_progress(common)) {
@@ -2476,6 +2481,7 @@ static struct fsg_common *fsg_common_init(struct fsg_common *common,
 
 	common->ops = NULL;
 	common->private_data = NULL;
+	common->controller_index = 0;
 
 	common->gadget = gadget;
 	common->ep0 = gadget->ep0;
@@ -2770,6 +2776,7 @@ int fsg_add(struct usb_configuration *c)
 
 	fsg_common->ops = NULL;
 	fsg_common->private_data = NULL;
+	fsg_common->controller_index = 0;
 
 	the_fsg_common = fsg_common;
 
