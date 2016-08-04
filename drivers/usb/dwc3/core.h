@@ -593,6 +593,13 @@ struct dwc3_hwparams {
 /* HWPARAMS7 */
 #define DWC3_RAM1_DEPTH(n)	((n) & 0xffff)
 
+/* GSBUSCFG0 */
+#define DWC3_SNOOP_ENABLE	(0x22220000)
+#define DWC3_INCR_BTYPE_MASK	(0xff)
+
+/* GSBUSCFG1 */
+#define DWC3_BREQ_LIMIT_MASK	(0xf00)
+
 struct dwc3_request {
 	struct usb_request	request;
 	struct list_head	list;

@@ -599,6 +599,51 @@ static void dwc3_core_exit_mode(struct dwc3 *dwc)
 
 #define DWC3_ALIGN_MASK		(16 - 1)
 
+void dwc3_core_incr_burst_enable(int index, int btype_incr_val,
+				 int breq_limit)
+{
+	struct dwc3 *dwc;
+	u32 reg;
+
+	list_for_each_entry(dwc, &dwc3_list, list) {
+		if (dwc->index != index)
+			continue;
+
+		/*
+		 * Change burst beat and outstanding pipelined
+		 * transfers requests
+		 */
+		reg = dwc3_readl(dwc->regs, DWC3_GSBUSCFG0);
+		reg = (reg & ~DWC3_INCR_BTYPE_MASK) | btype_incr_val;
+		dwc3_writel(dwc->regs, DWC3_GSBUSCFG0, reg);
+
+		reg = dwc3_readl(dwc->regs, DWC3_GSBUSCFG1);
+		reg = (reg & ~DWC3_BREQ_LIMIT_MASK) | (breq_limit << 8);
+		dwc3_writel(dwc->regs, DWC3_GSBUSCFG1, reg);
+		break;
+	}
+}
+
+void dwc3_core_set_snooping(int index, bool snoop)
+{
+	struct dwc3 *dwc;
+	u32 reg;
+
+	list_for_each_entry(dwc, &dwc3_list, list) {
+		if (dwc->index != index)
+			continue;
+
+		/* Enable/Disable snooping */
+		reg = dwc3_readl(dwc->regs, DWC3_GSBUSCFG0);
+		if (snoop)
+			reg |= DWC3_SNOOP_ENABLE;
+		else
+			reg &= ~DWC3_SNOOP_ENABLE;
+		dwc3_writel(dwc->regs, DWC3_GSBUSCFG0, reg);
+		break;
+	}
+}
+
 /**
  * dwc3_uboot_init - dwc3 core uboot initialization code
  * @dwc3_dev: struct dwc3_device containing initialization data
