@@ -15,6 +15,48 @@
 #endif
 #include <asm/u-boot.h>
 
+#ifdef CONFIG_HAS_FEATURE_GIC4K_ALIGN
+
+/* fixup GIC offset
+* For LS1043a rev1.0, GIC base address align with 4k.
+* For LS1043a rev1.1, if DCFG_GIC400_ALIGN[GIC_ADDR_BIT]
+* is set, GIC base address align with 4K, or else align
+* with 64k.
+* output:
+*	x0: the base address of GICD
+*	x1: the base address of GICC
+*/
+ENTRY(fix_gic_offset)
+	ldr     x0, =GICD_BASE
+	ldr     x1, =GICC_BASE
+	ldr     x3, =DCFG_CCSR_SVR
+	ldr	w3, [x3]
+	rev	w3, w3
+	ands	w3, w3, #0xff
+	cmp	w3, #REV1_0
+	b.eq	1f
+	ldr	x3, =SCFG_GIC400_ALIGN
+	ldr	w3, [x3]
+	rev	w3, w3
+	tbnz	w3, #GIC_ADDR_BIT, 1f
+	ret
+1:
+	ldr     x0, =GICD_BASE_4K
+	ldr     x1, =GICC_BASE_4K
+	ret
+ENDPROC(fix_gic_offset)
+
+ENTRY(smp_kick_all_cpus)
+	/* Kick secondary cpus up by SGI 0 interrupt */
+	mov	x29, lr			/* Save LR */
+	bl	fix_gic_offset
+	bl	gic_kick_secondary_cpus
+	mov	lr, x29			/* Restore LR */
+	ret
+ENDPROC(smp_kick_all_cpus)
+
+#endif
+
 ENTRY(lowlevel_init)
 	mov	x29, lr			/* Save LR */
 
@@ -106,15 +148,23 @@ ENTRY(lowlevel_init)
 	/* Initialize GIC Secure Bank Status */
 #if defined(CONFIG_GICV2) || defined(CONFIG_GICV3)
 	branch_if_slave x0, 1f
+#ifdef CONFIG_HAS_FEATURE_GIC4K_ALIGN
+	bl	fix_gic_offset
+#else
 	ldr	x0, =GICD_BASE
+#endif
 	bl	gic_init_secure
 1:
 #ifdef CONFIG_GICV3
 	ldr	x0, =GICR_BASE
 	bl	gic_init_secure_percpu
 #elif defined(CONFIG_GICV2)
+#ifdef CONFIG_HAS_FEATURE_GIC4K_ALIGN
+	bl	fix_gic_offset
+#else
 	ldr	x0, =GICD_BASE
 	ldr	x1, =GICC_BASE
+#endif
 	bl	gic_init_secure_percpu
 #endif
 #endif
@@ -336,7 +386,12 @@ ENTRY(secondary_boot_func)
 #if defined(CONFIG_GICV3)
 	gic_wait_for_interrupt_m x0
 #elif defined(CONFIG_GICV2)
+#ifdef CONFIG_HAS_FEATURE_GIC4K_ALIGN
+	bl	fix_gic_offset
+	mov	x0, x1
+#else
         ldr     x0, =GICC_BASE
+#endif
         gic_wait_for_interrupt_m x0, w1
 #endif
 

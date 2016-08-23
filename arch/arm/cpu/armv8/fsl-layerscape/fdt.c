@@ -202,6 +202,52 @@ void fsl_fdt_disable_usb(void *blob)
 	}
 }
 
+#ifdef CONFIG_HAS_FEATURE_GIC4K_ALIGN
+/* Fixup gic node align with 4K */
+static void fdt_fixup_gic(void *blob)
+{
+	int offset, err;
+	u64 reg[8];
+	struct ccsr_gur __iomem *gur = (void *)(CONFIG_SYS_FSL_GUTS_ADDR);
+	unsigned int val;
+	struct ccsr_scfg __iomem *scfg = (void *)CONFIG_SYS_FSL_SCFG_ADDR;
+
+	val = gur_in32(&gur->svr) & 0xff;
+
+	if (val == REV1_1) {
+		val = scfg_in32(&scfg->gic_align) & (0x01 << GIC_ADDR_BIT);
+		if (!val)
+			return;
+	}
+
+	offset = fdt_subnode_offset(blob, 0, "interrupt-controller@1400000");
+	if (offset < 0) {
+		printf("WARNING: fdt_subnode_offset can't find node %s: %s\n",
+		       "interrupt-controller@1400000", fdt_strerror(offset));
+		return;
+	}
+
+	reg[0] = cpu_to_fdt64(GICD_BASE_4K);
+	reg[1] = cpu_to_fdt64(GICD_SIZE_4K);
+	reg[2] = cpu_to_fdt64(GICC_BASE_4K);
+	reg[3] = cpu_to_fdt64(GICC_SIZE_4K);
+	reg[4] = cpu_to_fdt64(GICH_BASE_4K);
+	reg[5] = cpu_to_fdt64(GICH_SIZE_4K);
+	reg[6] = cpu_to_fdt64(GICV_BASE_4K);
+	reg[7] = cpu_to_fdt64(GICV_SIZE_4K);
+
+	err = fdt_setprop(blob, offset, "reg", reg, sizeof(reg));
+	if (err < 0) {
+		printf("WARNING: fdt_setprop can't set %s from node %s: %s\n",
+		       "reg", "interrupt-controller@1400000",
+		       fdt_strerror(err));
+		return;
+	}
+
+	return;
+}
+#endif
+
 void ft_cpu_setup(void *blob, bd_t *bd)
 {
 #ifdef CONFIG_FSL_LSCH2
@@ -259,4 +305,7 @@ void ft_cpu_setup(void *blob, bd_t *bd)
 #endif
 	fsl_fdt_disable_usb(blob);
 
+#ifdef CONFIG_HAS_FEATURE_GIC4K_ALIGN
+	fdt_fixup_gic(blob);
+#endif
 }

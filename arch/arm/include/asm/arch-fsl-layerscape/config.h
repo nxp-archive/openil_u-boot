@@ -202,8 +202,22 @@
 #define SMMU_BASE		0x09000000
 
 /* Generic Interrupt Controller Definitions */
-#define GICD_BASE		0x01401000
-#define GICC_BASE		0x01402000
+#define GICD_BASE		0x01410000
+#define GICC_BASE		0x01420000
+#define GICD_BASE_4K            0x01401000
+#define GICC_BASE_4K            0x01402000
+#define GICH_BASE_4K            0x01404000
+#define GICV_BASE_4K            0x01406000
+#define GICD_SIZE_4K		0x1000
+#define GICC_SIZE_4K		0x2000
+#define GICH_SIZE_4K		0x2000
+#define GICV_SIZE_4K		0x2000
+
+#define DCFG_CCSR_SVR		0x1ee00a4
+#define REV1_0			0x10
+#define REV1_1			0x11
+#define GIC_ADDR_BIT		31
+#define SCFG_GIC400_ALIGN	0x1570188
 
 #define CONFIG_SYS_FSL_ERRATUM_A008850
 #define CONFIG_SYS_FSL_ERRATUM_A009663
