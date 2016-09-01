@@ -192,6 +192,16 @@
 #define CONFIG_SYS_DDR_BLOCK1_SIZE		((phys_size_t)2 << 30)
 #define CONFIG_MAX_MEM_MAPPED			CONFIG_SYS_DDR_BLOCK1_SIZE
 
+/* Platform PLL frequency divisor for platform clock */
+#define CONFIG_SYS_FSL_PCLK_DIV			1
+/* Platform clock divisor for IPs' input clock */
+#define CONFIG_SYS_FSL_DUART_CLK_DIV		1
+#define CONFIG_SYS_FSL_I2C_CLK_DIV		1
+#define CONFIG_SYS_FSL_DSPI_CLK_DIV		1
+#define CONFIG_SYS_FSL_LPUART_CLK_DIV		1
+#define CONFIG_SYS_FSL_SDHC_CLK_DIV		1
+#define CONFIG_SYS_FSL_QMAN_CLK_DIV		1
+
 #define QE_MURAM_SIZE		0x6000UL
 #define MAX_QE_RISC		1
 #define QE_NUM_OF_SNUM		28
@@ -239,6 +249,14 @@
 #define CONFIG_MAX_CPUS                         1
 #undef	CONFIG_SYS_FSL_DDRC_ARM_GEN3
 
+/* Platform PLL frequency divisor for platform clock */
+#define CONFIG_SYS_FSL_PCLK_DIV			2
+/* Platform clock divisor for IPs' input clock */
+#define CONFIG_SYS_FSL_DUART_CLK_DIV		2
+#define CONFIG_SYS_FSL_I2C_CLK_DIV		2
+#define CONFIG_SYS_FSL_DSPI_CLK_DIV		2
+#define CONFIG_SYS_FSL_SDHC_CLK_DIV		1
+
 #define GICD_BASE		0x01401000
 #define GICC_BASE		0x01402000
 #define CONFIG_SYS_FSL_SFP_VER_3_2
@@ -260,6 +278,16 @@
 #define CONFIG_SYS_FSL_DDR_BE
 #define CONFIG_SYS_DDR_BLOCK1_SIZE  ((phys_size_t)2 << 30)
 #define CONFIG_MAX_MEM_MAPPED           CONFIG_SYS_DDR_BLOCK1_SIZE
+
+/* Platform PLL frequency divisor for platform clock */
+#define CONFIG_SYS_FSL_PCLK_DIV			1
+/* Platform clock divisor for IPs' input clock */
+#define CONFIG_SYS_FSL_DUART_CLK_DIV		2
+#define CONFIG_SYS_FSL_I2C_CLK_DIV		2
+#define CONFIG_SYS_FSL_DSPI_CLK_DIV		2
+#define CONFIG_SYS_FSL_LPUART_CLK_DIV		2
+#define CONFIG_SYS_FSL_SDHC_CLK_DIV		2
+#define CONFIG_SYS_FSL_QMAN_CLK_DIV		2
 
 #define CONFIG_SYS_FSL_SRDS_2
 #define CONFIG_SYS_FSL_IFC_BE
