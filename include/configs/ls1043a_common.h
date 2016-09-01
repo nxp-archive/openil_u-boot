@@ -21,6 +21,7 @@
 #endif
 
 #define CONFIG_HAS_FEATURE_GIC4K_ALIGN
+#define CONFIG_HAS_FEATURE_ENHANCED_MSI
 
 /* Link Definitions */
 #define CONFIG_SYS_INIT_SP_ADDR		(CONFIG_SYS_FSL_OCRAM_BASE + 0xfff0)

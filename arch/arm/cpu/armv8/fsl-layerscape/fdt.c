@@ -247,6 +247,97 @@ static void fdt_fixup_gic(void *blob)
 	return;
 }
 #endif
+#ifdef CONFIG_HAS_FEATURE_ENHANCED_MSI
+static int _fdt_fixup_msi_subnode(void *blob, int parentoffset,
+				const char *name, int irq_no)
+{
+	int err, offset;
+	u32 tmp[3];
+
+	offset = fdt_subnode_offset(blob, parentoffset, name);
+	if (offset < 0) {
+		printf("WARNING: fdt_subnode_offset can't find %s: %s\n",
+		       name, fdt_strerror(offset));
+		return 0;
+	}
+
+	tmp[0] = cpu_to_fdt32(0x0);
+	tmp[1] = cpu_to_fdt32(irq_no);
+	tmp[2] = cpu_to_fdt32(0x4);
+
+	err = fdt_setprop(blob, offset, "interrupts", tmp, sizeof(tmp));
+	if (err < 0) {
+		printf("WARNING: fdt_setprop can't set %s from node %s: %s\n",
+		       "interrupts", name, fdt_strerror(err));
+		return 0;
+	}
+
+	return 1;
+}
+
+static int _fdt_fixup_pci_msi(void *blob, const char *name)
+{
+	int offset, len, err;
+	void *p;
+	int val;
+	u32 tmp[4][8];
+
+	offset = fdt_path_offset(blob, name);
+	if (offset < 0) {
+		printf("WARNING: fdt_path_offset can't find path %s: %s\n",
+		       name, fdt_strerror(offset));
+		return 0;
+	}
+
+	p = (char *)fdt_getprop(blob, offset, "interrupt-map", &len);
+	if (!p || len != sizeof(tmp)) {
+		printf("WARNING: fdt_getprop can't get %s from node %s\n",
+		       "interrupt-map", name);
+		return 0;
+	}
+
+	memcpy((char *)tmp, p, len);
+	val = fdt32_to_cpu(tmp[0][6]);
+	tmp[1][6] = cpu_to_fdt32(val + 1);
+	tmp[2][6] = cpu_to_fdt32(val + 2);
+	tmp[3][6] = cpu_to_fdt32(val + 3);
+
+	err = fdt_setprop(blob, offset, "interrupt-map", tmp, sizeof(tmp));
+	if (err < 0) {
+		printf("WARNING: fdt_setprop can't set %s from node %s: %s.\n",
+		       "interrupt-map", name, fdt_strerror(err));
+		return 0;
+	}
+	return 1;
+}
+
+/* Fixup msi to v1_0*/
+
+static void fdt_fixup_msi(void *blob)
+{
+	int nodeoffset;
+	struct ccsr_gur __iomem *gur = (void *)(CONFIG_SYS_FSL_GUTS_ADDR);
+	unsigned int val;
+
+	val = gur_in32(&gur->svr) & 0xff;
+	if (val == REV1_1)
+		return;
+
+	nodeoffset = fdt_path_offset(blob, "/soc/msi-controller");
+	if (nodeoffset < 0) {
+		printf("WARNING: fdt_path_offset can't find path %s: %s\n",
+		       "/soc/msi-controller", fdt_strerror(nodeoffset));
+		return;
+	}
+	_fdt_fixup_msi_subnode(blob, nodeoffset, "msi0@1571000", 116);
+	_fdt_fixup_msi_subnode(blob, nodeoffset, "msi1@1572000", 126);
+	_fdt_fixup_msi_subnode(blob, nodeoffset, "msi2@1573000", 160);
+
+	_fdt_fixup_pci_msi(blob, "/soc/pcie@3400000");
+	_fdt_fixup_pci_msi(blob, "/soc/pcie@3500000");
+	_fdt_fixup_pci_msi(blob, "/soc/pcie@3600000");
+}
+#endif
 
 void ft_cpu_setup(void *blob, bd_t *bd)
 {
@@ -307,5 +398,8 @@ void ft_cpu_setup(void *blob, bd_t *bd)
 
 #ifdef CONFIG_HAS_FEATURE_GIC4K_ALIGN
 	fdt_fixup_gic(blob);
+#endif
+#ifdef CONFIG_HAS_FEATURE_ENHANCED_MSI
+	fdt_fixup_msi(blob);
 #endif
 }
