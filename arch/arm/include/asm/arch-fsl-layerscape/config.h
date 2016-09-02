@@ -135,6 +135,14 @@
 #define EPU_EPCTR5		0x700060a14ULL
 #define EPU_EPGCR		0x700060000ULL
 
+/* Platform PLL frequency divisor for platform clock */
+#define CONFIG_SYS_FSL_PCLK_DIV			2
+/* Platform clock divisor for IPs' input clock */
+#define CONFIG_SYS_FSL_DUART_CLK_DIV		2
+#define CONFIG_SYS_FSL_I2C_CLK_DIV		2
+#define CONFIG_SYS_FSL_DSPI_CLK_DIV		2
+#define CONFIG_SYS_FSL_SDHC_CLK_DIV		2
+
 #define CONFIG_SYS_FSL_ERRATUM_A008336
 #define CONFIG_SYS_FSL_ERRATUM_A008511
 #define CONFIG_SYS_FSL_ERRATUM_A008514
