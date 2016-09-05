@@ -42,7 +42,6 @@
 
 #ifdef CONFIG_RAMBOOT_PBL
 #define CONFIG_SYS_FSL_PBL_PBI board/freescale/t102xqds/t1024_pbi.cfg
-#define CONFIG_SYS_FSL_PBL_RCW board/freescale/t102xqds/t1024_rcw.cfg
 #define CONFIG_SPL_MPC8XXX_INIT_DDR_SUPPORT
 #define CONFIG_SPL_ENV_SUPPORT
 #define CONFIG_SPL_SERIAL_SUPPORT
@@ -73,6 +72,7 @@
 #define CONFIG_SYS_NAND_U_BOOT_START	0x00200000
 #define CONFIG_SYS_NAND_U_BOOT_OFFS	(256 << 10)
 #define CONFIG_SYS_LDSCRIPT	"arch/powerpc/cpu/mpc85xx/u-boot-nand.lds"
+#define CONFIG_SYS_FSL_PBL_RCW board/freescale/t102xqds/t1024_nand_rcw.cfg
 #define CONFIG_SPL_NAND_BOOT
 #endif
 
@@ -89,6 +89,7 @@
 #ifndef CONFIG_SPL_BUILD
 #define CONFIG_SYS_MPC85XX_NO_RESETVEC
 #endif
+#define CONFIG_SYS_FSL_PBL_RCW board/freescale/t102xqds/t1024_spi_rcw.cfg
 #define CONFIG_SPL_SPI_BOOT
 #endif
 
@@ -104,6 +105,7 @@
 #ifndef CONFIG_SPL_BUILD
 #define CONFIG_SYS_MPC85XX_NO_RESETVEC
 #endif
+#define CONFIG_SYS_FSL_PBL_RCW board/freescale/t102xqds/t1024_sd_rcw.cfg
 #define CONFIG_SPL_MMC_BOOT
 #endif
 
