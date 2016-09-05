@@ -35,4 +35,8 @@ phys_addr_t determine_mp_bootpg(void);
 void secondary_boot_func(void);
 int is_core_online(u64 cpu_id);
 #endif
+
+#define IH_ARCH_ARM		2	/* ARM */
+#define IH_ARCH_ARM64		22	/* ARM64 */
+
 #endif /* _FSL_LAYERSCAPE_MP_H */
