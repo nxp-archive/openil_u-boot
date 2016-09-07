@@ -84,6 +84,9 @@
 	defined(CONFIG_MPC83xx)
 #if !defined(CONFIG_FSL_IFC)
 #define CONFIG_FSL_LBC
+#ifndef CONFIG_SYS_FSL_LBC_CLK_DIV
+#define CONFIG_SYS_FSL_LBC_CLK_DIV	1
+#endif
 #endif
 #endif
 

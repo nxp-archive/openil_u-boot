@@ -385,6 +385,7 @@
 #define CONFIG_FSL_CORENET		/* Freescale CoreNet platform */
 #define CONFIG_MAX_CPUS			4
 #define CONFIG_SYS_FSL_NUM_CC_PLLS	2
+#define CONFIG_SYS_FSL_LBC_CLK_DIV	2
 #define CONFIG_SYS_FSL_NUM_LAWS		32
 #define CONFIG_SYS_FSL_SEC_COMPAT	4
 #define CONFIG_SYS_NUM_FMAN		1
@@ -423,6 +424,7 @@
 #define CONFIG_FSL_CORENET		/* Freescale CoreNet platform */
 #define CONFIG_MAX_CPUS			4
 #define CONFIG_SYS_FSL_NUM_CC_PLLS	2
+#define CONFIG_SYS_FSL_LBC_CLK_DIV	2
 #define CONFIG_SYS_FSL_NUM_LAWS		32
 #define CONFIG_SYS_FSL_SEC_COMPAT	4
 #define CONFIG_SYS_NUM_FMAN		1
@@ -463,6 +465,7 @@
 #define CONFIG_FSL_CORENET		/* Freescale CoreNet platform */
 #define CONFIG_MAX_CPUS			8
 #define CONFIG_SYS_FSL_NUM_CC_PLLS	4
+#define CONFIG_SYS_FSL_LBC_CLK_DIV	2
 #define CONFIG_SYS_FSL_NUM_LAWS		32
 #define CONFIG_SYS_FSL_SEC_COMPAT	4
 #define CONFIG_SYS_NUM_FMAN		2
@@ -515,6 +518,7 @@
 #define CONFIG_FSL_CORENET		/* Freescale CoreNet platform */
 #define CONFIG_MAX_CPUS			2
 #define CONFIG_SYS_FSL_NUM_CC_PLLS	2
+#define CONFIG_SYS_FSL_LBC_CLK_DIV	2
 #define CONFIG_SYS_FSL_NUM_LAWS		32
 #define CONFIG_SYS_FSL_SEC_COMPAT	4
 #define CONFIG_SYS_NUM_FMAN		1
@@ -551,6 +555,7 @@
 #define CONFIG_FSL_CORENET		/* Freescale CoreNet platform */
 #define CONFIG_MAX_CPUS			4
 #define CONFIG_SYS_FSL_NUM_CC_PLLS	3
+#define CONFIG_SYS_FSL_LBC_CLK_DIV	2
 #define CONFIG_SYS_FSL_NUM_LAWS		32
 #define CONFIG_SYS_FSL_SEC_COMPAT	4
 #define CONFIG_SYS_NUM_FMAN		2
