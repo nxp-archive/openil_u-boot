@@ -58,6 +58,10 @@ unsigned int get_soc_major_rev(void)
 	return major;
 }
 
+void s_init(void)
+{
+}
+
 int arch_soc_init(void)
 {
 	struct ccsr_scfg *scfg = (struct ccsr_scfg *)CONFIG_SYS_FSL_SCFG_ADDR;
