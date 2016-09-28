@@ -25,7 +25,8 @@ DECLARE_GLOBAL_DATA_PTR;
 #define TX_BUFFER_SIZE		0x40
 #endif
 
-#define OFFSET_BITS_MASK	GENMASK(23, 0)
+#define OFFSET_BITS_MASK	((FSL_QSPI_FLASH_SIZE  > SZ_16M) ? \
+					GENMASK(27, 0) :  GENMASK(23, 0))
 
 #define FLASH_STATUS_WEL	0x02
 
@@ -760,7 +761,10 @@ int qspi_xfer(struct fsl_qspi_priv *priv, unsigned int bitlen,
 	if (dout) {
 		if (flags & SPI_XFER_BEGIN) {
 			priv->cur_seqid = *(u8 *)dout;
-			memcpy(&txbuf, dout, 4);
+			if (FSL_QSPI_FLASH_SIZE  > SZ_16M && bytes > 4)
+				memcpy(&txbuf, dout + 1, 4);
+			else
+				memcpy(&txbuf, dout, 4);
 		}
 
 		if (flags == SPI_XFER_END) {
