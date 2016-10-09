@@ -88,7 +88,7 @@ int fsl_dp_resume(void)
 	dp_resume_prepare();
 
 	/* Get the entry address and jump to kernel */
-	start_addr = in_le32(&scfg->sparecr[1]);
+	start_addr = in_le32(&scfg->sparecr[3]);
 	debug("Entry address is 0x%08x\n", start_addr);
 	kernel_resume = (void (*)(void))start_addr;
 	secure_ram_addr(_do_nonsec_entry)(kernel_resume, 0, 0, 0);
