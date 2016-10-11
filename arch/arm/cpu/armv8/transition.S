@@ -12,12 +12,12 @@
 
 ENTRY(armv8_switch_to_el2)
 	switch_el x5, 1f, 0f, 0f
-0:	ret
+0:	br x3
 1:	armv8_switch_to_el2_m x3, x4, x5
 ENDPROC(armv8_switch_to_el2)
 
 ENTRY(armv8_switch_to_el1)
 	switch_el x5, 0f, 1f, 0f
-0:	ret
+0:	br x3
 1:	armv8_switch_to_el1_m x3, x4, x5
 ENDPROC(armv8_switch_to_el1)
