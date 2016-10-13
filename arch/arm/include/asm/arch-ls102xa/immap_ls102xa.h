@@ -162,6 +162,10 @@ struct ccsr_gur {
 #define SCFG_SNPCNFGCR_EDMA_SNP		0x00020000
 #define SCFG_ENDIANCR_LE		0x80000000
 
+#define SCFG_BASE			0x01570000
+#define SCFG_USB3PRM1CR			0x070
+#define USB_TXVREFTUNE			0x9
+
 /* Supplemental Configuration Unit */
 struct ccsr_scfg {
 	u32 dpslpcr;
