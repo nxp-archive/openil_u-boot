@@ -47,4 +47,12 @@ config PCI_TEGRA
 	  with a total of 5 lanes. Some boards require this for Ethernet
 	  support to work (e.g. beaver, jetson-tk1).
 
+config PCIE_LAYERSCAPE
+	bool "Layerscape PCIe support"
+	depends on DM_PCI
+	help
+	  Support Layerscape PCIe. The Layerscape SoC may have one or several
+	  PCIe controllers. The PCIe may works in RC or EP mode according to
+	  RCW setting.
+
 endmenu
