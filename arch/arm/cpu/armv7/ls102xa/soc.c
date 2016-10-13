@@ -77,6 +77,21 @@ static void erratum_a009798(void)
 #endif /* CONFIG_SYS_FSL_ERRATUM_A009798 */
 }
 
+static void erratum_a008997(void)
+{
+#ifdef CONFIG_SYS_FSL_ERRATUM_A008997
+	u32 __iomem *usb_phy = (u32 __iomem *)USB_PHY_BASE;
+	writew(USB_PHY_TX_OVRD_DRV_LO_VAL,
+	       (u8 *)(usb_phy) + USB_PHY_TX_OVRD_DRV_LO);
+	writew(USB_PHY_MPLL_OVRD_IN_HI_VAL,
+	       (u8 *)(usb_phy) + USB_PHY_MPLL_OVRD_IN_HI);
+	writew(USB_PHY_LEVEL_OVRD_IN_VAL,
+	       (u8 *)(usb_phy) + USB_PHY_LEVEL_OVRD_IN);
+	writew(USB_PHY_TX_OVRD_IN_HI_VAL,
+	       (u8 *)(usb_phy) + USB_PHY_TX_OVRD_IN_HI);
+#endif /* CONFIG_SYS_FSL_ERRATUM_A008997 */
+}
+
 void s_init(void)
 {
 }
@@ -149,6 +164,7 @@ int arch_soc_init(void)
 	/* Erratum */
 	erratum_a009008();
 	erratum_a009798();
+	erratum_a008997();
 	return 0;
 }
 
