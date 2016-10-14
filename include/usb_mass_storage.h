@@ -28,6 +28,6 @@ struct ums {
 
 int fsg_init(struct ums *ums_devs, int count);
 void fsg_cleanup(void);
-int fsg_main_thread(void *);
+int fsg_main_thread(unsigned int);
 int fsg_add(struct usb_configuration *c);
 #endif /* __USB_MASS_STORAGE_H__ */

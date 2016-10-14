@@ -19,6 +19,10 @@
 #ifdef CONFIG_CHAIN_OF_TRUST
 #include <fsl_validate.h>
 #endif
+#include <usb.h>
+#include <dwc3-uboot.h>
+#include <linux/usb/xhci-fsl.h>
+
 
 DECLARE_GLOBAL_DATA_PTR;
 
@@ -329,9 +333,18 @@ void fsl_lsch2_early_init_f(void)
 #if defined(CONFIG_FSL_QSPI) && !defined(CONFIG_QSPI_BOOT)
 	out_be32(&scfg->qspi_cfg, SCFG_QSPI_CLKSEL);
 #endif
+	/* Make SEC and USB reads and writes snoopable */
+#if defined(CONFIG_LS1043A)
+	setbits_be32(&scfg->snpcnfgcr, SCFG_SNPCNFGCR_SECRDSNP |
+		     SCFG_SNPCNFGCR_SECWRSNP | SCFG_SNPCNFGCR_USB1RDSNP |
+		     SCFG_SNPCNFGCR_USB1WRSNP | SCFG_SNPCNFGCR_USB2RDSNP |
+		     SCFG_SNPCNFGCR_USB2WRSNP | SCFG_SNPCNFGCR_USB3RDSNP |
+		     SCFG_SNPCNFGCR_USB3WRSNP);
+#else
 	/* Make SEC reads and writes snoopable */
 	setbits_be32(&scfg->snpcnfgcr, SCFG_SNPCNFGCR_SECRDSNP |
 		     SCFG_SNPCNFGCR_SECWRSNP);
+#endif
 
 	/*
 	 * Enable snoop requests and DVM message requests for
@@ -347,6 +360,86 @@ void fsl_lsch2_early_init_f(void)
 	erratum_a010539();
 }
 #endif
+
+#ifdef CONFIG_USB_DWC3
+
+#if defined(CONFIG_LS1043A)
+static struct dwc3_device dwc3_device_data0 = {
+	.maximum_speed = USB_SPEED_HIGH,
+	.base = CONFIG_SYS_FSL_XHCI_USB1_ADDR,
+	.dr_mode = USB_DR_MODE_PERIPHERAL,
+	.index = 0,
+};
+
+static struct dwc3_device dwc3_device_data1 = {
+	.maximum_speed = USB_SPEED_HIGH,
+	.base = CONFIG_SYS_FSL_XHCI_USB2_ADDR,
+	.dr_mode = USB_DR_MODE_PERIPHERAL,
+	.index = 1,
+};
+
+static struct dwc3_device dwc3_device_data2 = {
+	.maximum_speed = USB_SPEED_HIGH,
+	.base = CONFIG_SYS_FSL_XHCI_USB3_ADDR,
+	.dr_mode = USB_DR_MODE_PERIPHERAL,
+	.index = 2,
+};
+
+int usb_gadget_handle_interrupts(int index)
+{
+	dwc3_uboot_handle_interrupt(index);
+	return 0;
+}
+#endif
+
+int board_usb_init(int index, enum usb_init_type init)
+{
+	switch (init) {
+	case USB_INIT_DEVICE:
+		switch (index) {
+#if defined(CONFIG_LS1043A)
+		case 0:
+			dwc3_uboot_init(&dwc3_device_data0);
+			break;
+		case 1:
+			dwc3_uboot_init(&dwc3_device_data1);
+			break;
+		case 2:
+			dwc3_uboot_init(&dwc3_device_data2);
+			break;
+#endif
+		default:
+			printf("Invalid Controller Index\n");
+			return -1;
+		}
+#if defined(CONFIG_LS1043A)
+		dwc3_core_incr_burst_enable(index, 0xf, 0xf);
+		dwc3_core_set_snooping(index, true);
+#endif
+		break;
+	default:
+		break;
+	}
+
+	return 0;
+}
+
+int board_usb_cleanup(int index, enum usb_init_type init)
+{
+	switch (init) {
+	case USB_INIT_DEVICE:
+#if defined(CONFIG_LS1043A)
+		dwc3_uboot_exit(index);
+#endif
+		break;
+	default:
+		break;
+	}
+	return 0;
+}
+#endif
+
+
 
 #ifdef CONFIG_BOARD_LATE_INIT
 int board_late_init(void)
