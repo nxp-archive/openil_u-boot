@@ -94,12 +94,16 @@ enum spi_nor_option_flags {
 #define CMD_READ_EVCR			0x65
 
 /* Bank addr access commands */
-#ifdef CONFIG_SPI_FLASH_BAR
 # define CMD_BANKADDR_BRWR		0x17
 # define CMD_BANKADDR_BRRD		0x16
+#ifdef CONFIG_SPI_FLASH_BAR
 # define CMD_EXTNADDR_WREAR		0xC5
 # define CMD_EXTNADDR_RDEAR		0xC8
 #endif
+
+/* Used for Micron, Macronix and Winbond flashes */
+#define	CMD_ENTER_4B_ADDR		0xB7
+#define	CMD_EXIT_4B_ADDR		0xE9
 
 /* Common status */
 #define STATUS_WIP			BIT(0)
@@ -227,6 +231,9 @@ int spi_flash_read_common(struct spi_flash *flash, const u8 *cmd,
 /* Flash read operation, support all possible read commands */
 int spi_flash_cmd_read_ops(struct spi_flash *flash, u32 offset,
 		size_t len, void *data);
+
+int spi_flash_cmd_4B_addr_switch(struct spi_flash *flash,
+		int enable, u8 idcode0);
 
 #ifdef CONFIG_SPI_FLASH_MTD
 int spi_flash_mtd_register(struct spi_flash *flash);
