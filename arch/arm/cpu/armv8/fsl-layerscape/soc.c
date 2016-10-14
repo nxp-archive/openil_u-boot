@@ -64,6 +64,33 @@ static void erratum_a009798(void)
 #endif /* CONFIG_SYS_FSL_ERRATUM_A009798 */
 }
 
+static void erratum_a008997(void)
+{
+#ifdef CONFIG_SYS_FSL_ERRATUM_A008997
+#if defined(CONFIG_LS1043A) || defined(CONFIG_LS1046A)
+	u32 __iomem *scfg = (u32 __iomem *)SCFG_BASE;
+	u32 val = scfg_in32(scfg + SCFG_USB3PRM2CR_USB1 / 4);
+	val &= ~(0x7F << 9);
+	scfg_out32(scfg + SCFG_USB3PRM2CR_USB1 / 4,
+		   val | (USB_PCSTXSWINGFULL << 9));
+	val = scfg_in32(scfg + SCFG_USB3PRM2CR_USB2 / 4);
+	val &= ~(0x7F << 9);
+	scfg_out32(scfg + SCFG_USB3PRM2CR_USB2 / 4,
+		   val | (USB_PCSTXSWINGFULL << 9));
+	val = scfg_in32(scfg + SCFG_USB3PRM2CR_USB3 / 4);
+	val &= ~(0x7F << 9);
+	scfg_out32(scfg + SCFG_USB3PRM2CR_USB3 / 4,
+		   val | (USB_PCSTXSWINGFULL << 9));
+#elif defined(CONFIG_LS2080A) || defined(CONFIG_LS2085A)
+	u32 __iomem *scfg = (u32 __iomem *)SCFG_BASE;
+	u32 val = scfg_in32(scfg + SCFG_USB3PRM2CR / 4);
+	val &= ~(0x7F << 9);
+	scfg_out32(scfg + SCFG_USB3PRM2CR / 4,
+		   val | (USB_PCSTXSWINGFULL << 9));
+#endif
+#endif /* CONFIG_SYS_FSL_ERRATUM_A008997 */
+}
+
 bool soc_has_dp_ddr(void)
 {
 	struct ccsr_gur __iomem *gur = (void *)(CONFIG_SYS_FSL_GUTS_ADDR);
@@ -231,6 +258,7 @@ void fsl_lsch3_early_init_f(void)
 	erratum_a008336();
 	erratum_a009008();
 	erratum_a009798();
+	erratum_a008997();
 #ifdef CONFIG_CHAIN_OF_TRUST
 	/* In case of Secure Boot, the IBR configures the SMMU
 	* to allow only Secure transactions.
@@ -391,6 +419,7 @@ void fsl_lsch2_early_init_f(void)
 	erratum_a010539();
 	erratum_a009008();
 	erratum_a009798();
+	erratum_a008997();
 }
 #endif
 
