@@ -91,6 +91,47 @@ static void erratum_a008997(void)
 #endif /* CONFIG_SYS_FSL_ERRATUM_A008997 */
 }
 
+static void erratum_a009007(void)
+{
+/* TODO:implement the out_be16 instead of writew which is taking
+little endian style */
+#if defined(CONFIG_LS1043A) || defined(CONFIG_LS1046A)
+	u32 __iomem *usb_phy = (u32 __iomem *)USB_PHY1;
+	writew(USB_PHY_RX_EQ_VAL_1, (u8 *)(usb_phy) + USB_PHY_RX_OVRD_IN_HI);
+	writew(USB_PHY_RX_EQ_VAL_2, (u8 *)(usb_phy) + USB_PHY_RX_OVRD_IN_HI);
+	writew(USB_PHY_RX_EQ_VAL_3, (u8 *)(usb_phy) + USB_PHY_RX_OVRD_IN_HI);
+	writew(USB_PHY_RX_EQ_VAL_4, (u8 *)(usb_phy) + USB_PHY_RX_OVRD_IN_HI);
+	usb_phy = (u32 __iomem *)USB_PHY2;
+	writew(USB_PHY_RX_EQ_VAL_1, (u8 *)(usb_phy) + USB_PHY_RX_OVRD_IN_HI);
+	writew(USB_PHY_RX_EQ_VAL_2, (u8 *)(usb_phy) + USB_PHY_RX_OVRD_IN_HI);
+	writew(USB_PHY_RX_EQ_VAL_3, (u8 *)(usb_phy) + USB_PHY_RX_OVRD_IN_HI);
+	writew(USB_PHY_RX_EQ_VAL_4, (u8 *)(usb_phy) + USB_PHY_RX_OVRD_IN_HI);
+	usb_phy = (u32 __iomem *)USB_PHY3;
+	writew(USB_PHY_RX_EQ_VAL_1, (u8 *)(usb_phy) + USB_PHY_RX_OVRD_IN_HI);
+	writew(USB_PHY_RX_EQ_VAL_2, (u8 *)(usb_phy) + USB_PHY_RX_OVRD_IN_HI);
+	writew(USB_PHY_RX_EQ_VAL_3, (u8 *)(usb_phy) + USB_PHY_RX_OVRD_IN_HI);
+	writew(USB_PHY_RX_EQ_VAL_4, (u8 *)(usb_phy) + USB_PHY_RX_OVRD_IN_HI);
+#elif defined(CONFIG_LS2080A) || defined(CONFIG_LS2085A)
+	u32 __iomem *dcsr = (u32 __iomem *)DCSR_BASE;
+	writew(USB_PHY_RX_EQ_VAL_1,
+	       (u8 *)(dcsr) + DCSR_USB_PHY1 + DCSR_USB_PHY_RX_OVRD_IN_HI);
+	writew(USB_PHY_RX_EQ_VAL_2,
+	       (u8 *)(dcsr) + DCSR_USB_PHY1 + DCSR_USB_PHY_RX_OVRD_IN_HI);
+	writew(USB_PHY_RX_EQ_VAL_3,
+	       (u8 *)(dcsr) + DCSR_USB_PHY1 + DCSR_USB_PHY_RX_OVRD_IN_HI);
+	writew(USB_PHY_RX_EQ_VAL_4,
+	       (u8 *)(dcsr) + DCSR_USB_PHY1 + DCSR_USB_PHY_RX_OVRD_IN_HI);
+	writew(USB_PHY_RX_EQ_VAL_1,
+	       (u8 *)(dcsr) + DCSR_USB_PHY2 + DCSR_USB_PHY_RX_OVRD_IN_HI);
+	writew(USB_PHY_RX_EQ_VAL_2,
+	       (u8 *)(dcsr) + DCSR_USB_PHY2 + DCSR_USB_PHY_RX_OVRD_IN_HI);
+	writew(USB_PHY_RX_EQ_VAL_3,
+	       (u8 *)(dcsr) + DCSR_USB_PHY2 + DCSR_USB_PHY_RX_OVRD_IN_HI);
+	writew(USB_PHY_RX_EQ_VAL_4,
+	       (u8 *)(dcsr) + DCSR_USB_PHY2 + DCSR_USB_PHY_RX_OVRD_IN_HI);
+#endif /* CONFIG_SYS_FSL_ERRATUM_A009007 */
+}
+
 bool soc_has_dp_ddr(void)
 {
 	struct ccsr_gur __iomem *gur = (void *)(CONFIG_SYS_FSL_GUTS_ADDR);
@@ -259,6 +300,7 @@ void fsl_lsch3_early_init_f(void)
 	erratum_a009008();
 	erratum_a009798();
 	erratum_a008997();
+	erratum_a009007();
 #ifdef CONFIG_CHAIN_OF_TRUST
 	/* In case of Secure Boot, the IBR configures the SMMU
 	* to allow only Secure transactions.
@@ -420,6 +462,7 @@ void fsl_lsch2_early_init_f(void)
 	erratum_a009008();
 	erratum_a009798();
 	erratum_a008997();
+	erratum_a009007();
 }
 #endif
 
