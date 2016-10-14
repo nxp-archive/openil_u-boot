@@ -17,6 +17,9 @@
 #include <fsl_usb.h>
 #include <fdt_support.h>
 #include <dm.h>
+#ifdef CONFIG_USB_ULPI
+#include <usb/ulpi.h>
+#endif
 
 #include "ehci.h"
 
@@ -201,6 +204,10 @@ static int ehci_fsl_init(int index, struct usb_ehci *ehci,
 	size_t len;
 	char current_usb_controller[5];
 #endif
+#ifdef CONFIG_USB_ULPI
+	int ret;
+	struct ulpi_viewport ulpi_vp;
+#endif
 #ifdef CONFIG_SYS_FSL_USB_INTERNAL_UTMI_PHY
 	char usb_phy[5];
 
@@ -268,6 +275,20 @@ static int ehci_fsl_init(int index, struct usb_ehci *ehci,
 		udelay(1000); /* delay required for PHY Clk to appear */
 		if (!usb_phy_clk_valid(ehci))
 			return -EINVAL;
+
+#ifdef CONFIG_USB_ULPI
+		ulpi_vp.viewport_addr = (u32)&ehci->ulpi_viewpoint;
+		ulpi_vp.port_num = 0;
+
+		ret = ulpi_init(&ulpi_vp);
+		if (ret) {
+			puts("NXP ULPI viewport init failed\n");
+			return ret;
+		}
+
+		ulpi_set_vbus(&ulpi_vp, 1, 1);
+		ulpi_set_vbus_indicator(&ulpi_vp, 1, 1, 1);
+#endif
 		out_le32(&(hcor)->or_portsc[0], PORT_PTS_ULPI);
 	}
 
