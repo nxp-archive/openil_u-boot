@@ -162,6 +162,25 @@ struct ccsr_gur {
 #define SCFG_SNPCNFGCR_EDMA_SNP		0x00020000
 #define SCFG_ENDIANCR_LE		0x80000000
 
+#define SCFG_BASE			0x01570000
+#define SCFG_USB3PRM1CR			0x070
+#define USB_TXVREFTUNE			0x9
+#define USB_SQRXTUNE			0xFC7FFFFF
+#define USB_PHY_BASE			0x08510000
+#define USB_PHY_TX_OVRD_DRV_LO		0x2004
+#define USB_PHY_MPLL_OVRD_IN_HI		0x0024
+#define USB_PHY_LEVEL_OVRD_IN		0x002a
+#define USB_PHY_TX_OVRD_IN_HI		0x2002
+#define USB_PHY_RX_OVRD_IN_HI		0x200c
+#define USB_PHY_TX_OVRD_DRV_LO_VAL	0x784C
+#define USB_PHY_MPLL_OVRD_IN_HI_VAL	0x0080
+#define USB_PHY_LEVEL_OVRD_IN_VAL	0xA9A5
+#define USB_PHY_TX_OVRD_IN_HI_VAL	0x0003
+#define USB_PHY_RX_EQ_VAL_1		0x0000
+#define USB_PHY_RX_EQ_VAL_2		0x8000
+#define USB_PHY_RX_EQ_VAL_3		0x8004
+#define USB_PHY_RX_EQ_VAL_4		0x800C
+
 /* Supplemental Configuration Unit */
 struct ccsr_scfg {
 	u32 dpslpcr;

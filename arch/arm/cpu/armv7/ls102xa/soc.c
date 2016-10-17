@@ -58,6 +58,51 @@ unsigned int get_soc_major_rev(void)
 	return major;
 }
 
+static void erratum_a009008(void)
+{
+#ifdef CONFIG_SYS_FSL_ERRATUM_A009008
+	u32 __iomem *scfg = (u32 __iomem *)SCFG_BASE;
+	u32 val = in_be32(scfg + SCFG_USB3PRM1CR / 4);
+	val &= ~(0xF << 6);
+	out_be32(scfg + SCFG_USB3PRM1CR / 4, val|(USB_TXVREFTUNE << 6));
+#endif /* CONFIG_SYS_FSL_ERRATUM_A009008 */
+}
+
+static void erratum_a009798(void)
+{
+#ifdef CONFIG_SYS_FSL_ERRATUM_A009798
+	u32 __iomem *scfg = (u32 __iomem *)SCFG_BASE;
+	u32 val = in_be32(scfg + SCFG_USB3PRM1CR / 4);
+	out_be32(scfg + SCFG_USB3PRM1CR / 4, val & USB_SQRXTUNE);
+#endif /* CONFIG_SYS_FSL_ERRATUM_A009798 */
+}
+
+static void erratum_a008997(void)
+{
+#ifdef CONFIG_SYS_FSL_ERRATUM_A008997
+	u32 __iomem *usb_phy = (u32 __iomem *)USB_PHY_BASE;
+	writew(USB_PHY_TX_OVRD_DRV_LO_VAL,
+	       (u8 *)(usb_phy) + USB_PHY_TX_OVRD_DRV_LO);
+	writew(USB_PHY_MPLL_OVRD_IN_HI_VAL,
+	       (u8 *)(usb_phy) + USB_PHY_MPLL_OVRD_IN_HI);
+	writew(USB_PHY_LEVEL_OVRD_IN_VAL,
+	       (u8 *)(usb_phy) + USB_PHY_LEVEL_OVRD_IN);
+	writew(USB_PHY_TX_OVRD_IN_HI_VAL,
+	       (u8 *)(usb_phy) + USB_PHY_TX_OVRD_IN_HI);
+#endif /* CONFIG_SYS_FSL_ERRATUM_A008997 */
+}
+
+static void erratum_a009007(void)
+{
+#ifdef CONFIG_SYS_FSL_ERRATUM_A009007
+	u32 __iomem *usb_phy = (u32 __iomem *)USB_PHY_BASE;
+	writew(USB_PHY_RX_EQ_VAL_1, (u8 *)(usb_phy) + USB_PHY_RX_OVRD_IN_HI);
+	writew(USB_PHY_RX_EQ_VAL_2, (u8 *)(usb_phy) + USB_PHY_RX_OVRD_IN_HI);
+	writew(USB_PHY_RX_EQ_VAL_3, (u8 *)(usb_phy) + USB_PHY_RX_OVRD_IN_HI);
+	writew(USB_PHY_RX_EQ_VAL_4, (u8 *)(usb_phy) + USB_PHY_RX_OVRD_IN_HI);
+#endif /* CONFIG_SYS_FSL_ERRATUM_A009007 */
+}
+
 void s_init(void)
 {
 }
@@ -127,6 +172,11 @@ int arch_soc_init(void)
 	 */
 	out_be32(&scfg->eddrtqcfg, 0x63b20042);
 
+	/* Erratum */
+	erratum_a009008();
+	erratum_a009798();
+	erratum_a008997();
+	erratum_a009007();
 	return 0;
 }
 
