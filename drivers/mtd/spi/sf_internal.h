@@ -46,6 +46,7 @@ enum {
 	E_FSR		= BIT(2),
 	SST_WR		= BIT(3),
 	WR_QPP		= BIT(4),
+	ADDR_4B		= BIT(8),
 };
 
 enum spi_nor_option_flags {
@@ -54,7 +55,8 @@ enum spi_nor_option_flags {
 };
 
 #define SPI_FLASH_3B_ADDR_LEN		3
-#define SPI_FLASH_CMD_LEN		(1 + SPI_FLASH_3B_ADDR_LEN)
+#define SPI_FLASH_4B_ADDR_LEN		4
+#define SPI_FLASH_CMD_MAX_LEN		(1 + SPI_FLASH_4B_ADDR_LEN)
 #define SPI_FLASH_16MB_BOUN		0x1000000
 
 /* CFI Manufacture ID's */
