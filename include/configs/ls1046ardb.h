@@ -9,7 +9,6 @@
 
 #include "ls1046a_common.h"
 
-#define CONFIG_FSL_LS_PPA
 #if defined(CONFIG_FSL_LS_PPA)
 #define CONFIG_ARMV8_PSCI
 #define CONFIG_ARMV8_SEC_FIRMWARE_SUPPORT

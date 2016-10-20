@@ -22,6 +22,16 @@ phys_addr_t determine_mp_bootpg(void)
 	return (phys_addr_t)&secondary_boot_code;
 }
 
+void update_os_arch_secondary_cores(uint8_t os_arch)
+{
+	u64 *table = get_spin_tbl_addr();
+	int i;
+
+	for (i = 1; i < CONFIG_MAX_CPUS; i++)
+		table[i * WORDS_PER_SPIN_TABLE_ENTRY +
+			SPIN_TABLE_ELEM_OS_ARCH_IDX] = os_arch;
+}
+
 int fsl_layerscape_wake_seconday_cores(void)
 {
 	struct ccsr_gur __iomem *gur = (void *)(CONFIG_SYS_FSL_GUTS_ADDR);
