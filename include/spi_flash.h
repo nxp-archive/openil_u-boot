@@ -83,6 +83,7 @@ struct spi_flash {
 	u8 read_cmd;
 	u8 write_cmd;
 	u8 dummy_byte;
+	u8 cmd_len;
 
 	void *memory_map;
 

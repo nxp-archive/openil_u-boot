@@ -25,7 +25,8 @@ DECLARE_GLOBAL_DATA_PTR;
 #define TX_BUFFER_SIZE		0x40
 #endif
 
-#define OFFSET_BITS_MASK	GENMASK(23, 0)
+#define OFFSET_BITS_MASK	((FSL_QSPI_FLASH_SIZE  > SZ_16M) ? \
+					GENMASK(27, 0) :  GENMASK(23, 0))
 
 #define FLASH_STATUS_WEL	0x02
 
@@ -440,13 +441,23 @@ static void qspi_enable_ddr_mode(struct fsl_qspi_priv *priv)
 static void qspi_init_ahb_read(struct fsl_qspi_priv *priv)
 {
 	struct fsl_qspi_regs *regs = priv->regs;
+	int rx_size = 0x80;
 
 	/* AHB configuration for access buffer 0/1/2 .*/
 	qspi_write32(priv->flags, &regs->buf0cr, QSPI_BUFXCR_INVALID_MSTRID);
 	qspi_write32(priv->flags, &regs->buf1cr, QSPI_BUFXCR_INVALID_MSTRID);
 	qspi_write32(priv->flags, &regs->buf2cr, QSPI_BUFXCR_INVALID_MSTRID);
+
+#ifdef CONFIG_SYS_FSL_ERRATUM_A009282
+	/*A-009282: QuadSPI data pre-fetch can result in incorrect data
+	 *Workaround: Keep the read data size to 64 bits (8 Bytes), which
+	 *disables the prefetch on the AHB buffer,and prevents this issue
+	 *from occurring.
+	*/
+	rx_size = 0x1;
+#endif
 	qspi_write32(priv->flags, &regs->buf3cr, QSPI_BUF3CR_ALLMST_MASK |
-		     (0x80 << QSPI_BUF3CR_ADATSZ_SHIFT));
+		     (rx_size << QSPI_BUF3CR_ADATSZ_SHIFT));
 
 	/* We only use the buffer3 */
 	qspi_write32(priv->flags, &regs->buf0ind, 0);
@@ -760,7 +771,10 @@ int qspi_xfer(struct fsl_qspi_priv *priv, unsigned int bitlen,
 	if (dout) {
 		if (flags & SPI_XFER_BEGIN) {
 			priv->cur_seqid = *(u8 *)dout;
-			memcpy(&txbuf, dout, 4);
+			if (FSL_QSPI_FLASH_SIZE  > SZ_16M && bytes > 4)
+				memcpy(&txbuf, dout + 1, 4);
+			else
+				memcpy(&txbuf, dout, 4);
 		}
 
 		if (flags == SPI_XFER_END) {
