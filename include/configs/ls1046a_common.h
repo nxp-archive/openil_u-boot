@@ -118,6 +118,12 @@
 #define CONFIG_SYS_I2C_MXC_I2C3
 #define CONFIG_SYS_I2C_MXC_I2C4
 
+#ifdef CONFIG_PCI
+#define CONFIG_PCI_PNP
+#define CONFIG_PCI_SCAN_SHOW
+#define CONFIG_CMD_PCI
+#endif
+
 /* Command line configuration */
 #define CONFIG_CMD_ENV
 

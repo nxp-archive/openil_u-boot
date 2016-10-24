@@ -350,6 +350,12 @@ unsigned long get_board_ddr_clk(void);
 
 #define CONFIG_FSL_MEMAC
 
+#ifdef CONFIG_PCI
+#define CONFIG_PCI_PNP
+#define CONFIG_PCI_SCAN_SHOW
+#define CONFIG_CMD_PCI
+#endif
+
 /*  MMC  */
 #define CONFIG_MMC
 #ifdef CONFIG_MMC

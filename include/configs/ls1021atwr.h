@@ -394,6 +394,11 @@
 
 /* PCIe */
 #define FSL_PCIE_COMPAT "fsl,ls1021a-pcie"
+#ifdef CONFIG_PCI
+#define CONFIG_PCI_PNP
+#define CONFIG_PCI_SCAN_SHOW
+#define CONFIG_CMD_PCI
+#endif
 
 #define CONFIG_CMDLINE_TAG
 #define CONFIG_CMDLINE_EDITING
