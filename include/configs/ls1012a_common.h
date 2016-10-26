@@ -64,6 +64,7 @@
 
 #define FSL_QSPI_FLASH_SIZE		SZ_64M
 #define FSL_QSPI_FLASH_NUM		2
+#define CONFIG_QSPI_AHB_INIT
 
 /*
  * Environment
