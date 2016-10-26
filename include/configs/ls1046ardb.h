@@ -238,4 +238,6 @@
 			"7e800000.flash:16m(nand_uboot)," \
 			"48m(nand_kernel),448m(nand_free)"
 
+#include <asm/fsl_secure_boot.h>
+
 #endif /* __LS1046ARDB_H__ */
