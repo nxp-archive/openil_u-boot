@@ -181,11 +181,6 @@ phys_addr_t pci_hose_bus_to_phys(struct pci_controller *hose,
 		return phys_addr;
 	}
 
-#ifdef CONFIG_DM_PCI
-	/* The root controller has the region information */
-	hose = pci_bus_to_hose(0);
-#endif
-
 	/*
 	 * if PCI_REGION_MEM is set we do a two pass search with preference
 	 * on matches that don't have PCI_REGION_SYS_MEMORY set
@@ -247,11 +242,6 @@ pci_addr_t pci_hose_phys_to_bus(struct pci_controller *hose,
 		puts("pci_hose_phys_to_bus: invalid hose\n");
 		return bus_addr;
 	}
-
-#ifdef CONFIG_DM_PCI
-	/* The root controller has the region information */
-	hose = pci_bus_to_hose(0);
-#endif
 
 	/*
 	 * if PCI_REGION_MEM is set we do a two pass search with preference

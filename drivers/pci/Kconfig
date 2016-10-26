@@ -1,5 +1,13 @@
 menu "PCI"
 
+config PCI
+	bool "PCI support"
+	help
+	  Enable support for PCI (Peripheral Interconnect Bus), a type of bus
+	  used on some devices to allow the CPU to communicate with its
+	  peripherals. This also enables PCI Express (Peripheral Component
+	  Interconnect Express) bus.
+
 config DM_PCI
 	bool "Enable driver mode for PCI"
 	depends on DM
@@ -38,5 +46,13 @@ config PCI_TEGRA
 	  3 root ports with a total of 6 lanes and Tegra124 has 2 root ports
 	  with a total of 5 lanes. Some boards require this for Ethernet
 	  support to work (e.g. beaver, jetson-tk1).
+
+config PCIE_LAYERSCAPE
+	bool "Layerscape PCIe support"
+	depends on DM_PCI
+	help
+	  Support Layerscape PCIe. The Layerscape SoC may have one or several
+	  PCIe controllers. The PCIe may works in RC or EP mode according to
+	  RCW setting.
 
 endmenu

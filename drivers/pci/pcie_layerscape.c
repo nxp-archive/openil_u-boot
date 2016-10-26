@@ -11,10 +11,13 @@
 #include <asm/io.h>
 #include <errno.h>
 #include <malloc.h>
+#include <dm.h>
 #ifndef CONFIG_LS102XA
 #include <asm/arch/fdt.h>
 #include <asm/arch/soc.h>
 #endif
+
+DECLARE_GLOBAL_DATA_PTR;
 
 #ifndef CONFIG_SYS_PCI_MEMORY_BUS
 #define CONFIG_SYS_PCI_MEMORY_BUS CONFIG_SYS_SDRAM_BASE
@@ -40,6 +43,7 @@
 #define PCIE_ATU_REGION_INDEX1		(0x1 << 0)
 #define PCIE_ATU_REGION_INDEX2		(0x2 << 0)
 #define PCIE_ATU_REGION_INDEX3		(0x3 << 0)
+#define PCIE_ATU_REGION_NUM		6
 #define PCIE_ATU_CR1			0x904
 #define PCIE_ATU_TYPE_MEM		(0x0 << 0)
 #define PCIE_ATU_TYPE_IO		(0x2 << 0)
@@ -58,6 +62,9 @@
 #define PCIE_ATU_FUNC(x)		(((x) & 0x7) << 16)
 #define PCIE_ATU_UPPER_TARGET		0x91C
 
+/* DBI registers */
+#define PCIE_SRIOV		0x178
+#define PCIE_STRFMR1		0x71c /* Symbol Timer & Filter Mask Register1 */
 #define PCIE_DBI_RO_WR_EN	0x8bc
 
 #define PCIE_LINK_CAP		0x7c
@@ -88,329 +95,408 @@
 #define PCIE_BAR2_SIZE		(4 * 1024) /* 4K */
 #define PCIE_BAR4_SIZE		(1 * 1024 * 1024) /* 1M */
 
+/* LUT registers */
+#define PCIE_LUT_UDR(n)		(0x800 + (n) * 8)
+#define PCIE_LUT_LDR(n)		(0x804 + (n) * 8)
+#define PCIE_LUT_ENABLE		(1 << 31)
+#define PCIE_LUT_ENTRY_COUNT	32
+
+/* PF Controll registers */
+#define PCIE_PF_VF_CTRL		0x7F8
+#define PCIE_PF_DBG		0x7FC
+
+#define PCIE_SRDS_PRTCL(idx)	(PCIE1 + (idx))
+#define PCIE_SYS_BASE_ADDR	0x3400000
+#define PCIE_CCSR_SIZE		0x0100000
+
+/* CS2 */
+#define PCIE_CS2_OFFSET		0x1000 /* For PCIe without SR-IOV */
+
+#ifdef CONFIG_LS102XA
+/* LS1021a PCIE space */
+#define LS1021_PCIE_SPACE_OFFSET	0x4000000000ULL
+#define LS1021_PCIE_SPACE_SIZE		0x0800000000ULL
+
+/* LS1021a PEX1/2 Misc Ports Status Register */
+#define LS1021_PEXMSCPORTSR(pex_idx)	(0x94 + (pex_idx) * 4)
+#define LS1021_LTSSM_STATE_SHIFT	20
+#endif
+
 struct ls_pcie {
 	int idx;
+	struct list_head list;
+	struct udevice *bus;
+	struct fdt_resource dbi_res;
+	struct fdt_resource lut_res;
+	struct fdt_resource ctrl_res;
+	struct fdt_resource cfg_res;
 	void __iomem *dbi;
-	void __iomem *va_cfg0;
-	void __iomem *va_cfg1;
+	void __iomem *lut;
+	void __iomem *ctrl;
+	void __iomem *cfg0;
+	void __iomem *cfg1;
+	bool big_endian;
+	bool enabled;
 	int next_lut_index;
 	struct pci_controller hose;
 };
 
-struct ls_pcie_info {
-	unsigned long regs;
-	int pci_num;
-	u64 phys_base;
-	u64 cfg0_phys;
-	u64 cfg0_size;
-	u64 cfg1_phys;
-	u64 cfg1_size;
-	u64 mem_bus;
-	u64 mem_phys;
-	u64 mem_size;
-	u64 io_bus;
-	u64 io_phys;
-	u64 io_size;
-};
+static LIST_HEAD(ls_pcie_list);
 
-#define SET_LS_PCIE_INFO(x, num)			\
-{							\
-	x.regs = CONFIG_SYS_PCIE##num##_ADDR;		\
-	x.phys_base = CONFIG_SYS_PCIE##num##_PHYS_ADDR;	\
-	x.cfg0_phys = CONFIG_SYS_PCIE_CFG0_PHYS_OFF +	\
-		      CONFIG_SYS_PCIE##num##_PHYS_ADDR;	\
-	x.cfg0_size = CONFIG_SYS_PCIE_CFG0_SIZE;	\
-	x.cfg1_phys = CONFIG_SYS_PCIE_CFG1_PHYS_OFF +	\
-		      CONFIG_SYS_PCIE##num##_PHYS_ADDR;	\
-	x.cfg1_size = CONFIG_SYS_PCIE_CFG1_SIZE;	\
-	x.mem_bus = CONFIG_SYS_PCIE_MEM_BUS;		\
-	x.mem_phys = CONFIG_SYS_PCIE_MEM_PHYS_OFF +	\
-		     CONFIG_SYS_PCIE##num##_PHYS_ADDR;	\
-	x.mem_size = CONFIG_SYS_PCIE_MEM_SIZE;		\
-	x.io_bus = CONFIG_SYS_PCIE_IO_BUS;		\
-	x.io_phys = CONFIG_SYS_PCIE_IO_PHYS_OFF +	\
-		    CONFIG_SYS_PCIE##num##_PHYS_ADDR;	\
-	x.io_size = CONFIG_SYS_PCIE_IO_SIZE;		\
-	x.pci_num = num;				\
+static unsigned int dbi_readl(struct ls_pcie *pcie, unsigned int offset)
+{
+	return in_le32(pcie->dbi + offset);
+}
+
+static void dbi_writel(struct ls_pcie *pcie, unsigned int value,
+		       unsigned int offset)
+{
+	out_le32(pcie->dbi + offset, value);
+}
+
+#ifdef CONFIG_FSL_LSCH3
+static void lut_writel(struct ls_pcie *pcie, unsigned int value,
+		       unsigned int offset)
+{
+	if (pcie->big_endian)
+		out_be32(pcie->lut + offset, value);
+	else
+		out_le32(pcie->lut + offset, value);
+}
+#endif
+
+static unsigned int ctrl_readl(struct ls_pcie *pcie, unsigned int offset)
+{
+	if (pcie->big_endian)
+		return in_be32(pcie->ctrl + offset);
+	else
+		return in_le32(pcie->ctrl + offset);
+}
+
+static void ctrl_writel(struct ls_pcie *pcie, unsigned int value,
+			unsigned int offset)
+{
+	if (pcie->big_endian)
+		out_be32(pcie->ctrl + offset, value);
+	else
+		out_le32(pcie->ctrl + offset, value);
 }
 
 #ifdef CONFIG_LS102XA
-#include <asm/arch/immap_ls102xa.h>
-
-/* PEX1/2 Misc Ports Status Register */
-#define LTSSM_STATE_SHIFT	20
-
-static int ls_pcie_link_state(struct ls_pcie *pcie)
+static int ls_pcie_ltssm(struct ls_pcie *pcie)
 {
 	u32 state;
-	struct ccsr_scfg *scfg = (struct ccsr_scfg *)CONFIG_SYS_FSL_SCFG_ADDR;
 
-	state = in_be32(&scfg->pexmscportsr[pcie->idx]);
-	state = (state >> LTSSM_STATE_SHIFT) & LTSSM_STATE_MASK;
-	if (state < LTSSM_PCIE_L0) {
-		debug("....PCIe link error. LTSSM=0x%02x.\n", state);
-		return 0;
-	}
+	state = ctrl_readl(pcie, LS1021_PEXMSCPORTSR(pcie->idx));
+	state = (state >> LS1021_LTSSM_STATE_SHIFT) & LTSSM_STATE_MASK;
 
-	return 1;
+	return state;
 }
 #else
-static int ls_pcie_link_state(struct ls_pcie *pcie)
+static int ls_pcie_ltssm(struct ls_pcie *pcie)
 {
-	u32 state;
-
-	state = pex_lut_in32(pcie->dbi + PCIE_LUT_BASE + PCIE_LUT_DBG) &
-		LTSSM_STATE_MASK;
-	if (state < LTSSM_PCIE_L0) {
-		debug("....PCIe link error. LTSSM=0x%02x.\n", state);
-		return 0;
-	}
-
-	return 1;
+	return ctrl_readl(pcie, PCIE_PF_DBG) & LTSSM_STATE_MASK;
 }
 #endif
 
 static int ls_pcie_link_up(struct ls_pcie *pcie)
 {
-	int state;
-	u32 cap;
+	int ltssm;
 
-	state = ls_pcie_link_state(pcie);
-	if (state)
-		return state;
+	ltssm = ls_pcie_ltssm(pcie);
+	if (ltssm < LTSSM_PCIE_L0)
+		return 0;
 
-	/* Try to download speed to gen1 */
-	cap = readl(pcie->dbi + PCIE_LINK_CAP);
-	writel((cap & (~PCIE_LINK_SPEED_MASK)) | 1, pcie->dbi + PCIE_LINK_CAP);
-	/*
-	 * Notice: the following delay has critical impact on link training
-	 * if too short (<30ms) the link doesn't get up.
-	 */
-	mdelay(100);
-	state = ls_pcie_link_state(pcie);
-	if (state)
-		return state;
-
-	writel(cap, pcie->dbi + PCIE_LINK_CAP);
-
-	return 0;
+	return 1;
 }
 
 static void ls_pcie_cfg0_set_busdev(struct ls_pcie *pcie, u32 busdev)
 {
-	writel(PCIE_ATU_REGION_OUTBOUND | PCIE_ATU_REGION_INDEX0,
-	       pcie->dbi + PCIE_ATU_VIEWPORT);
-	writel(busdev, pcie->dbi + PCIE_ATU_LOWER_TARGET);
+	dbi_writel(pcie, PCIE_ATU_REGION_OUTBOUND | PCIE_ATU_REGION_INDEX0,
+		   PCIE_ATU_VIEWPORT);
+	dbi_writel(pcie, busdev, PCIE_ATU_LOWER_TARGET);
 }
 
 static void ls_pcie_cfg1_set_busdev(struct ls_pcie *pcie, u32 busdev)
 {
-	writel(PCIE_ATU_REGION_OUTBOUND | PCIE_ATU_REGION_INDEX1,
-	       pcie->dbi + PCIE_ATU_VIEWPORT);
-	writel(busdev, pcie->dbi + PCIE_ATU_LOWER_TARGET);
+	dbi_writel(pcie, PCIE_ATU_REGION_OUTBOUND | PCIE_ATU_REGION_INDEX1,
+		   PCIE_ATU_VIEWPORT);
+	dbi_writel(pcie, busdev, PCIE_ATU_LOWER_TARGET);
 }
 
-static void ls_pcie_iatu_outbound_set(struct ls_pcie *pcie, int idx, int type,
+static void ls_pcie_atu_outbound_set(struct ls_pcie *pcie, int idx, int type,
 				      u64 phys, u64 bus_addr, pci_size_t size)
 {
-	writel(PCIE_ATU_REGION_OUTBOUND | idx, pcie->dbi + PCIE_ATU_VIEWPORT);
-	writel((u32)phys, pcie->dbi + PCIE_ATU_LOWER_BASE);
-	writel(phys >> 32, pcie->dbi + PCIE_ATU_UPPER_BASE);
-	writel(phys + size - 1, pcie->dbi + PCIE_ATU_LIMIT);
-	writel((u32)bus_addr, pcie->dbi + PCIE_ATU_LOWER_TARGET);
-	writel(bus_addr >> 32, pcie->dbi + PCIE_ATU_UPPER_TARGET);
-	writel(type, pcie->dbi + PCIE_ATU_CR1);
-	writel(PCIE_ATU_ENABLE, pcie->dbi + PCIE_ATU_CR2);
+	dbi_writel(pcie, PCIE_ATU_REGION_OUTBOUND | idx, PCIE_ATU_VIEWPORT);
+	dbi_writel(pcie, (u32)phys, PCIE_ATU_LOWER_BASE);
+	dbi_writel(pcie, phys >> 32, PCIE_ATU_UPPER_BASE);
+	dbi_writel(pcie, (u32)phys + size - 1, PCIE_ATU_LIMIT);
+	dbi_writel(pcie, (u32)bus_addr, PCIE_ATU_LOWER_TARGET);
+	dbi_writel(pcie, bus_addr >> 32, PCIE_ATU_UPPER_TARGET);
+	dbi_writel(pcie, type, PCIE_ATU_CR1);
+	dbi_writel(pcie, PCIE_ATU_ENABLE, PCIE_ATU_CR2);
 }
 
 /* Use bar match mode and MEM type as default */
-static void ls_pcie_iatu_inbound_set(struct ls_pcie *pcie, int idx,
+static void ls_pcie_atu_inbound_set(struct ls_pcie *pcie, int idx,
 				     int bar, u64 phys)
 {
-	writel(PCIE_ATU_REGION_INBOUND | idx, pcie->dbi + PCIE_ATU_VIEWPORT);
-	writel((u32)phys, pcie->dbi + PCIE_ATU_LOWER_TARGET);
-	writel(phys >> 32, pcie->dbi + PCIE_ATU_UPPER_TARGET);
-	writel(PCIE_ATU_TYPE_MEM, pcie->dbi + PCIE_ATU_CR1);
-	writel(PCIE_ATU_ENABLE | PCIE_ATU_BAR_MODE_ENABLE |
-	       PCIE_ATU_BAR_NUM(bar), pcie->dbi + PCIE_ATU_CR2);
+	dbi_writel(pcie, PCIE_ATU_REGION_INBOUND | idx, PCIE_ATU_VIEWPORT);
+	dbi_writel(pcie, (u32)phys, PCIE_ATU_LOWER_TARGET);
+	dbi_writel(pcie, phys >> 32, PCIE_ATU_UPPER_TARGET);
+	dbi_writel(pcie, PCIE_ATU_TYPE_MEM, PCIE_ATU_CR1);
+	dbi_writel(pcie, PCIE_ATU_ENABLE | PCIE_ATU_BAR_MODE_ENABLE |
+		   PCIE_ATU_BAR_NUM(bar), PCIE_ATU_CR2);
 }
 
-static void ls_pcie_setup_atu(struct ls_pcie *pcie, struct ls_pcie_info *info)
+static void ls_pcie_dump_atu(struct ls_pcie *pcie)
 {
-#ifdef DEBUG
 	int i;
-#endif
 
-	/* ATU 0 : OUTBOUND : CFG0 */
-	ls_pcie_iatu_outbound_set(pcie, PCIE_ATU_REGION_INDEX0,
-				  PCIE_ATU_TYPE_CFG0,
-				  info->cfg0_phys,
-				  0,
-				  info->cfg0_size);
-	/* ATU 1 : OUTBOUND : CFG1 */
-	ls_pcie_iatu_outbound_set(pcie, PCIE_ATU_REGION_INDEX1,
-				  PCIE_ATU_TYPE_CFG1,
-				  info->cfg1_phys,
-				  0,
-				  info->cfg1_size);
-	/* ATU 2 : OUTBOUND : MEM */
-	ls_pcie_iatu_outbound_set(pcie, PCIE_ATU_REGION_INDEX2,
-				  PCIE_ATU_TYPE_MEM,
-				  info->mem_phys,
-				  info->mem_bus,
-				  info->mem_size);
-	/* ATU 3 : OUTBOUND : IO */
-	ls_pcie_iatu_outbound_set(pcie, PCIE_ATU_REGION_INDEX3,
-				  PCIE_ATU_TYPE_IO,
-				  info->io_phys,
-				  info->io_bus,
-				  info->io_size);
-
-#ifdef DEBUG
-	for (i = 0; i <= PCIE_ATU_REGION_INDEX3; i++) {
-		writel(PCIE_ATU_REGION_OUTBOUND | i,
-		       pcie->dbi + PCIE_ATU_VIEWPORT);
+	for (i = 0; i < PCIE_ATU_REGION_NUM; i++) {
+		dbi_writel(pcie, PCIE_ATU_REGION_OUTBOUND | i,
+			   PCIE_ATU_VIEWPORT);
 		debug("iATU%d:\n", i);
 		debug("\tLOWER PHYS 0x%08x\n",
-		      readl(pcie->dbi + PCIE_ATU_LOWER_BASE));
+		      dbi_readl(pcie, PCIE_ATU_LOWER_BASE));
 		debug("\tUPPER PHYS 0x%08x\n",
-		      readl(pcie->dbi + PCIE_ATU_UPPER_BASE));
+		      dbi_readl(pcie, PCIE_ATU_UPPER_BASE));
 		debug("\tLOWER BUS  0x%08x\n",
-		      readl(pcie->dbi + PCIE_ATU_LOWER_TARGET));
+		      dbi_readl(pcie, PCIE_ATU_LOWER_TARGET));
 		debug("\tUPPER BUS  0x%08x\n",
-		      readl(pcie->dbi + PCIE_ATU_UPPER_TARGET));
+		      dbi_readl(pcie, PCIE_ATU_UPPER_TARGET));
 		debug("\tLIMIT      0x%08x\n",
 		      readl(pcie->dbi + PCIE_ATU_LIMIT));
 		debug("\tCR1        0x%08x\n",
-		      readl(pcie->dbi + PCIE_ATU_CR1));
+		      dbi_readl(pcie, PCIE_ATU_CR1));
 		debug("\tCR2        0x%08x\n",
-		      readl(pcie->dbi + PCIE_ATU_CR2));
+		      dbi_readl(pcie, PCIE_ATU_CR2));
 	}
+}
+
+static void ls_pcie_setup_atu(struct ls_pcie *pcie)
+{
+	struct pci_region *io, *mem, *pref;
+	unsigned long long offset = 0;
+	int idx = 0;
+
+#ifdef CONFIG_LS102XA
+	offset = LS1021_PCIE_SPACE_OFFSET + LS1021_PCIE_SPACE_SIZE * pcie->idx;
 #endif
+
+	/* ATU 0 : OUTBOUND : CFG0 */
+	ls_pcie_atu_outbound_set(pcie, PCIE_ATU_REGION_INDEX0,
+				 PCIE_ATU_TYPE_CFG0,
+				 pcie->cfg_res.start + offset,
+				 0,
+				 fdt_resource_size(&pcie->cfg_res) / 2);
+	/* ATU 1 : OUTBOUND : CFG1 */
+	ls_pcie_atu_outbound_set(pcie, PCIE_ATU_REGION_INDEX1,
+				 PCIE_ATU_TYPE_CFG1,
+				 pcie->cfg_res.start + offset +
+				 fdt_resource_size(&pcie->cfg_res) / 2,
+				 0,
+				 fdt_resource_size(&pcie->cfg_res) / 2);
+
+	pci_get_regions(pcie->bus, &io, &mem, &pref);
+	idx = PCIE_ATU_REGION_INDEX1 + 1;
+
+	if (io)
+		/* ATU : OUTBOUND : IO */
+		ls_pcie_atu_outbound_set(pcie, idx++,
+					 PCIE_ATU_TYPE_IO,
+					 io->phys_start + offset,
+					 io->bus_start,
+					 io->size);
+
+	if (mem)
+		/* ATU : OUTBOUND : MEM */
+		ls_pcie_atu_outbound_set(pcie, idx++,
+					 PCIE_ATU_TYPE_MEM,
+					 mem->phys_start + offset,
+					 mem->bus_start,
+					 mem->size);
+
+	if (pref)
+		/* ATU : OUTBOUND : pref */
+		ls_pcie_atu_outbound_set(pcie, idx++,
+					 PCIE_ATU_TYPE_MEM,
+					 pref->phys_start + offset,
+					 pref->bus_start,
+					 pref->size);
+
+	ls_pcie_dump_atu(pcie);
 }
 
-int pci_skip_dev(struct pci_controller *hose, pci_dev_t dev)
+static int ls_pcie_addr_valid(struct ls_pcie *pcie, pci_dev_t bdf)
 {
-	/* Do not skip controller */
+	struct udevice *bus = pcie->bus;
+
+	if (!pcie->enabled)
+		return -ENODEV;
+
+	if (PCI_BUS(bdf) < bus->seq)
+		return -EINVAL;
+
+	if ((PCI_BUS(bdf) > bus->seq) && (!ls_pcie_link_up(pcie)))
+		return -EINVAL;
+
+	if (PCI_BUS(bdf) <= (bus->seq + 1) && (PCI_DEV(bdf) > 0))
+		return -EINVAL;
+
 	return 0;
 }
 
-static int ls_pcie_addr_valid(struct pci_controller *hose, pci_dev_t d)
+void *ls_pcie_conf_address(struct ls_pcie *pcie, pci_dev_t bdf,
+				   int offset)
 {
-	if (PCI_DEV(d) > 0)
-		return -EINVAL;
+	struct udevice *bus = pcie->bus;
+	u32 busdev;
 
-	/* Controller does not support multi-function in RC mode */
-	if ((PCI_BUS(d) == hose->first_busno) && (PCI_FUNC(d) > 0))
-		return -EINVAL;
+	if (PCI_BUS(bdf) == bus->seq)
+		return pcie->dbi + offset;
 
-	return 0;
+	busdev = PCIE_ATU_BUS(PCI_BUS(bdf)) |
+		 PCIE_ATU_DEV(PCI_DEV(bdf)) |
+		 PCIE_ATU_FUNC(PCI_FUNC(bdf));
+
+	if (PCI_BUS(bdf) == bus->seq + 1) {
+		ls_pcie_cfg0_set_busdev(pcie, busdev);
+		return pcie->cfg0 + offset;
+	} else {
+		ls_pcie_cfg1_set_busdev(pcie, busdev);
+		return pcie->cfg1 + offset;
+	}
 }
 
-static int ls_pcie_read_config(struct pci_controller *hose, pci_dev_t d,
-			       int where, u32 *val)
+static int ls_pcie_read_config(struct udevice *bus, pci_dev_t bdf,
+			       uint offset, ulong *valuep,
+			       enum pci_size_t size)
 {
-	struct ls_pcie *pcie = hose->priv_data;
-	u32 busdev, *addr;
+	struct ls_pcie *pcie = dev_get_priv(bus);
+	void *address;
 
-	if (ls_pcie_addr_valid(hose, d)) {
-		*val = 0xffffffff;
+	if (ls_pcie_addr_valid(pcie, bdf)) {
+		*valuep = pci_get_ff(size);
 		return 0;
 	}
 
-	if (PCI_BUS(d) == hose->first_busno) {
-		addr = pcie->dbi + (where & ~0x3);
-	} else {
-		busdev = PCIE_ATU_BUS(PCI_BUS(d)) |
-			 PCIE_ATU_DEV(PCI_DEV(d)) |
-			 PCIE_ATU_FUNC(PCI_FUNC(d));
+	address = ls_pcie_conf_address(pcie, bdf, offset);
 
-		if (PCI_BUS(d) == hose->first_busno + 1) {
-			ls_pcie_cfg0_set_busdev(pcie, busdev);
-			addr = pcie->va_cfg0 + (where & ~0x3);
-		} else {
-			ls_pcie_cfg1_set_busdev(pcie, busdev);
-			addr = pcie->va_cfg1 + (where & ~0x3);
-		}
-	}
-
-	*val = readl(addr);
-
-	return 0;
-}
-
-static int ls_pcie_write_config(struct pci_controller *hose, pci_dev_t d,
-				int where, u32 val)
-{
-	struct ls_pcie *pcie = hose->priv_data;
-	u32 busdev, *addr;
-
-	if (ls_pcie_addr_valid(hose, d))
+	switch (size) {
+	case PCI_SIZE_8:
+		*valuep = readb(address);
+		return 0;
+	case PCI_SIZE_16:
+		*valuep = readw(address);
+		return 0;
+	case PCI_SIZE_32:
+		*valuep = readl(address);
+		return 0;
+	default:
 		return -EINVAL;
-
-	if (PCI_BUS(d) == hose->first_busno) {
-		addr = pcie->dbi + (where & ~0x3);
-	} else {
-		busdev = PCIE_ATU_BUS(PCI_BUS(d)) |
-			 PCIE_ATU_DEV(PCI_DEV(d)) |
-			 PCIE_ATU_FUNC(PCI_FUNC(d));
-
-		if (PCI_BUS(d) == hose->first_busno + 1) {
-			ls_pcie_cfg0_set_busdev(pcie, busdev);
-			addr = pcie->va_cfg0 + (where & ~0x3);
-		} else {
-			ls_pcie_cfg1_set_busdev(pcie, busdev);
-			addr = pcie->va_cfg1 + (where & ~0x3);
-		}
 	}
-
-	writel(val, addr);
-
-	return 0;
 }
 
-static void ls_pcie_setup_ctrl(struct ls_pcie *pcie,
-			       struct ls_pcie_info *info)
+static int ls_pcie_write_config(struct udevice *bus, pci_dev_t bdf,
+				uint offset, ulong value,
+				enum pci_size_t size)
 {
-	struct pci_controller *hose = &pcie->hose;
-	pci_dev_t dev = PCI_BDF(hose->first_busno, 0, 0);
+	struct ls_pcie *pcie = dev_get_priv(bus);
+	void *address;
 
-	ls_pcie_setup_atu(pcie, info);
+	if (ls_pcie_addr_valid(pcie, bdf))
+		return 0;
 
-	pci_hose_write_config_dword(hose, dev, PCI_BASE_ADDRESS_0, 0);
+	address = ls_pcie_conf_address(pcie, bdf, offset);
 
-	/* program correct class for RC */
-	writel(1, pcie->dbi + PCIE_DBI_RO_WR_EN);
-	pci_hose_write_config_word(hose, dev, PCI_CLASS_DEVICE,
-				   PCI_CLASS_BRIDGE_PCI);
-#ifndef CONFIG_LS102XA
-	writel(0, pcie->dbi + PCIE_DBI_RO_WR_EN);
-#endif
+	switch (size) {
+	case PCI_SIZE_8:
+		writeb(value, address);
+		return 0;
+	case PCI_SIZE_16:
+		writew(value, address);
+		return 0;
+	case PCI_SIZE_32:
+		writel(value, address);
+		return 0;
+	default:
+		return -EINVAL;
+	}
 }
 
-static void ls_pcie_ep_setup_atu(struct ls_pcie *pcie,
-				 struct ls_pcie_info *info)
+/* Clear multi-function bit */
+static void ls_pcie_clear_multifunction(struct ls_pcie *pcie)
+{
+	writeb(PCI_HEADER_TYPE_BRIDGE, pcie->dbi + PCI_HEADER_TYPE);
+}
+
+/* Fix class value */
+static void ls_pcie_fix_class(struct ls_pcie *pcie)
+{
+	writew(PCI_CLASS_BRIDGE_PCI, pcie->dbi + PCI_CLASS_DEVICE);
+}
+
+/* Drop MSG TLP except for Vendor MSG */
+static void ls_pcie_drop_msg_tlp(struct ls_pcie *pcie)
+{
+	u32 val;
+
+	val = dbi_readl(pcie, PCIE_STRFMR1);
+	val &= 0xDFFFFFFF;
+	dbi_writel(pcie, val, PCIE_STRFMR1);
+}
+
+/* Disable all bars in RC mode */
+static void ls_pcie_disable_bars(struct ls_pcie *pcie)
+{
+	u32 sriov;
+
+	sriov = in_le32(pcie->dbi + PCIE_SRIOV);
+
+	if (PCI_EXT_CAP_ID(sriov) == PCI_EXT_CAP_ID_SRIOV)
+		return;
+
+	dbi_writel(pcie, 0, PCIE_CS2_OFFSET + PCI_BASE_ADDRESS_0);
+	dbi_writel(pcie, 0, PCIE_CS2_OFFSET + PCI_BASE_ADDRESS_1);
+	dbi_writel(pcie, 0, PCIE_CS2_OFFSET + PCI_ROM_ADDRESS1);
+}
+
+static void ls_pcie_setup_ctrl(struct ls_pcie *pcie)
+{
+	ls_pcie_setup_atu(pcie);
+
+	dbi_writel(pcie, 1, PCIE_DBI_RO_WR_EN);
+	ls_pcie_fix_class(pcie);
+	ls_pcie_clear_multifunction(pcie);
+	ls_pcie_drop_msg_tlp(pcie);
+	dbi_writel(pcie, 0, PCIE_DBI_RO_WR_EN);
+
+	ls_pcie_disable_bars(pcie);
+}
+
+static void ls_pcie_ep_setup_atu(struct ls_pcie *pcie)
 {
 	u64 phys = CONFIG_SYS_PCI_EP_MEMORY_BASE;
 
 	/* ATU 0 : INBOUND : map BAR0 */
-	ls_pcie_iatu_inbound_set(pcie, PCIE_ATU_REGION_INDEX0, 0, phys);
+	ls_pcie_atu_inbound_set(pcie, 0, 0, phys);
 	/* ATU 1 : INBOUND : map BAR1 */
 	phys += PCIE_BAR1_SIZE;
-	ls_pcie_iatu_inbound_set(pcie, PCIE_ATU_REGION_INDEX1, 1, phys);
+	ls_pcie_atu_inbound_set(pcie, 1, 1, phys);
 	/* ATU 2 : INBOUND : map BAR2 */
 	phys += PCIE_BAR2_SIZE;
-	ls_pcie_iatu_inbound_set(pcie, PCIE_ATU_REGION_INDEX2, 2, phys);
+	ls_pcie_atu_inbound_set(pcie, 2, 2, phys);
 	/* ATU 3 : INBOUND : map BAR4 */
 	phys = CONFIG_SYS_PCI_EP_MEMORY_BASE + PCIE_BAR4_SIZE;
-	ls_pcie_iatu_inbound_set(pcie, PCIE_ATU_REGION_INDEX3, 4, phys);
+	ls_pcie_atu_inbound_set(pcie, 3, 4, phys);
 
-	/* ATU 0 : OUTBOUND : map 4G MEM */
-	ls_pcie_iatu_outbound_set(pcie, PCIE_ATU_REGION_INDEX0,
-				  PCIE_ATU_TYPE_MEM,
-				  info->phys_base,
-				  0,
-				  4 * 1024 * 1024 * 1024ULL);
+	/* ATU 0 : OUTBOUND : map MEM */
+	ls_pcie_atu_outbound_set(pcie, 0,
+				 PCIE_ATU_TYPE_MEM,
+				 pcie->cfg_res.start,
+				 0,
+				 CONFIG_SYS_PCI_MEMORY_SIZE);
 }
 
 /* BAR0 and BAR1 are 32bit BAR2 and BAR4 are 64bit */
@@ -451,35 +537,28 @@ static void ls_pcie_ep_setup_bars(void *bar_base)
 	ls_pcie_ep_setup_bar(bar_base, 4, PCIE_BAR4_SIZE);
 }
 
-static void ls_pcie_setup_ep(struct ls_pcie *pcie, struct ls_pcie_info *info)
+static void ls_pcie_setup_ep(struct ls_pcie *pcie)
 {
-	struct pci_controller *hose = &pcie->hose;
-	pci_dev_t dev = PCI_BDF(hose->first_busno, 0, 0);
-	int sriov;
+	u32 sriov;
 
-	sriov = pci_hose_find_ext_capability(hose, dev, PCI_EXT_CAP_ID_SRIOV);
-	if (sriov) {
+	sriov = readl(pcie->dbi + PCIE_SRIOV);
+	if (PCI_EXT_CAP_ID(sriov) == PCI_EXT_CAP_ID_SRIOV) {
 		int pf, vf;
 
 		for (pf = 0; pf < PCIE_PF_NUM; pf++) {
 			for (vf = 0; vf <= PCIE_VF_NUM; vf++) {
-#ifndef CONFIG_LS102XA
-				writel(PCIE_LCTRL0_VAL(pf, vf),
-				       pcie->dbi + PCIE_LUT_BASE +
-				       PCIE_LUT_LCTRL0);
-#endif
+				ctrl_writel(pcie, PCIE_LCTRL0_VAL(pf, vf),
+					    PCIE_PF_VF_CTRL);
+
 				ls_pcie_ep_setup_bars(pcie->dbi);
-				ls_pcie_ep_setup_atu(pcie, info);
+				ls_pcie_ep_setup_atu(pcie);
 			}
 		}
-
 		/* Disable CFG2 */
-#ifndef CONFIG_LS102XA
-		writel(0, pcie->dbi + PCIE_LUT_BASE + PCIE_LUT_LCTRL0);
-#endif
+		ctrl_writel(pcie, 0, PCIE_PF_VF_CTRL);
 	} else {
 		ls_pcie_ep_setup_bars(pcie->dbi + PCIE_NO_SRIOV_BAR_BASE);
-		ls_pcie_ep_setup_atu(pcie, info);
+		ls_pcie_ep_setup_atu(pcie);
 	}
 }
 
@@ -499,15 +578,11 @@ static int ls_pcie_next_lut_index(struct ls_pcie *pcie)
  * Program a single LUT entry
  */
 static void ls_pcie_lut_set_mapping(struct ls_pcie *pcie, int index, u32 devid,
-			     u32 streamid)
+				    u32 streamid)
 {
-	void __iomem *lut;
-
-	lut = pcie->dbi + PCIE_LUT_BASE;
-
 	/* leave mask as all zeroes, want to match all bits */
-	writel((devid << 16), lut + PCIE_LUT_UDR(index));
-	writel(streamid | PCIE_LUT_ENABLE, lut + PCIE_LUT_LDR(index));
+	lut_writel(pcie, devid << 16, PCIE_LUT_UDR(index));
+	lut_writel(pcie, streamid | PCIE_LUT_ENABLE, PCIE_LUT_LDR(index));
 }
 
 /* returns the next available streamid */
@@ -532,26 +607,30 @@ static u32 ls_pcie_next_streamid(void)
 static void fdt_pcie_set_msi_map_entry(void *blob, struct ls_pcie *pcie,
 				       u32 devid, u32 streamid)
 {
-	char pcie_path[19];
 	u32 *prop;
 	u32 phandle;
 	int nodeoffset;
 
 	/* find pci controller node */
-	snprintf(pcie_path, sizeof(pcie_path), "/soc/pcie@%llx",
-		 (u64)pcie->dbi);
-	nodeoffset = fdt_path_offset(blob, pcie_path);
+	nodeoffset = fdt_node_offset_by_compat_reg(blob, "fsl,ls-pcie",
+						   pcie->dbi_res.start);
 	if (nodeoffset < 0) {
-		printf("\n%s: ERROR: unable to update PCIe node: %s\n",
-		       __func__, pcie_path);
+	#ifdef FSL_PCIE_COMPAT /* Compatible with older version of dts node */
+		nodeoffset = fdt_node_offset_by_compat_reg(blob,
+							   FSL_PCIE_COMPAT,
+							   pcie->dbi_res.start);
+		if (nodeoffset < 0)
+			return;
+	#else
 		return;
+	#endif
 	}
 
 	/* get phandle to MSI controller */
 	prop = (u32 *)fdt_getprop(blob, nodeoffset, "msi-parent", 0);
 	if (prop == NULL) {
-		printf("\n%s: ERROR: missing msi-parent: %s\n", __func__,
-		       pcie_path);
+		printf("\n%s: ERROR: missing msi-parent: PCIe%d\n",
+		       __func__, pcie->idx);
 		return;
 	}
 	phandle = be32_to_cpu(*prop);
@@ -565,244 +644,78 @@ static void fdt_pcie_set_msi_map_entry(void *blob, struct ls_pcie *pcie,
 
 static void fdt_fixup_pcie(void *blob)
 {
-	unsigned int found_multi = 0;
-	unsigned char header_type;
-	int index;
+	struct udevice *dev, *bus;
+	struct ls_pcie *pcie;
 	u32 streamid;
-	pci_dev_t dev, bdf;
-	int bus;
-	unsigned short id;
-	struct pci_controller *hose;
-	struct ls_pcie *pcie;
-	int i;
+	int index;
+	pci_dev_t bdf;
 
-	for (i = 0, hose = pci_get_hose_head(); hose; hose = hose->next, i++) {
-		pcie = hose->priv_data;
-		for (bus = hose->first_busno; bus <= hose->last_busno; bus++) {
+	/* Scan all known buses */
+	for (pci_find_first_device(&dev);
+	     dev;
+	     pci_find_next_device(&dev)) {
+		for (bus = dev; device_is_on_pci_bus(bus);)
+			bus = bus->parent;
+		pcie = dev_get_priv(bus);
 
-			for (dev =  PCI_BDF(bus, 0, 0);
-			     dev <  PCI_BDF(bus, PCI_MAX_PCI_DEVICES - 1,
-					    PCI_MAX_PCI_FUNCTIONS - 1);
-			     dev += PCI_BDF(0, 0, 1)) {
-
-				if (PCI_FUNC(dev) && !found_multi)
-					continue;
-
-				pci_read_config_word(dev, PCI_VENDOR_ID, &id);
-
-				pci_read_config_byte(dev, PCI_HEADER_TYPE,
-						     &header_type);
-
-				if ((id == 0xFFFF) || (id == 0x0000))
-					continue;
-
-				if (!PCI_FUNC(dev))
-					found_multi = header_type & 0x80;
-
-				streamid = ls_pcie_next_streamid();
-				if (streamid == 0xffffffff) {
-					printf("ERROR: no stream ids free\n");
-					continue;
-				}
-
-				index = ls_pcie_next_lut_index(pcie);
-				if (index < 0) {
-					printf("ERROR: no LUT indexes free\n");
-					continue;
-				}
-
-				/* the DT fixup must be relative to the hose first_busno */
-				bdf = dev - PCI_BDF(hose->first_busno, 0, 0);
-
-				/* map PCI b.d.f to streamID in LUT */
-				ls_pcie_lut_set_mapping(pcie, index, bdf >> 8,
-							streamid);
-
-				/* update msi-map in device tree */
-				fdt_pcie_set_msi_map_entry(blob, pcie, bdf >> 8,
-							   streamid);
-			}
+		streamid = ls_pcie_next_streamid();
+		if (streamid == 0xffffffff) {
+			printf("ERROR: no stream ids free\n");
+			continue;
 		}
+
+		index = ls_pcie_next_lut_index(pcie);
+		if (index < 0) {
+			printf("ERROR: no LUT indexes free\n");
+			continue;
+		}
+
+		/* the DT fixup must be relative to the hose first_busno */
+		bdf = dm_pci_get_bdf(dev) - PCI_BDF(bus->seq, 0, 0);
+		/* map PCI b.d.f to streamID in LUT */
+		ls_pcie_lut_set_mapping(pcie, index, bdf >> 8,
+					streamid);
+		/* update msi-map in device tree */
+		fdt_pcie_set_msi_map_entry(blob, pcie, bdf >> 8,
+					   streamid);
 	}
 }
 #endif
-
-int ls_pcie_init_ctrl(int busno, enum srds_prtcl dev, struct ls_pcie_info *info)
-{
-	struct ls_pcie *pcie;
-	struct pci_controller *hose;
-	int num = dev - PCIE1;
-	pci_dev_t pdev = PCI_BDF(busno, 0, 0);
-	int i, linkup, ep_mode;
-	u8 header_type;
-	u16 temp16;
-
-	if (!is_serdes_configured(dev)) {
-		printf("PCIe%d: disabled\n", num + 1);
-		return busno;
-	}
-
-	pcie = malloc(sizeof(*pcie));
-	if (!pcie)
-		return busno;
-	memset(pcie, 0, sizeof(*pcie));
-
-	hose = &pcie->hose;
-	hose->priv_data = pcie;
-	hose->first_busno = busno;
-	pcie->idx = num;
-	pcie->dbi = map_physmem(info->regs, PCIE_DBI_SIZE, MAP_NOCACHE);
-	pcie->va_cfg0 = map_physmem(info->cfg0_phys,
-				    info->cfg0_size,
-				    MAP_NOCACHE);
-	pcie->va_cfg1 = map_physmem(info->cfg1_phys,
-				    info->cfg1_size,
-				    MAP_NOCACHE);
-	pcie->next_lut_index = 0;
-
-	/* outbound memory */
-	pci_set_region(&hose->regions[0],
-		       (pci_size_t)info->mem_bus,
-		       (phys_size_t)info->mem_phys,
-		       (pci_size_t)info->mem_size,
-		       PCI_REGION_MEM);
-
-	/* outbound io */
-	pci_set_region(&hose->regions[1],
-		       (pci_size_t)info->io_bus,
-		       (phys_size_t)info->io_phys,
-		       (pci_size_t)info->io_size,
-		       PCI_REGION_IO);
-
-	/* System memory space */
-	pci_set_region(&hose->regions[2],
-		       CONFIG_SYS_PCI_MEMORY_BUS,
-		       CONFIG_SYS_PCI_MEMORY_PHYS,
-		       CONFIG_SYS_PCI_MEMORY_SIZE,
-		       PCI_REGION_SYS_MEMORY);
-
-	hose->region_count = 3;
-
-	for (i = 0; i < hose->region_count; i++)
-		debug("PCI reg:%d %016llx:%016llx %016llx %08lx\n",
-		      i,
-		      (u64)hose->regions[i].phys_start,
-		      (u64)hose->regions[i].bus_start,
-		      (u64)hose->regions[i].size,
-		      hose->regions[i].flags);
-
-	pci_set_ops(hose,
-		    pci_hose_read_config_byte_via_dword,
-		    pci_hose_read_config_word_via_dword,
-		    ls_pcie_read_config,
-		    pci_hose_write_config_byte_via_dword,
-		    pci_hose_write_config_word_via_dword,
-		    ls_pcie_write_config);
-
-	pci_hose_read_config_byte(hose, pdev, PCI_HEADER_TYPE, &header_type);
-	ep_mode = (header_type & 0x7f) == PCI_HEADER_TYPE_NORMAL;
-	printf("PCIe%u: %s ", info->pci_num,
-	       ep_mode ? "Endpoint" : "Root Complex");
-
-	if (ep_mode)
-		ls_pcie_setup_ep(pcie, info);
-	else
-		ls_pcie_setup_ctrl(pcie, info);
-
-	linkup = ls_pcie_link_up(pcie);
-
-	if (!linkup) {
-		/* Let the user know there's no PCIe link */
-		printf("no link, regs @ 0x%lx\n", info->regs);
-		hose->last_busno = hose->first_busno;
-		return busno;
-	}
-
-	/* Print the negotiated PCIe link width */
-	pci_hose_read_config_word(hose, pdev, PCIE_LINK_STA, &temp16);
-	printf("x%d gen%d, regs @ 0x%lx\n", (temp16 & 0x3f0) >> 4,
-	       (temp16 & 0xf), info->regs);
-
-	if (ep_mode)
-		return busno;
-
-	pci_register_hose(hose);
-
-	hose->last_busno = pci_hose_scan(hose);
-
-	printf("PCIe%x: Bus %02x - %02x\n",
-	       info->pci_num, hose->first_busno, hose->last_busno);
-
-	return hose->last_busno + 1;
-}
-
-int ls_pcie_init_board(int busno)
-{
-	struct ls_pcie_info info;
-
-#ifdef CONFIG_PCIE1
-	SET_LS_PCIE_INFO(info, 1);
-	busno = ls_pcie_init_ctrl(busno, PCIE1, &info);
-#endif
-
-#ifdef CONFIG_PCIE2
-	SET_LS_PCIE_INFO(info, 2);
-	busno = ls_pcie_init_ctrl(busno, PCIE2, &info);
-#endif
-
-#ifdef CONFIG_PCIE3
-	SET_LS_PCIE_INFO(info, 3);
-	busno = ls_pcie_init_ctrl(busno, PCIE3, &info);
-#endif
-
-#ifdef CONFIG_PCIE4
-	SET_LS_PCIE_INFO(info, 4);
-	busno = ls_pcie_init_ctrl(busno, PCIE4, &info);
-#endif
-
-	return busno;
-}
-
-void pci_init_board(void)
-{
-	ls_pcie_init_board(0);
-}
 
 #ifdef CONFIG_OF_BOARD_SETUP
 #include <libfdt.h>
 #include <fdt_support.h>
 
-static void ft_pcie_ls_setup(void *blob, const char *pci_compat,
-			     unsigned long ctrl_addr, enum srds_prtcl dev)
+static void ft_pcie_ls_setup(void *blob, struct ls_pcie *pcie)
 {
 	int off;
 
-	off = fdt_node_offset_by_compat_reg(blob, pci_compat,
-					    (phys_addr_t)ctrl_addr);
-	if (off < 0)
+	off = fdt_node_offset_by_compat_reg(blob, "fsl,ls-pcie",
+					    pcie->dbi_res.start);
+	if (off < 0) {
+	#ifdef FSL_PCIE_COMPAT /* Compatible with older version of dts node */
+		off = fdt_node_offset_by_compat_reg(blob,
+						    FSL_PCIE_COMPAT,
+						    pcie->dbi_res.start);
+		if (off < 0)
+			return;
+	#else
 		return;
+	#endif
+	}
 
-	if (!is_serdes_configured(dev))
+	if (pcie->enabled)
+		fdt_set_node_status(blob, off, FDT_STATUS_OKAY, 0);
+	else
 		fdt_set_node_status(blob, off, FDT_STATUS_DISABLED, 0);
 }
 
 void ft_pci_setup(void *blob, bd_t *bd)
 {
-	#ifdef CONFIG_PCIE1
-	ft_pcie_ls_setup(blob, FSL_PCIE_COMPAT, CONFIG_SYS_PCIE1_ADDR, PCIE1);
-	#endif
+	struct ls_pcie *pcie;
 
-	#ifdef CONFIG_PCIE2
-	ft_pcie_ls_setup(blob, FSL_PCIE_COMPAT, CONFIG_SYS_PCIE2_ADDR, PCIE2);
-	#endif
-
-	#ifdef CONFIG_PCIE3
-	ft_pcie_ls_setup(blob, FSL_PCIE_COMPAT, CONFIG_SYS_PCIE3_ADDR, PCIE3);
-	#endif
-
-	#ifdef CONFIG_PCIE4
-	ft_pcie_ls_setup(blob, FSL_PCIE_COMPAT, CONFIG_SYS_PCIE4_ADDR, PCIE4);
-	#endif
+	list_for_each_entry(pcie, &ls_pcie_list, list)
+		ft_pcie_ls_setup(blob, pcie);
 
 	#ifdef CONFIG_FSL_LSCH3
 	fdt_fixup_pcie(blob);
@@ -814,3 +727,118 @@ void ft_pci_setup(void *blob, bd_t *bd)
 {
 }
 #endif
+
+static int ls_pcie_probe(struct udevice *dev)
+{
+	struct ls_pcie *pcie = dev_get_priv(dev);
+	void *fdt = (void *)gd->fdt_blob;
+	int node = dev->of_offset;
+	u8 header_type;
+	u16 link_sta;
+	bool ep_mode;
+	int ret;
+
+	pcie->bus = dev;
+
+	ret = fdt_get_named_resource(fdt, node, "reg", "reg-names",
+				     "dbi", &pcie->dbi_res);
+	if (ret) {
+		printf("ls-pcie: resource \"dbi\" not found\n");
+		return ret;
+	}
+
+	pcie->idx = (pcie->dbi_res.start - PCIE_SYS_BASE_ADDR) / PCIE_CCSR_SIZE;
+
+	list_add(&pcie->list, &ls_pcie_list);
+
+	pcie->enabled = is_serdes_configured(PCIE_SRDS_PRTCL(pcie->idx));
+	if (!pcie->enabled) {
+		printf("PCIe%d: %s disabled\n", pcie->idx, dev->name);
+		return 0;
+	}
+
+	pcie->dbi = map_physmem(pcie->dbi_res.start,
+				fdt_resource_size(&pcie->dbi_res),
+				MAP_NOCACHE);
+
+	ret = fdt_get_named_resource(fdt, node, "reg", "reg-names",
+				     "lut", &pcie->lut_res);
+	if (!ret)
+		pcie->lut = map_physmem(pcie->lut_res.start,
+					fdt_resource_size(&pcie->lut_res),
+					MAP_NOCACHE);
+
+	ret = fdt_get_named_resource(fdt, node, "reg", "reg-names",
+				     "ctrl", &pcie->ctrl_res);
+	if (!ret)
+		pcie->ctrl = map_physmem(pcie->ctrl_res.start,
+					 fdt_resource_size(&pcie->ctrl_res),
+					 MAP_NOCACHE);
+	if (!pcie->ctrl)
+		pcie->ctrl = pcie->lut;
+
+	if (!pcie->ctrl) {
+		printf("%s: NOT find CTRL\n", dev->name);
+		return 0;
+	}
+
+	ret = fdt_get_named_resource(fdt, node, "reg", "reg-names",
+				     "config", &pcie->cfg_res);
+	if (ret) {
+		printf("%s: resource \"config\" not found\n", dev->name);
+		return 0;
+	}
+
+	pcie->cfg0 = map_physmem(pcie->cfg_res.start,
+				 fdt_resource_size(&pcie->cfg_res),
+				 MAP_NOCACHE);
+	pcie->cfg1 = pcie->cfg0 + fdt_resource_size(&pcie->cfg_res) / 2;
+
+	pcie->big_endian = fdtdec_get_bool(fdt, node, "big-endian");
+
+	debug("%s dbi:%lx lut:%lx ctrl:0x%lx cfg0:0x%lx, big-endian:%d\n",
+	      dev->name, (unsigned long)pcie->dbi, (unsigned long)pcie->lut,
+	      (unsigned long)pcie->ctrl, (unsigned long)pcie->cfg0,
+	      pcie->big_endian);
+
+	header_type = readb(pcie->dbi + PCI_HEADER_TYPE);
+	ep_mode = (header_type & 0x7f) == PCI_HEADER_TYPE_NORMAL;
+	printf("PCIe%u: %s %s", pcie->idx, dev->name,
+	       ep_mode ? "Endpoint" : "Root Complex");
+
+	if (ep_mode)
+		ls_pcie_setup_ep(pcie);
+	else
+		ls_pcie_setup_ctrl(pcie);
+
+	if (!ls_pcie_link_up(pcie)) {
+		/* Let the user know there's no PCIe link */
+		printf(": no link\n");
+		return 0;
+	}
+
+	/* Print the negotiated PCIe link width */
+	link_sta = readw(pcie->dbi + PCIE_LINK_STA);
+	printf(": x%d gen%d\n", (link_sta & 0x3f0) >> 4, link_sta & 0xf);
+
+	return 0;
+}
+
+static const struct dm_pci_ops ls_pcie_ops = {
+	.read_config	= ls_pcie_read_config,
+	.write_config	= ls_pcie_write_config,
+};
+
+static const struct udevice_id ls_pcie_ids[] = {
+	{ .compatible = "fsl,ls-pcie" },
+	{ }
+};
+
+U_BOOT_DRIVER(pci_layerscape) = {
+	.name = "pci_layerscape",
+	.id = UCLASS_PCI,
+	.of_match = ls_pcie_ids,
+	.ops = &ls_pcie_ops,
+	.probe	= ls_pcie_probe,
+	.priv_auto_alloc_size = sizeof(struct ls_pcie),
+};
