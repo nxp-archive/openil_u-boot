@@ -646,6 +646,7 @@
 #define CONFIG_BAUDRATE	115200
 
 #define	CONFIG_EXTRA_ENV_SETTINGS				\
+"initrd_high=0xffffffff\0"					\
 "hwconfig=fsl_ddr:ctlr_intlv=bank,bank_intlv=cs0_cs1,ecc=off\0"		\
 "netdev=eth0\0"						\
 "uboot=" __stringify(CONFIG_UBOOTPATH) "\0"				\

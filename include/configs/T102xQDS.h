@@ -871,6 +871,7 @@ unsigned long get_board_ddr_clk(void);
 #define __USB_PHY_TYPE		utmi
 
 #define	CONFIG_EXTRA_ENV_SETTINGS				\
+	"initrd_high=0xffffffff\0"				\
 	"hwconfig=fsl_ddr:ctlr_intlv=cacheline,bank_intlv=cs0_cs1;\0"  \
 	"usb1:dr_mode=host,phy_type=" __stringify(__USB_PHY_TYPE) "\0" \
 	"bootargs=root=/dev/ram rw console=ttyS0,115200\0" \

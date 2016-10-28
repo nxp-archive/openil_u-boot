@@ -815,6 +815,7 @@ unsigned long get_board_ddr_clk(void);
 
 #define	CONFIG_EXTRA_ENV_SETTINGS				\
 	HWCONFIG						\
+	"initrd_high=0xffffffff\0"				\
 	"usb1:dr_mode=host,phy_type=" __stringify(__USB_PHY_TYPE) "\0"\
 	"netdev=eth0\0"						\
 	"uboot=" __stringify(CONFIG_UBOOTPATH) "\0"			\
