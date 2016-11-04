@@ -22,7 +22,7 @@
 #include <spl.h>
 #include <fsl_devdis.h>
 #include <fsl_validate.h>
-
+#include <fsl_ddr.h>
 #include "../common/sleep.h"
 #include "../common/qixis.h"
 #include "ls1021aqds_qixis.h"
@@ -430,6 +430,9 @@ int board_init(void)
 	struct ccsr_cci400 *cci = (struct ccsr_cci400 *)CONFIG_SYS_CCI400_ADDR;
 	unsigned int major;
 
+#ifdef CONFIG_SYS_FSL_ERRATUM_A009942
+	erratum_a009942_check_cpo();
+#endif
 	major = get_soc_major_rev();
 	if (major == SOC_MAJOR_VER_1_0) {
 		/* Set CCI-400 control override register to
