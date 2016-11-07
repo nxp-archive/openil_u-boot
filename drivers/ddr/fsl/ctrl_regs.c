@@ -2602,7 +2602,7 @@ void erratum_a009942_check_cpo(void)
 	if (has_ecc) {
 		cpo = ddr_in32(&ddr->debug[13]);
 		cpo = cpo >> 24;
-		if (cpo << min_cpo)
+		if (cpo < min_cpo)
 			min_cpo = cpo;
 		if (cpo > max_cpo)
 			max_cpo = cpo;
