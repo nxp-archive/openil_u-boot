@@ -20,6 +20,7 @@ static int sata_curr_device = -1;
 static int do_sata(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 {
 	int rc = 0;
+	int i;
 
 	if (argc == 2 && strcmp(argv[1], "stop") == 0)
 		return sata_stop();
@@ -32,9 +33,15 @@ static int do_sata(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 	}
 
 	/* If the user has not yet run `sata init`, do it now */
-	if (sata_curr_device == -1)
-		if (sata_initialize())
-			return 1;
+	if (sata_curr_device == -1) {
+		rc = sata_initialize();
+		for (i = 0; i < CONFIG_SYS_SATA_MAX_DEVICE; i++) {
+			if (sata_dev_desc[i].lba > 0)
+				sata_curr_device = i;
+		}
+		if (sata_curr_device == -1)
+			return -1;
+	}
 
 	switch (argc) {
 	case 0:
