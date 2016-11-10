@@ -29,6 +29,9 @@
 #ifdef CONFIG_SYS_FSL_DDR
 #include <fsl_ddr.h>
 #endif
+#ifdef CONFIG_SYS_DPAA_QBMAN
+#include <fsl_qbman.h>
+#endif
 
 DECLARE_GLOBAL_DATA_PTR;
 
@@ -403,6 +406,9 @@ int arch_early_init_r(void)
 #endif
 #ifdef CONFIG_FMAN_ENET
 	fman_enet_init();
+#endif
+#ifdef CONFIG_SYS_DPAA_QBMAN
+	setup_qbman_portals();
 #endif
 	return 0;
 }

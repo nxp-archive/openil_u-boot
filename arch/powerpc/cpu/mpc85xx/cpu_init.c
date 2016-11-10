@@ -26,6 +26,7 @@
 #ifdef CONFIG_FSL_CORENET
 #include <asm/fsl_portals.h>
 #include <asm/fsl_liodn.h>
+#include <fsl_qbman.h>
 #endif
 #include <fsl_usb.h>
 #include <hwconfig.h>
@@ -795,7 +796,7 @@ int cpu_init_r(void)
 #ifdef CONFIG_FSL_CORENET
 	set_liodns();
 #ifdef CONFIG_SYS_DPAA_QBMAN
-	setup_portals();
+	setup_qbman_portals();
 #endif
 #endif
 

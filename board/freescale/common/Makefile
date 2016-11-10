@@ -73,6 +73,8 @@ obj-$(CONFIG_P5040DS)	+= p_corenet/
 
 obj-$(CONFIG_LAYERSCAPE_NS_ACCESS)	+= ns_access.o
 
+obj-$(CONFIG_SYS_DPAA_QBMAN)  += portals.o
+
 ifdef CONFIG_SECURE_BOOT
 obj-$(CONFIG_CMD_ESBC_VALIDATE) += fsl_validate.o cmd_esbc_validate.o
 endif
