@@ -824,12 +824,16 @@ config TARGET_LS1021AQDS
 	select CPU_V7
 	select SUPPORT_SPL
 	select ARCH_SUPPORT_PSCI
+	select CPU_V7_HAS_NONSEC
+	select CPU_V7_HAS_VIRT
 
 config TARGET_LS1021ATWR
 	bool "Support ls1021atwr"
 	select CPU_V7
 	select SUPPORT_SPL
 	select ARCH_SUPPORT_PSCI
+	select CPU_V7_HAS_NONSEC
+	select CPU_V7_HAS_VIRT
 
 config TARGET_LS1043AQDS
 	bool "Support ls1043aqds"
