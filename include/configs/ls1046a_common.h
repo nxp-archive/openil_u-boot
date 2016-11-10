@@ -118,6 +118,7 @@
 #define CONFIG_SYS_I2C_MXC_I2C3
 #define CONFIG_SYS_I2C_MXC_I2C4
 
+#define FSL_PCIE_COMPAT "fsl,ls1046a-pcie"
 #ifdef CONFIG_PCI
 #define CONFIG_PCI_PNP
 #define CONFIG_PCI_SCAN_SHOW
