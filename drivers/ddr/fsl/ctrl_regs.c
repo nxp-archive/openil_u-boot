@@ -2571,7 +2571,8 @@ void erratum_a009942_check_cpo(void)
 	struct ccsr_ddr __iomem *ddr =
 		(struct ccsr_ddr __iomem *)(CONFIG_SYS_FSL_DDR_ADDR);
 	u32 cpo, cpo_e, cpo_o, cpo_target, cpo_optimal;
-	u32 min_cpo = 0, max_cpo = 0;
+	u32 cpo_min = ddr_in32(&ddr->debug[9]) >> 24;
+	u32 cpo_max = cpo_min;
 	u32 sdram_cfg, i, tmp, lanes, ddr_type;
 	bool update_cpo = false, has_ecc = false;
 
@@ -2592,39 +2593,38 @@ void erratum_a009942_check_cpo(void)
 		cpo_e = cpo >> 24;
 		cpo_o = (cpo >> 8) & 0xff;
 		tmp = min(cpo_e, cpo_o);
-		if (tmp < min_cpo)
-			min_cpo = tmp;
+		if (tmp < cpo_min)
+			cpo_min = tmp;
 		tmp = max(cpo_e, cpo_o);
-		if (tmp > max_cpo)
-			max_cpo = tmp;
+		if (tmp > cpo_max)
+			cpo_max = tmp;
 	}
 
 	if (has_ecc) {
 		cpo = ddr_in32(&ddr->debug[13]);
 		cpo = cpo >> 24;
-		if (cpo < min_cpo)
-			min_cpo = cpo;
-		if (cpo > max_cpo)
-			max_cpo = cpo;
+		if (cpo < cpo_min)
+			cpo_min = cpo;
+		if (cpo > cpo_max)
+			cpo_max = cpo;
 	}
 
 	cpo_target = ddr_in32(&ddr->debug[28]) & 0xff;
-	cpo_optimal = ((max_cpo + min_cpo) >> 1) + 0x27;
+	cpo_optimal = ((cpo_max + cpo_min) >> 1) + 0x27;
 	debug("cpo_optimal = 0x%x, cpo_target = 0x%x\n", cpo_optimal,
 	      cpo_target);
-	debug("max_cpo = 0x%x, min_cpo = 0x%x\n", max_cpo, min_cpo);
+	debug("cpo_max = 0x%x, cpo_min = 0x%x\n", cpo_max, cpo_min);
 
 	ddr_type = (sdram_cfg & SDRAM_CFG_SDRAM_TYPE_MASK) >>
 		    SDRAM_CFG_SDRAM_TYPE_SHIFT;
 	if (ddr_type == SDRAM_TYPE_DDR4)
-		update_cpo = (min_cpo + 0x3b) < cpo_target ? true : false;
+		update_cpo = (cpo_min + 0x3b) < cpo_target ? true : false;
 	else if (ddr_type == SDRAM_TYPE_DDR3)
-		update_cpo = (min_cpo + 0x3f) < cpo_target ? true : false;
+		update_cpo = (cpo_min + 0x3f) < cpo_target ? true : false;
 
 	if (update_cpo) {
-		printf("WARN: This board needs to optimize debug_29, pls set ");
-		printf("\'popts->cpo_sample = 0x%x\' in <board>/ddr.c\n",
-			cpo_optimal);
+		printf("WARN: pls set popts->cpo_sample = 0x%x ", cpo_optimal);
+		printf("in <board>/ddr.c to optimize cpo\n");
 	}
 }
 #endif
