@@ -365,7 +365,7 @@ int spi_flash_cmd_erase_ops(struct spi_flash *flash, u32 offset, size_t len)
 		debug("SF: erase %2x %2x %2x %2x (%x)\n", cmd[0], cmd[1],
 		      cmd[2], cmd[3], erase_addr);
 
-		ret = spi_flash_write_common(flash, cmd, sizeof(cmd), NULL, 0);
+		ret = spi_flash_write_common(flash, cmd, flash->cmd_len, NULL, 0);
 		if (ret < 0) {
 			debug("SF: erase failed\n");
 			break;
@@ -423,7 +423,7 @@ int spi_flash_cmd_write_ops(struct spi_flash *flash, u32 offset,
 		debug("SF: 0x%p => cmd = { 0x%02x 0x%02x%02x%02x } chunk_len = %zu\n",
 		      buf + actual, cmd[0], cmd[1], cmd[2], cmd[3], chunk_len);
 
-		ret = spi_flash_write_common(flash, cmd, sizeof(cmd),
+		ret = spi_flash_write_common(flash, cmd, flash->cmd_len,
 					buf + actual, chunk_len);
 		if (ret < 0) {
 			debug("SF: write failed\n");
@@ -1063,8 +1063,9 @@ int spi_flash_scan(struct spi_flash *flash)
 {
 	struct spi_slave *spi = flash->spi;
 	const struct spi_flash_params *params;
-	u16 jedec, ext_jedec;
-	u8 cmd, idcode[5];
+	u16 jedec;
+	u32 ext_jedec;
+	u8 cmd, idcode[6];
 	int ret;
 	static u8 spi_read_cmds_array[] = {
 		CMD_READ_ARRAY_SLOW,
@@ -1087,7 +1088,7 @@ int spi_flash_scan(struct spi_flash *flash)
 #endif
 
 	jedec = idcode[1] << 8 | idcode[2];
-	ext_jedec = idcode[3] << 8 | idcode[4];
+	ext_jedec = idcode[3] << 16 | idcode[4] << 8;
 
 	/* Validate params from spi_flash_params table */
 	params = spi_flash_params_table;
@@ -1097,6 +1098,8 @@ int spi_flash_scan(struct spi_flash *flash)
 				if (params->ext_jedec == 0)
 					break;
 				else if (params->ext_jedec == ext_jedec)
+					break;
+				else if (params->ext_jedec == (ext_jedec | idcode[5]))
 					break;
 			}
 		}
