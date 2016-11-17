@@ -8,6 +8,7 @@
 #define _FSL_LIODN_H_
 
 #include <asm/types.h>
+#include <fsl_qbman.h>
 
 struct srio_liodn_id_table {
 	u32 id[2];
