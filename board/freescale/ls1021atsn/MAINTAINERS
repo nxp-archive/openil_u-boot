@@ -1,0 +1,6 @@
+LS1021ATSN BOARD
+M:	Alison Wang <alison.wang@freescale.com>
+S:	Maintained
+F:	board/freescale/ls1021atsn/
+F:	include/configs/ls1021atsn.h
+F:	configs/ls1021atsn_sdcard_defconfig

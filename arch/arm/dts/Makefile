@@ -136,7 +136,7 @@ dtb-$(CONFIG_TARGET_AM57XX_EVM) += am57xx-beagle-x15.dtb \
 dtb-$(CONFIG_TARGET_STV0991) += stv0991.dtb
 
 dtb-$(CONFIG_LS102XA) += ls1021a-qds-duart.dtb \
-	ls1021a-qds-lpuart.dtb \
+	ls1021a-qds-lpuart.dtb ls1021a-tsn.dtb \
 	ls1021a-twr-duart.dtb ls1021a-twr-lpuart.dtb
 dtb-$(CONFIG_FSL_LSCH3) += fsl-ls2080a-qds.dtb \
 	fsl-ls2080a-rdb.dtb
