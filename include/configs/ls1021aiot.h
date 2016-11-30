@@ -35,7 +35,6 @@
 
 #if defined(CONFIG_HAS_FSL_DR_USB) || defined(CONFIG_HAS_FSL_XHCI_USB)
 #define CONFIG_USB_STORAGE
-#define CONFIG_CMD_EXT2
 #endif
 
 /*
@@ -140,7 +139,6 @@
 /*
  * I2C
  */
-#define CONFIG_CMD_I2C
 #define CONFIG_SYS_I2C
 #define CONFIG_SYS_I2C_MXC
 #define CONFIG_SYS_I2C_MXC_I2C1		/* enable I2C bus 1 */
@@ -158,7 +156,6 @@
  * MMC
  */
 #define CONFIG_MMC
-#define CONFIG_CMD_MMC
 #define CONFIG_FSL_ESDHC
 #define CONFIG_GENERIC_MMC
 
@@ -179,7 +176,6 @@
 #define CONFIG_SYS_SCSI_MAX_DEVICE	(CONFIG_SYS_SCSI_MAX_SCSI_ID * \
 		CONFIG_SYS_SCSI_MAX_LUN)
 
-#define CONFIG_CMD_FAT
 #define CONFIG_DOS_PARTITION
 
 /* SPI */
@@ -196,7 +192,6 @@
 
 /* DM SPI */
 #if defined(CONFIG_FSL_DSPI) || defined(CONFIG_FSL_QSPI)
-#define CONFIG_CMD_SF
 #define CONFIG_DM_SPI_FLASH
 #endif
 
@@ -263,16 +258,8 @@
 #define CONFIG_CMD_PCI
 #endif
 
-#define CONFIG_CMD_PING
-#define CONFIG_CMD_DHCP
-#define CONFIG_CMD_MII
-
 #define CONFIG_CMDLINE_TAG
 #define CONFIG_CMDLINE_EDITING
-
-#if defined(CONFIG_QSPI_BOOT) || defined(CONFIG_SD_BOOT)
-#undef	CONFIG_CMD_IMLS
-#endif
 
 #define CONFIG_PEN_ADDR_BIG_ENDIAN
 #define CONFIG_LAYERSCAPE_NS_ACCESS
@@ -300,8 +287,8 @@
 #define CONFIG_SYS_MAXARGS	16	/* max number of command args */
 #define CONFIG_SYS_BARGSIZE		CONFIG_SYS_CBSIZE
 
-#define CONFIG_CMD_GREPENV
-#define CONFIG_CMD_MEMINFO
+#define CONFIG_SYS_MEMTEST_START	0x80000000
+#define CONFIG_SYS_MEMTEST_END		0x9fffffff
 
 #define CONFIG_SYS_LOAD_ADDR		0x82000000
 
@@ -344,8 +331,6 @@
 #define CONFIG_ENV_OFFSET		0x100000
 #define CONFIG_ENV_SECT_SIZE	0x10000
 #endif
-
-#define CONFIG_CMD_BOOTZ
 
 #define CONFIG_MISC_INIT_R
 
