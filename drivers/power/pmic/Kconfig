@@ -135,3 +135,10 @@ config PMIC_TPS65090
 	FETs and a battery charger. This driver provides register access
 	only, and you can enable the regulator/charger drivers separately if
 	required.
+
+config POWER_MC34VR500
+	bool "Enable driver for Freescale MC34VR500 PMIC"
+	---help---
+	The MC34VR500 is used in conjunction with the FSL T1 and LS1 series
+	SoC. It provides 4 buck DC-DC convertors and 5 LDOs, and it is accessed
+	via an I2C interface.
