@@ -1026,6 +1026,7 @@ static const struct udevice_id fsl_esdhc_ids[] = {
 	{ .compatible = "fsl,imx6sl-usdhc", },
 	{ .compatible = "fsl,imx6q-usdhc", },
 	{ .compatible = "fsl,imx7d-usdhc", },
+	{ .compatible = "fsl,esdhc", },
 	{ /* sentinel */ }
 };
 
