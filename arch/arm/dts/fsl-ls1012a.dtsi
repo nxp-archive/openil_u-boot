@@ -103,6 +103,24 @@
 			status = "disabled";
 		};
 
+		esdhc0: esdhc@1560000 {
+			compatible = "fsl,esdhc";
+			reg = <0x0 0x1560000 0x0 0x10000>;
+			interrupts = <0 62 0x4>;
+			big-endian;
+			bus-width = <4>;
+		};
+
+		esdhc1: esdhc@1580000 {
+			compatible = "fsl,esdhc";
+			reg = <0x0 0x1580000 0x0 0x10000>;
+			interrupts = <0 65 0x4>;
+			big-endian;
+			non-removable;
+			bus-width = <4>;
+		};
+
+
 		pcie@3400000 {
 			compatible = "fsl,ls-pcie", "snps,dw-pcie";
 			reg = <0x00 0x03400000 0x0 0x80000   /* dbi registers */
