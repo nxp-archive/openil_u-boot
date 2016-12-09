@@ -83,6 +83,11 @@
 #define QSPI0_BASE_ADDR				(CONFIG_SYS_IMMR + 0x00550000)
 #define DSPI1_BASE_ADDR				(CONFIG_SYS_IMMR + 0x01100000)
 
+#define GPIO1_BASE_ADDR				(CONFIG_SYS_IMMR + 0x1300000)
+#define GPIO2_BASE_ADDR				(CONFIG_SYS_IMMR + 0x1310000)
+#define GPIO3_BASE_ADDR				(CONFIG_SYS_IMMR + 0x1320000)
+#define GPIO4_BASE_ADDR				(CONFIG_SYS_IMMR + 0x1330000)
+
 #define LPUART_BASE				(CONFIG_SYS_IMMR + 0x01950000)
 
 #define AHCI_BASE_ADDR				(CONFIG_SYS_IMMR + 0x02200000)
@@ -642,6 +647,16 @@ struct ccsr_cci400 {
 		u8 res_a010[0xb000 - 0xa010];
 	} pcounter[4];			/* Performance Counter */
 	u8 res_e004[0x10000 - 0xe004];
+};
+
+struct ccsr_gpio {
+	u32	gpdir;
+	u32	gpodr;
+	u32	gpdat;
+	u32	gpier;
+	u32	gpimr;
+	u32	gpicr;
+	u32	gpibe;
 };
 
 /* MMU 500 */
