@@ -1495,17 +1495,16 @@ void tmu_init(TMU_CFG *cfg)
 	writel(0x3FF,	TMU_TDQ2_SCH_CTRL);
 #endif
 	writel(0x3FF,	TMU_TDQ3_SCH_CTRL);
-	
-	
+
 	if (PLL_CLK_EN == 0)
 		writel(0x0,	TMU_PE_SYS_CLK_RATIO);	// Clock ratio: for 1:1 the value is 0
 	else
 		writel(0x1,	TMU_PE_SYS_CLK_RATIO);	// Clock ratio: for 1:2 the value is 1
 
-	//printf("TMU_LLM_BASE_ADDR %x\n", cfg->llm_base_addr);
+	debug("TMU_LLM_BASE_ADDR %x\n", cfg->llm_base_addr);
 	writel(cfg->llm_base_addr,	TMU_LLM_BASE_ADDR);	// Extra packet pointers will be stored from this address onwards
-	
-	//printf("TMU_LLM_QUE_LEN %x\n", cfg->llm_queue_len);
+
+	debug("TMU_LLM_QUE_LEN %x\n", cfg->llm_queue_len);
 	writel(cfg->llm_queue_len,	TMU_LLM_QUE_LEN);
 	writel(5,			TMU_TDQ_IIFG_CFG);
 	writel(DDR_BUF_SIZE,		TMU_BMU_BUF_SIZE);
@@ -1537,7 +1536,12 @@ void tmu_init(TMU_CFG *cfg)
 			u32 qmax;
 			writel((phyno << 8) | q, TMU_TEQ_CTRL);
 			writel(1 << 22, TMU_TEQ_QCFG);
-			qmax = ((phyno == 3) || (q < 8)) ? 255 : 127;
+
+			if (phyno == 3)
+				qmax = DEFAULT_TMU3_QDEPTH;
+			else
+				qmax = (q == 0) ? DEFAULT_Q0_QDEPTH : DEFAULT_MAX_QDEPTH;
+
 			writel(qmax << 18, TMU_TEQ_HW_PROB_CFG2);
 			writel(qmax >> 14, TMU_TEQ_HW_PROB_CFG3);
 		}

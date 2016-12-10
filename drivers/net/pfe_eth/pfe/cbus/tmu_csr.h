@@ -98,10 +98,17 @@
 #define MEM_INIT_DONE	(1 << 7)
 #define LLM_INIT	(1 << 8)
 #define LLM_INIT_DONE	(1 << 9)
+#define ECC_MEM_INIT_DONE	(1<<10)
 
 typedef struct {
 	u32 llm_base_addr;
 	u32 llm_queue_len;
 } TMU_CFG;
+
+/* Not HW related for pfe_ctrl / pfe common defines */
+#define DEFAULT_MAX_QDEPTH	80
+#define DEFAULT_Q0_QDEPTH	511 //We keep one large queue for host tx qos
+#define DEFAULT_TMU3_QDEPTH	127
+
 
 #endif /* _TMU_CSR_H_ */

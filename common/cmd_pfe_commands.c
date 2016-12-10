@@ -918,7 +918,7 @@ static void send_dummy_pkt_to_hif(void)
 	/*Allocate BMU2 buffer */
 	buf = readl(BMU2_BASE_ADDR + BMU_ALLOC_CTRL);
 
-	printf("Sending a dummy pkt to HIF %x\n", buf);
+	debug("Sending a dummy pkt to HIF %x\n", buf);
 	buf += 0x80;
 	memcpy((void *)DDR_PFE_TO_VIRT(buf), dummy_pkt, sizeof(dummy_pkt));
 	/*Write length and pkt to TMU*/
@@ -931,14 +931,13 @@ static void pfe_command_stop(int argc, char * const argv[])
 {
 	int id;
 	u32 rx_status;
-	printf("Stopping PFE \n");
+	printf("Stopping PFE... \n");
 
 	/*Mark all descriptors as LAST_BD */
 	hif_rx_desc_disable();
 
 	/*If HIF Rx BDP is busy send a dummy packet */
 	rx_status = readl(HIF_RX_STATUS);
-	printf("rx_status %x %x\n",rx_status, BDP_CSR_RX_DMA_ACTV);
 	if(rx_status & BDP_CSR_RX_DMA_ACTV)
 		send_dummy_pkt_to_hif();
 	udelay(10);
@@ -950,12 +949,10 @@ static void pfe_command_stop(int argc, char * const argv[])
 
 	for (id = CLASS0_ID; id <= CLASS_MAX_ID; id++)
 	{
-		printf("Stop %d\n", id);
 		/*Inform PE to stop */
 		pe_dmem_write(id, cpu_to_be32(1), PEMBOX_ADDR_CLASS, 4);
 		udelay(10);
 
-		printf("Reading %d\n", id);
 		/*Read status */
 		if(!pe_dmem_read(id, PEMBOX_ADDR_CLASS+4, 4))
 			printf("Failed to stop PE%d\n", id);
@@ -965,12 +962,10 @@ static void pfe_command_stop(int argc, char * const argv[])
 	{
 		if(id == TMU2_ID) continue;
 
-		printf("Stop %d\n", id);
 		/*Inform PE to stop */
 		pe_dmem_write(id, 1, PEMBOX_ADDR_TMU, 4);
 		udelay(10);
 
-		printf("Reading %d\n", id);
 		/*Read status */
 		if(!pe_dmem_read(id, PEMBOX_ADDR_TMU+4, 4))
 			printf("Failed to stop PE%d\n", id);
