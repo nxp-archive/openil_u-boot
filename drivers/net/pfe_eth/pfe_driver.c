@@ -32,13 +32,18 @@ int pfe_recv(unsigned int *pkt_ptr, int *phy_port)
 	struct rx_desc_s *rx_desc = g_rx_desc;
 	struct bufDesc *bd;
 	int len = -1;
-	//volatile u32 ctrl;
+	volatile u32 ctrl;
 	struct hif_header_s *hif_header;
 
 	bd = rx_desc->rxBase + rx_desc->rxToRead;
 
-	if (bd->ctrl & BD_CTRL_DESC_EN)
+	if (bd->ctrl & BD_CTRL_DESC_EN) {
+		if(!(readl(HIF_RX_STATUS) & BDP_CSR_RX_DMA_ACTV)){
+			/*If BDP is not active give write strobe */
+			writel((readl(HIF_RX_CTRL) | HIF_CTRL_BDP_CH_START_WSTB), HIF_RX_CTRL);
+		}
 		return len; //No pending Rx packet
+	}
 
 	/* this len include hif_header(8bytes) */
 	len = bd->ctrl & 0xFFFF;
@@ -50,7 +55,7 @@ int pfe_recv(unsigned int *pkt_ptr, int *phy_port)
 	dprint("Pkt recv'd: Pkt ptr(%p), len(%d), gemac_port(%d) status(%08x)\n",
 				hif_header, len, hif_header->port_no, bd->status);
 
-#if 0
+#if DEBUG
 	{
 		int i;
 		unsigned char *p = (unsigned char *)hif_header;
@@ -66,20 +71,26 @@ int pfe_recv(unsigned int *pkt_ptr, int *phy_port)
 	*pkt_ptr = (unsigned long)(hif_header + 1);
 	*phy_port = hif_header->port_no;
 	len -= sizeof(struct hif_header_s);
-#if 0
+
+#if defined(PFE_LS1012A_RESET_WA)
 	/* reset bd control field */
-	ctrl = (MAX_FRAME_SIZE | BD_CTRL_DESC_EN | BD_CTRL_DIR);
+	ctrl = (MAX_FRAME_SIZE | BD_CTRL_LAST_BD | BD_CTRL_LIFM | BD_CTRL_DESC_EN | BD_CTRL_DIR);
+#else
+	/* reset bd control field */
+	ctrl = (MAX_FRAME_SIZE | BD_CTRL_LIFM | BD_CTRL_DESC_EN | BD_CTRL_DIR);
+	/* If we use BD_CTRL_LAST_BD, rxToRead never changes */
+	rx_desc->rxToRead = (rx_desc->rxToRead + 1) & (rx_desc->rxRingSize - 1);
+#endif
 	bd->ctrl = ctrl;
 	bd->status = 0;
 
-	rx_desc->rxToRead = (rx_desc->rxToRead + 1) & (rx_desc->rxRingSize - 1);
 
 	/* Give START_STROBE to BDP to fetch the descriptor __NOW__,
 	 * BDP need not to wait for rx_poll_cycle time to fetch the descriptor,
 	 * In idle state (ie., no rx pkt), BDP will not fetch
 	 * the descriptor even if strobe is given(I think) */
 	writel((readl(HIF_RX_CTRL) | HIF_CTRL_BDP_CH_START_WSTB), HIF_RX_CTRL);
-#endif
+
 	return len;
 }
 
@@ -279,13 +290,36 @@ void hif_rx_desc_dump(void)
 	rx_desc = g_rx_desc;
 	bd_va = rx_desc->rxBase;
 
-	printf("HIF rx desc: base_va: %p, base_pa: %08x\n", rx_desc->rxBase, rx_desc->rxBase_pa);
+	dprint("HIF rx desc: base_va: %p, base_pa: %08x\n", rx_desc->rxBase, rx_desc->rxBase_pa);
 	for (i=0; i < rx_desc->rxRingSize; i++) {
-//		printf("status: %08x, ctrl: %08x, data: %08x, next: %p\n",
-//			bd_va->status, bd_va->ctrl, bd_va->data, bd_va->next);
+		dprint("status: %08x, ctrl: %08x, data: %08x, next: %p\n",
+			bd_va->status, bd_va->ctrl, bd_va->data, bd_va->next);
 		bd_va++;
 	}
 }
+
+/** This function mark all Rx descriptors as LAST_BD.
+ */
+void hif_rx_desc_disable(void)
+{
+	int i;
+	struct rx_desc_s *rx_desc;
+	struct bufDesc *bd_va;
+
+	if (g_rx_desc == NULL) {
+		printf("%s: HIF Rx desc not initialized \n", __func__);
+		return;
+	}
+
+	rx_desc = g_rx_desc;
+	bd_va = rx_desc->rxBase;
+
+	for (i=0; i < rx_desc->rxRingSize; i++) {
+		bd_va->ctrl |= BD_CTRL_LAST_BD;
+		bd_va++;
+	}
+}
+
 
 /** HIF Rx Desc initialization function.
  */
@@ -329,7 +363,11 @@ static int hif_rx_desc_init(struct pfe *pfe)
 
 	memset(bd_va, 0, sizeof(struct bufDesc) * rx_desc->rxRingSize);
 
+#if defined(PFE_LS1012A_RESET_WA)
+	ctrl = (MAX_FRAME_SIZE | BD_CTRL_LAST_BD | BD_CTRL_DESC_EN | BD_CTRL_DIR | BD_CTRL_LIFM);
+#else
 	ctrl = (MAX_FRAME_SIZE | BD_CTRL_DESC_EN | BD_CTRL_DIR | BD_CTRL_LIFM);
+#endif
 	for (i=0; i < rx_desc->rxRingSize; i++) {
 		bd_va->next = (unsigned long)(bd_pa + 1);
 		bd_va->ctrl = ctrl;

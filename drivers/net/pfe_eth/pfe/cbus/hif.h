@@ -39,6 +39,9 @@
 #define HIF_CTRL_BDP_POLL_CTRL_EN	(1<<1)
 #define HIF_CTRL_BDP_CH_START_WSTB	(1<<2)
 
+/*HIF_RX_STATUS bits */
+#define BDP_CSR_RX_DMA_ACTV	(1<<16)
+
 /*HIF_INT_ENABLE bits */
 #define HIF_INT_EN		(1 << 0)
 #define HIF_RXBD_INT_EN		(1 << 1)

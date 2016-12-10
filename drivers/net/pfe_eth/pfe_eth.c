@@ -53,7 +53,7 @@ static void ls1012a_gemac_enable(void *gemac_base)
         writel(readl(gemac_base + EMAC_ECNTRL_REG) | EMAC_ECNTRL_ETHER_EN, gemac_base + EMAC_ECNTRL_REG);	
 }
 
-static void ls1012a_gemac_dsable(void *gemac_base)
+static void ls1012a_gemac_disable(void *gemac_base)
 {
         writel(readl(gemac_base + EMAC_ECNTRL_REG) & ~EMAC_ECNTRL_ETHER_EN, gemac_base + EMAC_ECNTRL_REG);	
 }
@@ -114,7 +114,7 @@ static void ls1012a_eth_halt(struct eth_device *edev)
 {
         struct ls1012a_eth_dev *priv = (struct ls1012a_eth_dev *)edev->priv;
 
-        ls1012a_gemac_enable(priv->gem->gemac_base);
+        ls1012a_gemac_disable(priv->gem->gemac_base);
 
         gpi_disable(priv->gem->egpi_base);
 
@@ -216,14 +216,12 @@ static int ls1012a_eth_recv(struct eth_device *dev)
         dprint("Rx pkt: pkt_buf(%08x), phy_port(%d), len(%d)\n", pkt_buf, phy_port, len);
         if (phy_port != priv->gemac_port)  {
                 printf("Rx pkt not on expected port\n");
-		pfe_recv_ack();
                 return 0;
         }
 
 	// Pass the packet up to the protocol layers.
 	net_process_received_packet((void *)(long int)pkt_buf, len);
 
-	pfe_recv_ack();
 	return 0;
 }
 

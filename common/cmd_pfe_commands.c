@@ -18,6 +18,7 @@
 #include "../drivers/net/pfe_eth/pfe/cbus/gpi.h"
 DECLARE_GLOBAL_DATA_PTR;
 
+void hif_rx_desc_disable(void);
 int pfe_load_elf(int pe_mask, const struct firmware *fw);
 int ls1012a_gemac_initialize(bd_t * bis, int dev_id, char *devname);
 
@@ -576,7 +577,9 @@ void  bmu(int id, void *base)
 }
 
 #define	PESTATUS_ADDR_CLASS	0x800
+#define PEMBOX_ADDR_CLASS	0x890
 #define	PESTATUS_ADDR_TMU	0x80
+#define PEMBOX_ADDR_TMU		0x290
 #define	PESTATUS_ADDR_UTIL	0x0
 
 static void pfe_pe_status(int argc, char * const argv[])
@@ -843,14 +846,12 @@ void hif_rx_enable(void)
 void hif_rx_disable(void)
 }
 #endif
-
 #define ROUTE_TABLE_START	(CONFIG_DDR_PHYS_BASEADDR+ROUTE_TABLE_BASEADDR)
 static void pfe_command_fftest(int argc, char * const argv[])
 {
 	bd_t *bd = gd->bd;
 	struct eth_device *edev_eth0;
 	struct eth_device *edev_eth1;
-
 
 	// open eth0 and eth1 
 	edev_eth0 = eth_get_dev_by_name("pfe_eth0");
@@ -902,6 +903,80 @@ static void pfe_command_start(int argc, char * const argv[])
 }
 #endif
 
+#ifdef PFE_LS1012A_RESET_WA
+/*This function sends a dummy packet to HIF through TMU3 */
+static void send_dummy_pkt_to_hif(void)
+{
+	u32 buf;
+	static u32 dummy_pkt[] =  {
+		0x4200800a, 0x01000003, 0x00018100, 0x00000000,
+		0x33221100, 0x2b785544, 0xd73093cb, 0x01000608,
+		0x04060008, 0x2b780200, 0xd73093cb, 0x0a01a8c0,
+		0x33221100, 0xa8c05544, 0x00000301, 0x00000000,
+		0x00000000, 0x00000000, 0x00000000, 0xbe86c51f };
+
+	/*Allocate BMU2 buffer */
+	buf = readl(BMU2_BASE_ADDR + BMU_ALLOC_CTRL);
+
+	printf("Sending a dummy pkt to HIF %x\n", buf);
+	buf += 0x80;
+	memcpy((void *)DDR_PFE_TO_VIRT(buf), dummy_pkt, sizeof(dummy_pkt));
+	/*Write length and pkt to TMU*/
+	writel(0x03000042, TMU_PHY_INQ_PKTPTR);
+	writel(buf, TMU_PHY_INQ_PKTINFO);
+
+}
+
+static void pfe_command_stop(int argc, char * const argv[])
+{
+	int id;
+	u32 rx_status;
+	printf("Stopping PFE \n");
+
+	/*Mark all descriptors as LAST_BD */
+	hif_rx_desc_disable();
+
+	/*If HIF Rx BDP is busy send a dummy packet */
+	rx_status = readl(HIF_RX_STATUS);
+	printf("rx_status %x %x\n",rx_status, BDP_CSR_RX_DMA_ACTV);
+	if(rx_status & BDP_CSR_RX_DMA_ACTV)
+		send_dummy_pkt_to_hif();
+	udelay(10);
+
+	if(readl(HIF_RX_STATUS) & BDP_CSR_RX_DMA_ACTV)
+		printf("Unable to stop HIF\n");
+
+	/*Disable Class PEs */
+
+	for (id = CLASS0_ID; id <= CLASS_MAX_ID; id++)
+	{
+		printf("Stop %d\n", id);
+		/*Inform PE to stop */
+		pe_dmem_write(id, cpu_to_be32(1), PEMBOX_ADDR_CLASS, 4);
+		udelay(10);
+
+		printf("Reading %d\n", id);
+		/*Read status */
+		if(!pe_dmem_read(id, PEMBOX_ADDR_CLASS+4, 4))
+			printf("Failed to stop PE%d\n", id);
+	}
+	/*Disable TMU PEs */
+	for (id = TMU0_ID; id <= TMU_MAX_ID; id++)
+	{
+		if(id == TMU2_ID) continue;
+
+		printf("Stop %d\n", id);
+		/*Inform PE to stop */
+		pe_dmem_write(id, 1, PEMBOX_ADDR_TMU, 4);
+		udelay(10);
+
+		printf("Reading %d\n", id);
+		/*Read status */
+		if(!pe_dmem_read(id, PEMBOX_ADDR_TMU+4, 4))
+			printf("Failed to stop PE%d\n", id);
+	}
+}
+#endif
 
 static int pfe_command(cmd_tbl_t *cmdtp, int flag, int argc,
 		       char * const argv[])
@@ -950,6 +1025,10 @@ static int pfe_command(cmd_tbl_t *cmdtp, int flag, int argc,
 #ifdef CONFIG_CMD_PFE_START
 	else if (strcmp(argv[1], "start") == 0)
 		pfe_command_start(argc, argv);
+#endif
+#ifdef PFE_LS1012A_RESET_WA
+	else if (strcmp(argv[1], "stop") == 0)
+		pfe_command_stop(argc, argv);
 #endif
 	else
 	{
