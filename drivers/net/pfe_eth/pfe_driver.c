@@ -37,13 +37,8 @@ int pfe_recv(unsigned int *pkt_ptr, int *phy_port)
 
 	bd = rx_desc->rxBase + rx_desc->rxToRead;
 
-	if (bd->ctrl & BD_CTRL_DESC_EN) {
-		if(!(readl(HIF_RX_STATUS) & BDP_CSR_RX_DMA_ACTV)){
-			/*If BDP is not active give write strobe */
-			writel((readl(HIF_RX_CTRL) | HIF_CTRL_BDP_CH_START_WSTB), HIF_RX_CTRL);
-		}
+	if (bd->ctrl & BD_CTRL_DESC_EN)
 		return len; //No pending Rx packet
-	}
 
 	/* this len include hif_header(8bytes) */
 	len = bd->ctrl & 0xFFFF;
@@ -72,15 +67,10 @@ int pfe_recv(unsigned int *pkt_ptr, int *phy_port)
 	*phy_port = hif_header->port_no;
 	len -= sizeof(struct hif_header_s);
 
-#if defined(PFE_LS1012A_RESET_WA)
-	/* reset bd control field */
-	ctrl = (MAX_FRAME_SIZE | BD_CTRL_LAST_BD | BD_CTRL_LIFM | BD_CTRL_DESC_EN | BD_CTRL_DIR);
-#else
 	/* reset bd control field */
 	ctrl = (MAX_FRAME_SIZE | BD_CTRL_LIFM | BD_CTRL_DESC_EN | BD_CTRL_DIR);
-	/* If we use BD_CTRL_LAST_BD, rxToRead never changes */
 	rx_desc->rxToRead = (rx_desc->rxToRead + 1) & (rx_desc->rxRingSize - 1);
-#endif
+
 	bd->ctrl = ctrl;
 	bd->status = 0;
 
@@ -363,11 +353,8 @@ static int hif_rx_desc_init(struct pfe *pfe)
 
 	memset(bd_va, 0, sizeof(struct bufDesc) * rx_desc->rxRingSize);
 
-#if defined(PFE_LS1012A_RESET_WA)
-	ctrl = (MAX_FRAME_SIZE | BD_CTRL_LAST_BD | BD_CTRL_DESC_EN | BD_CTRL_DIR | BD_CTRL_LIFM);
-#else
 	ctrl = (MAX_FRAME_SIZE | BD_CTRL_DESC_EN | BD_CTRL_DIR | BD_CTRL_LIFM);
-#endif
+
 	for (i=0; i < rx_desc->rxRingSize; i++) {
 		bd_va->next = (unsigned long)(bd_pa + 1);
 		bd_va->ctrl = ctrl;

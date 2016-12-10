@@ -929,7 +929,7 @@ static void send_dummy_pkt_to_hif(void)
 
 static void pfe_command_stop(int argc, char * const argv[])
 {
-	int id;
+	int id, hif_stop_loop = 10;
 	u32 rx_status;
 	printf("Stopping PFE... \n");
 
@@ -937,10 +937,12 @@ static void pfe_command_stop(int argc, char * const argv[])
 	hif_rx_desc_disable();
 
 	/*If HIF Rx BDP is busy send a dummy packet */
-	rx_status = readl(HIF_RX_STATUS);
-	if(rx_status & BDP_CSR_RX_DMA_ACTV)
-		send_dummy_pkt_to_hif();
-	udelay(10);
+	do {
+		rx_status = readl(HIF_RX_STATUS);
+		if (rx_status & BDP_CSR_RX_DMA_ACTV)
+			send_dummy_pkt_to_hif();
+		udelay(10);
+	} while (hif_stop_loop--);
 
 	if(readl(HIF_RX_STATUS) & BDP_CSR_RX_DMA_ACTV)
 		printf("Unable to stop HIF\n");
