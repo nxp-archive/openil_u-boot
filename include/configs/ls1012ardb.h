@@ -27,7 +27,6 @@
 #define EMAC2_PHY_ADDR          0x1
 #define CONFIG_PHYLIB
 #define CONFIG_PHY_REALTEK
-#define CONFIG_RESET_PHY_R
 #endif
 
 /* DDR */

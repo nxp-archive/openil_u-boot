@@ -42,6 +42,7 @@ int board_eth_init(bd_t *bis)
 	struct mdio_info mac1_mdio_info;
 	struct ccsr_scfg *scfg = (struct ccsr_scfg *)CONFIG_SYS_FSL_SCFG_ADDR;
 
+	reset_phy();
 
 	/*TODO Following config should be done for all boards, where is the right place to put this */
 	out_be32(&scfg->pfeasbcr, in_be32(&scfg->pfeasbcr) | SCFG_PPFEASBCR_AWCACHE0);
