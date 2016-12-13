@@ -243,6 +243,7 @@
 #define CONFIG_SYS_FSL_SRK_LE
 #define CONFIG_KEY_REVOCATION
 #define CONFIG_SYS_FSL_MAX_NUM_OF_SEC           1
+#define CONFIG_SYS_DDR_BLOCK1_SIZE	((phys_size_t)2 << 30)
 #elif defined(CONFIG_LS1046A)
 #define CONFIG_MAX_CPUS				4
 #define CONFIG_SYS_FMAN_V3
