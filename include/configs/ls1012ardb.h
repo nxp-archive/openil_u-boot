@@ -22,6 +22,14 @@
 #endif
 #endif
 
+#ifdef CONFIG_FSL_PPFE
+#define EMAC1_PHY_ADDR          0x2
+#define EMAC2_PHY_ADDR          0x1
+#define CONFIG_PHYLIB
+#define CONFIG_PHY_REALTEK
+#define CONFIG_RESET_PHY_R
+#endif
+
 /* DDR */
 #define CONFIG_DIMM_SLOTS_PER_CTLR	1
 #define CONFIG_CHIP_SELECTS_PER_CTRL	1
@@ -86,6 +94,14 @@
 #define CONFIG_PCI_SCAN_SHOW
 #define CONFIG_CMD_PCI
 #endif
+
+/*
+ *I2C RESET expander
+ */
+#define CONFIG_SYS_I2C_RESET_IO_EXPANDER	0x25
+#define __PHY_MASK		0xF9
+#define __PHY_ETH2_MASK		0xFB
+#define __PHY_ETH1_MASK		0xFD
 
 #define CONFIG_CMD_MEMINFO
 #define CONFIG_CMD_MEMTEST

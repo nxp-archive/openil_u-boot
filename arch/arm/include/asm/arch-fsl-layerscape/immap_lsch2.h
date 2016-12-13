@@ -41,6 +41,7 @@
 #define CONFIG_SYS_PCIE1_ADDR			(CONFIG_SYS_IMMR + 0x2400000)
 #define CONFIG_SYS_PCIE2_ADDR			(CONFIG_SYS_IMMR + 0x2500000)
 #define CONFIG_SYS_PCIE3_ADDR			(CONFIG_SYS_IMMR + 0x2600000)
+#define CONFIG_SYS_PPFE_ADDR			(CONFIG_SYS_IMMR + 0x3000000)
 #define CONFIG_SYS_SEC_MON_ADDR			(CONFIG_SYS_IMMR + 0xe90000)
 #define CONFIG_SYS_SFP_ADDR			(CONFIG_SYS_IMMR + 0xe80200)
 
@@ -400,6 +401,24 @@ struct ccsr_gur {
 #define SCFG_SNPCNFGCR_USB3RDSNP	0x00002000
 #define SCFG_SNPCNFGCR_USB3WRSNP	0x00004000
 
+/* RGMIIPCR bit definitions*/
+#define SCFG_RGMIIPCR_EN_AUTO		(0x00000008)
+#define SCFG_RGMIIPCR_SETSP_1000M	(0x00000004)
+#define SCFG_RGMIIPCR_SETSP_100M	(0x00000000)
+#define SCFG_RGMIIPCR_SETSP_10M		(0x00000002)
+#define SCFG_RGMIIPCR_SETFD		(0x00000001)
+
+/*PFEASBCR bit definitions */
+#define SCFG_PPFEASBCR_ARCACHE0		(0x80000000)
+#define SCFG_PPFEASBCR_AWCACHE0		(0x40000000)
+#define SCFG_PPFEASBCR_ARCACHE1		(0x20000000)
+#define SCFG_PPFEASBCR_AWCACHE1		(0x10000000)
+#define SCFG_PPFEASBCR_ARSNP		(0x08000000)
+#define SCFG_PPFEASBCR_AWSNP		(0x04000000)
+
+
+
+
 /* Supplemental Configuration Unit */
 struct ccsr_scfg {
 	u8 res_000[0x100-0x000];
@@ -417,7 +436,12 @@ struct ccsr_scfg {
 	u8 res_140[0x158-0x140];
 	u32 altcbar;
 	u32 qspi_cfg;
-	u8 res_160[0x180-0x160];
+	u8 res_160[0x164-0x160];
+	u32 wr_qos1;
+	u32 wr_qos2;
+	u32 rd_qos1;
+	u32 rd_qos2;
+	u8 res_174[0x180-0x174];
 	u32 dmamcr;
 	u8 res_184[0x188-0x184];
 	u32 gic_align;
@@ -448,7 +472,21 @@ struct ccsr_scfg {
 	u32 usb_refclk_selcr1;
 	u32 usb_refclk_selcr2;
 	u32 usb_refclk_selcr3;
-	u8 res_424[0x600-0x424];
+	u8 res_424[0x434-0x424];
+	u32 rgmiipcr;
+	u32 res_438;
+	u32 rgmiipsr;
+	u32 pfepfcssr1;
+	u32 pfeintencr1;
+	u32 pfepfcssr2;
+	u32 pfeintencr2;
+	u32 pfeerrcr;
+	u32 pfeeerrintencr;
+	u32 pfeasbcr;
+	u32 pfebsbcr;
+	u8 res_460[0x484-0x460];
+	u32 mdioselcr;
+	u8 res_468[0x600-0x488];
 	u32 scratchrw[4];
 	u8 res_610[0x680-0x610];
 	u32 corebcr;

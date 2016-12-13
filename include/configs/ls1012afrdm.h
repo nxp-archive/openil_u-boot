@@ -22,6 +22,13 @@
 #endif
 #endif
 
+#ifdef CONFIG_FSL_PPFE
+#define EMAC1_PHY_ADDR          0x2
+#define EMAC2_PHY_ADDR          0x1
+#define CONFIG_PHYLIB
+#define CONFIG_PHY_REALTEK
+#endif
+
 /* DDR */
 #define CONFIG_DIMM_SLOTS_PER_CTLR	1
 #define CONFIG_CHIP_SELECTS_PER_CTRL	1

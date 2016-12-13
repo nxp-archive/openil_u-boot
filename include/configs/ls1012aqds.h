@@ -22,6 +22,16 @@
 #endif
 #endif
 
+#ifdef CONFIG_FSL_PPFE
+/*#define CONFIG_CMD_PFE_START */
+#define EMAC1_PHY_ADDR          0x1e
+#define EMAC2_PHY_ADDR          0x1
+#define CONFIG_PHYLIB
+#define CONFIG_PHY_VITESSE
+#define CONFIG_PHY_REALTEK
+#define RGMII_RESET_WA
+#endif
+
 /* DDR */
 #define CONFIG_DIMM_SLOTS_PER_CTLR	1
 #define CONFIG_CHIP_SELECTS_PER_CTRL	1
@@ -89,6 +99,7 @@
 #define I2C_VOL_MONITOR_BUS_V_OFFSET   0x2
 #define I2C_VOL_MONITOR_BUS_V_OVF      0x1
 #define I2C_VOL_MONITOR_BUS_V_SHIFT    3
+
 
 /* DSPI */
 #define CONFIG_FSL_DSPI1

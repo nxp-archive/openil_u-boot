@@ -123,11 +123,6 @@ int board_init(void)
 	return 0;
 }
 
-int board_eth_init(bd_t *bis)
-{
-	return pci_eth_init(bis);
-}
-
 int esdhc_status_fixup(void *blob, const char *compat)
 {
 	char esdhc0_path[] = "/soc/esdhc@1560000";

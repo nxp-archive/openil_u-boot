@@ -58,6 +58,8 @@ obj-$(CONFIG_$(SPL_)OF_LIBFDT) += fdt_support.o
 obj-$(CONFIG_MII) += miiphyutil.o
 obj-$(CONFIG_CMD_MII) += miiphyutil.o
 obj-$(CONFIG_PHYLIB) += miiphyutil.o
+obj-$(CONFIG_CMD_PFE_COMMANDS) += cmd_pfe_commands.o
+obj-$(CONFIG_CMD_PFE_COMMANDS) += cmd_gemac_stat.o
 
 ifdef CONFIG_CMD_USB
 obj-y += usb.o usb_hub.o
