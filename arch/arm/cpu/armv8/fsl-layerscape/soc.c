@@ -351,6 +351,7 @@ int sata_init(void)
 	out_le32(&ccsr_ahci->pp2c, AHCI_PORT_PHY_2_CFG);
 	out_le32(&ccsr_ahci->pp3c, AHCI_PORT_PHY_3_CFG);
 	out_le32(&ccsr_ahci->ptc, AHCI_PORT_TRANS_CFG);
+	out_le32(&ccsr_ahci->axicc, AHCI_PORT_AXICC_CFG);
 
 	ahci_init((void __iomem *)CONFIG_SYS_SATA);
 	scsi_scan(0);
@@ -543,11 +544,13 @@ void fsl_lsch2_early_init_f(void)
 		     SCFG_SNPCNFGCR_SECWRSNP | SCFG_SNPCNFGCR_USB1RDSNP |
 		     SCFG_SNPCNFGCR_USB1WRSNP | SCFG_SNPCNFGCR_USB2RDSNP |
 		     SCFG_SNPCNFGCR_USB2WRSNP | SCFG_SNPCNFGCR_USB3RDSNP |
-		     SCFG_SNPCNFGCR_USB3WRSNP);
+		     SCFG_SNPCNFGCR_USB3WRSNP | SCFG_SNPCNFGCR_SATARDSNP |
+		     SCFG_SNPCNFGCR_SATAWRSNP);
 #else
 	/* Make SEC reads and writes snoopable */
-	setbits_be32(&scfg->snpcnfgcr, SCFG_SNPCNFGCR_SECRDSNP |
-		     SCFG_SNPCNFGCR_SECWRSNP);
+	setbits_be32(&scfg->snpcnfgcr,
+		     SCFG_SNPCNFGCR_SECRDSNP | SCFG_SNPCNFGCR_SECWRSNP |
+		     SCFG_SNPCNFGCR_SATARDSNP | SCFG_SNPCNFGCR_SATAWRSNP);
 #endif
 
 	/*
