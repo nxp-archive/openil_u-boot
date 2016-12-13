@@ -20,6 +20,9 @@
 #include <fsl_mmdc.h>
 #include <netdev.h>
 #include <fsl_sec.h>
+#ifdef CONFIG_FSL_LS_PPA
+#include <asm/arch/ppa.h>
+#endif
 
 DECLARE_GLOBAL_DATA_PTR;
 
@@ -116,6 +119,9 @@ int board_init(void)
 	sec_init();
 #endif
 
+#ifdef CONFIG_FSL_LS_PPA
+	ppa_init();
+#endif
 	return 0;
 }
 

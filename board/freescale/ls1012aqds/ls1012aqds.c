@@ -22,6 +22,9 @@
 #include <fsl_mmdc.h>
 #include <spl.h>
 #include <netdev.h>
+#ifdef CONFIG_FSL_LS_PPA
+#include <asm/arch/ppa.h>
+#endif
 
 #include "../common/qixis.h"
 #include "ls1012aqds_qixis.h"
@@ -113,6 +116,9 @@ int board_init(void)
 
 #ifdef CONFIG_ENV_IS_NOWHERE
 	gd->env_addr = (ulong)&default_environment[0];
+#endif
+#ifdef CONFIG_FSL_LS_PPA
+	ppa_init();
 #endif
 	return 0;
 }

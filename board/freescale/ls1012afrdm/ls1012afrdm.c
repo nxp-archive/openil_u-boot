@@ -15,6 +15,9 @@
 #include <environment.h>
 #include <fsl_mmdc.h>
 #include <netdev.h>
+#ifdef CONFIG_FSL_LS_PPA
+#include <asm/arch/ppa.h>
+#endif
 
 DECLARE_GLOBAL_DATA_PTR;
 
@@ -79,6 +82,9 @@ int board_init(void)
 	enable_layerscape_ns_access();
 #endif
 
+#ifdef CONFIG_FSL_LS_PPA
+	ppa_init();
+#endif
 	return 0;
 }
 
