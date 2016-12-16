@@ -1026,7 +1026,7 @@ int spi_flash_decode_fdt(const void *blob, struct spi_flash *flash)
 static int spansion_s25fss_disable_4KB_erase(struct spi_slave *spi)
 {
 	u8 cmd[SPI_FLASH_CMD_MAX_LEN];
-	u32 offset = 0x800004; /* CR3V register offset */
+	u32 offset = 0x4; /* CR3NV register offset */
 	u8 cr3v;
 	int ret;
 
