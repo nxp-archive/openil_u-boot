@@ -26,6 +26,7 @@
 #define HIF_TX_DMA_STATUS	(HIF_BASE_ADDR + 0x48)
 #define HIF_RX_DMA_STATUS	(HIF_BASE_ADDR + 0x4c)
 #define HIF_INT_COAL	(HIF_BASE_ADDR + 0x50)
+#define HIF_AXI_CTRL	(HIF_BASE_ADDR + 0x54)
 
 /* HIF_INT_SRC/ HIF_INT_ENABLE control bits */
 #define HIF_INT			(1 << 0)

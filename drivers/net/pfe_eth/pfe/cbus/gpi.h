@@ -29,6 +29,7 @@
 #define GPI_DDR_SEC_BUF_DATA_OFFSET	0x64
 #define GPI_TOE_CHKSUM_EN		0x68
 #define GPI_OVERRUN_DROPCNT		0x6c
+#define GPI_AXI_CTRL			0x70
 
 typedef struct {
 	u32 lmem_rtry_cnt;

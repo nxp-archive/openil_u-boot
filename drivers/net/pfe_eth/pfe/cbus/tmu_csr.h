@@ -127,6 +127,8 @@
  */
 #define TMU_PHY5_INQ_ADDR		(TMU_CSR_BASE_ADDR + 0x148)
 
+#define TMU_AXI_CTRL			(TMU_CSR_BASE_ADDR + 0x17c)
+
 #define SW_RESET	(1 << 0)	/**< Global software reset */
 #define INQ_RESET	(1 << 2)
 #define TEQ_RESET	(1 << 3)

@@ -44,10 +44,6 @@ int board_eth_init(bd_t *bis)
 
 	reset_phy();
 
-	/*TODO Following config should be done for all boards, where is the right place to put this */
-	out_be32(&scfg->pfeasbcr, in_be32(&scfg->pfeasbcr) | SCFG_PPFEASBCR_AWCACHE0);
-	out_be32(&scfg->pfebsbcr, in_be32(&scfg->pfebsbcr) | SCFG_PPFEASBCR_AWCACHE0);
-
 	/*CCI-400 QoS settings for PFE */
 	out_be32(&scfg->wr_qos1, 0x0ff00000);
 	out_be32(&scfg->rd_qos1, 0x0ff00000);

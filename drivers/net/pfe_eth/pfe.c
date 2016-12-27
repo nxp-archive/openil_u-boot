@@ -1494,6 +1494,9 @@ void gpi_set_config(void *base, GPI_CFG *cfg)
 		GPI_LMEM_BUF_EN),	base + GPI_RX_CONFIG);
 	writel(cfg->tmlf_txthres,	base + GPI_TMLF_TX);
 	writel(cfg->aseq_len,		base + GPI_DTX_ASEQ);
+
+	/*Make GPI AXI transactions non-bufferable */
+	writel(0x1,		base + GPI_AXI_CTRL);
 }
 
 /**************************** CLASSIFIER ***************************/
@@ -1568,7 +1571,13 @@ void class_set_config(CLASS_CFG *cfg)
 
 	writel(24, CLASS_MAX_BUF_CNT);
 	writel(24, CLASS_TSQ_MAX_CNT);
+	/*Make Class AXI transactions non-bufferable */
+	writel(0x1, CLASS_AXI_CTRL);
 	/* writel(1, CLASS_USE_TMU_INQ); */
+
+	/*Make Util AXI transactions non-bufferable */
+	/*Util is disabled in U-boot, do it from here */
+	writel(0x1, UTIL_AXI_CTRL);
 }
 
 /**************************** TMU ***************************/
@@ -1587,6 +1596,9 @@ void tmu_init(TMU_CFG *cfg)
 
 	/* keep in soft reset */
 	writel(SW_RESET,                     TMU_CTRL);
+
+	/*Make Class AXI transactions non-bufferable */
+	writel(0x1, TMU_AXI_CTRL);
 
 	/* enable EMAC PHY ports */
 	writel(0x3,			TMU_SYS_GENERIC_CONTROL);
@@ -1669,6 +1681,7 @@ void tmu_init(TMU_CFG *cfg)
 	}
 	writel(0x05, TMU_TEQ_DISABLE_DROPCHK);
 	writel(0,	TMU_CTRL);
+
 }
 
 /** Enables TMU-PE cores.
@@ -1703,6 +1716,8 @@ void util_init(UTIL_CFG *cfg)
 {
 
 	/* writel(0x1, UTIL_MISC_REG); */
+	/*Make Util AXI transactions non-bufferable */
+	writel(0x1, UTIL_AXI_CTRL);
 
 	if (PLL_CLK_EN == 0) {
 		/* Clock ratio: for 1:1 the value is 0 */
@@ -1711,6 +1726,7 @@ void util_init(UTIL_CFG *cfg)
 		writel(0x1,     UTIL_PE_SYS_CLK_RATIO);
 		/* Clock ratio: for 1:2 the value is 1 */
 	}
+
 }
 
 /** Enables UTIL-PE core.
@@ -1752,6 +1768,9 @@ void hif_nocpy_init(void)
 		BMU_ALLOC_CTRL),		HIF_NOCPY_LMEM_ALLOC_ADDR);
 	writel(CBUS_VIRT_TO_PFE(CLASS_INQ_PKTPTR),	HIF_NOCPY_CLASS_ADDR);
 	writel(CBUS_VIRT_TO_PFE(TMU_PHY_INQ_PKTPTR), HIF_NOCPY_TMU_PORT0_ADDR);
+
+	/*Make HIF_NOCPY AXI transactions non-bufferable */
+	writel(0x1, HIF_NOCPY_AXI_CTRL);
 }
 
 /** Initializes HIF copy block.
@@ -1762,6 +1781,8 @@ void hif_init(void)
 	/* Initialize HIF registers */
 	writel(HIF_RX_POLL_CTRL_CYCLE<<16|HIF_TX_POLL_CTRL_CYCLE,
 		HIF_POLL_CTRL);
+	/*Make HIF AXI transactions non-bufferable */
+	writel(0x1, HIF_AXI_CTRL);
 }
 
 /** Enable hif tx DMA and interrupt

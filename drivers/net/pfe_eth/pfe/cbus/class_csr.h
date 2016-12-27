@@ -176,6 +176,7 @@
 #define CLASS_PE5_DEBUG			(CLASS_CSR_BASE_ADDR + 0x2b8)
 
 #define CLASS_STATE			(CLASS_CSR_BASE_ADDR + 0x2bc)
+#define CLASS_AXI_CTRL			(CLASS_CSR_BASE_ADDR + 0x2d0)
 
 /* CLASS defines */
 #define CLASS_PBUF_SIZE			0x100	/* Fixed by hardware */
