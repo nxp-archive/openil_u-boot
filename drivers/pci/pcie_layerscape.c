@@ -102,8 +102,10 @@ DECLARE_GLOBAL_DATA_PTR;
 #define PCIE_LUT_ENTRY_COUNT	32
 
 /* PF Controll registers */
+#define PCIE_PF_CONFIG		0x14
 #define PCIE_PF_VF_CTRL		0x7F8
 #define PCIE_PF_DBG		0x7FC
+#define PCIE_CONFIG_READY	(1 << 0)
 
 #define PCIE_SRDS_PRTCL(idx)	(PCIE1 + (idx))
 #define PCIE_SYS_BASE_ADDR	0x3400000
@@ -526,6 +528,12 @@ static void ls_pcie_ep_setup_bars(void *bar_base)
 	ls_pcie_ep_setup_bar(bar_base, 4, PCIE_BAR4_SIZE);
 }
 
+static void ls_pcie_ep_enable_cfg(struct ls_pcie *pcie)
+{
+	ctrl_writel(pcie, PCIE_CONFIG_READY, PCIE_PF_CONFIG);
+}
+
+
 static void ls_pcie_setup_ep(struct ls_pcie *pcie)
 {
 	u32 sriov;
@@ -549,6 +557,8 @@ static void ls_pcie_setup_ep(struct ls_pcie *pcie)
 		ls_pcie_ep_setup_bars(pcie->dbi + PCIE_NO_SRIOV_BAR_BASE);
 		ls_pcie_ep_setup_atu(pcie);
 	}
+
+	ls_pcie_ep_enable_cfg(pcie);
 }
 
 #ifdef CONFIG_FSL_LSCH3
