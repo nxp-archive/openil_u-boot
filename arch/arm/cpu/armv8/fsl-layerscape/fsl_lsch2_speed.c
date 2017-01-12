@@ -108,7 +108,8 @@ void get_sys_info(struct sys_info *sys_info)
 		sys_info->freq_fman[0] = freq_c_pll[0] / 4;
 		break;
 	case 5:
-		sys_info->freq_fman[0] = sys_info->freq_systembus;
+		sys_info->freq_fman[0] = sys_info->freq_systembus /
+					CONFIG_SYS_FSL_PCLK_DIV;
 		break;
 	case 6:
 		sys_info->freq_fman[0] = freq_c_pll[1] / 2;
@@ -152,11 +153,13 @@ void get_sys_info(struct sys_info *sys_info)
 #endif
 
 #if defined(CONFIG_FSL_IFC)
-	sys_info->freq_localbus = sys_info->freq_systembus /
+	sys_info->freq_localbus = (sys_info->freq_systembus /
+						CONFIG_SYS_FSL_PCLK_DIV) /
 						CONFIG_SYS_FSL_IFC_CLK_DIV;
 #endif
 #ifdef CONFIG_SYS_DPAA_QBMAN
-	sys_info->freq_qman = sys_info->freq_systembus /
+	sys_info->freq_qman = (sys_info->freq_systembus /
+				CONFIG_SYS_FSL_PCLK_DIV) /
 				CONFIG_SYS_FSL_QMAN_CLK_DIV;
 #endif
 }
