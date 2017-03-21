@@ -24,6 +24,15 @@
 #define CONFIG_SILENT_CONSOLE
 #endif
 
+#ifdef CONFIG_ARMV7_TEE
+#define CONFIG_TEE_RAM_SIZE            0x04000000
+#define CONFIG_SYS_MEM_TOP_HIDE                CONFIG_TEE_RAM_SIZE
+#define CONFIG_OPTEE_ENTRY             0xBC000000
+#define OPTEE_HEADER_START             0x63E00000
+#define OPTEE_IMAGE_START              0x63E20000
+#define OPTEE_IMAGE_SIZE               0x100000
+#endif
+
 /*
  * Size of malloc() pool
  */
