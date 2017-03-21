@@ -71,6 +71,8 @@ endif
 
 obj-y	+= psci-dt.o
 
+obj-y   += tzasc380.o
+
 obj-$(CONFIG_DEBUG_LL)	+= debug.o
 
 # For EABI conformant tool chains, provide eabi_compat()
