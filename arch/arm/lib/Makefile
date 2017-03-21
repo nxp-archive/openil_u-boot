@@ -66,6 +66,8 @@ obj-$(CONFIG_SYS_ARM_CACHE_CP15)	+= cache-cp15.o
 
 obj-y	+= psci-dt.o
 
+obj-y   += tzasc380.o
+
 obj-$(CONFIG_DEBUG_LL)	+= debug.o
 
 # For EABI conformant tool chains, provide eabi_compat()
