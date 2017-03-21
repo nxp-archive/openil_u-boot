@@ -86,6 +86,18 @@ __weak void psci_board_init(void)
 {
 }
 
+#ifdef CONFIG_ARMV7_TEE
+void relocate_optee(void)
+{
+	memcpy((void *)CONFIG_OPTEE_ENTRY, (void *)OPTEE_IMAGE_START, OPTEE_IMAGE_SIZE);
+}
+
+/* Platform specific function to validate tee.bin */
+void __weak validate_optee(void)
+{
+}
+#endif
+
 int armv7_init_nonsec(void)
 {
 	unsigned int reg;
@@ -132,6 +144,14 @@ int armv7_init_nonsec(void)
 	 * cores.
 	 */
 	relocate_secure_section();
+
+	/* Validate & Relocate tee binary from nor flash to secure ram area
+	 * if CONFIG_ARMV7_TEE is enabled.
+	 */
+#ifdef CONFIG_ARMV7_TEE
+	validate_optee();
+	relocate_optee();
+#endif
 
 #ifndef CONFIG_ARMV7_PSCI
 	smp_set_core_boot_addr((unsigned long)secure_ram_addr(_smp_pen), -1);
