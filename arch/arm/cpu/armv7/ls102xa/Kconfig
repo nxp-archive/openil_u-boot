@@ -48,6 +48,13 @@ config SECURE_BOOT
 		Enable Freescale Secure Boot feature. Normally selected
 		by defconfig. If unsure, do not change.
 
+config ARMV7_TEE
+	bool	"armv7 optee"
+	help
+	  OP-TEE is a Trusted Execution Environment (TEE) designed as companion
+	  to a non-secure Linux kernel running on Arm; Cortex-A cores using the
+	  TrustZone technology.
+
 config SYS_CCI400_OFFSET
 	hex "Offset for CCI400 base"
 	depends on SYS_FSL_HAS_CCI400

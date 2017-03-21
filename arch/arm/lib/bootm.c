@@ -9,6 +9,8 @@
  * Marius Groeger <mgroeger@sysgo.de>
  *
  * Copyright (C) 2001  Erik Mouw (J.A.K.Mouw@its.tudelft.nl)
+ *
+ * Copyright 2017,2019-2020 NXP
  */
 
 #include <common.h>
@@ -395,8 +397,18 @@ static void boot_jump_linux(bootm_headers_t *images, int flag)
 #ifdef CONFIG_ARMV7_NONSEC
 		if (armv7_boot_nonsec()) {
 			armv7_init_nonsec();
+#ifdef CONFIG_ARMV7_TEE
+			/*
+			 * Optee os will reopen cache, so cleanup again
+			 * before boot into linux
+			 */
+			cleanup_before_linux();
+			secure_ram_addr(_do_tee_nonsec_entry)(kernel_entry,
+							      0, machid, r2);
+#else
 			secure_ram_addr(_do_nonsec_entry)(kernel_entry,
 							  0, machid, r2);
+#endif
 		} else
 #endif
 			kernel_entry(0, machid, r2);
