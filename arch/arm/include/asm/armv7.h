@@ -3,6 +3,8 @@
  * (C) Copyright 2010
  * Texas Instruments, <www.ti.com>
  * Aneesh V <aneesh@ti.com>
+ *
+ * Copyright 2017,2019 NXP
  */
 #ifndef ARMV7_H
 #define ARMV7_H
@@ -142,6 +144,8 @@ bool armv7_boot_nonsec(void);
 unsigned int _nonsec_init(void);
 void _do_nonsec_entry(void *target_pc, unsigned long r0,
 		      unsigned long r1, unsigned long r2);
+void _do_tee_nonsec_entry(void *target_pc, unsigned long r0,
+			  unsigned long r1, unsigned long r2);
 void _smp_pen(void);
 
 extern char __secure_start[];
