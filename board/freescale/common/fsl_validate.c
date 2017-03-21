@@ -18,6 +18,7 @@
 #ifdef CONFIG_ARCH_LS1021A
 #include <asm/arch/immap_ls102xa.h>
 #endif
+#include <asm/secure.h>
 
 #define SHA256_BITS	256
 #define SHA256_BYTES	(256/8)
@@ -961,3 +962,27 @@ exit:
 	free(img);
 	return ret;
 }
+
+#ifdef CONFIG_ARMV7_TEE
+/* Validate tee.bin */
+void validate_optee(void)
+{
+/*
+ * Define the key hash for trusted os binary here if public/private key pair used to
+ * sign bootscript are different from the SRK hash put in the fuse
+ * Example of defining KEY_HASH is
+ * #define CONFIG_TEE_KEY_HASH \
+ *	 "43a395e45aafaa76a273b6ea649ad796042221f69300c355e64e180af35fdf96"
+ */
+	int ret = 0;
+	uintptr_t img_addr = 0;
+#ifdef CONFIG_TEE_KEY_HASH
+	ret = fsl_secboot_validate(OPTEE_HEADER_START, CONFIG_TEE_KEY_HASH);
+#else
+	ret = fsl_secboot_validate(OPTEE_HEADER_START, NULL, &img_addr);
+#endif
+
+if (ret == 0)
+	printf("Validation of TEE/Secure OS successful\n\n");
+}
+#endif
