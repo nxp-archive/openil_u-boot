@@ -1,6 +1,7 @@
 /* SPDX-License-Identifier: GPL-2.0+ */
 /*
  * Copyright 2015 Freescale Semiconductor
+ * Copyright 2017,2019 NXP
  */
 
 #ifndef __LS1043ARDB_H__
@@ -41,6 +42,8 @@
 #define CONFIG_SYS_MMCSD_RAW_MODE_ARGS_SECTOR	0x500
 #define CONFIG_SYS_MMCSD_RAW_MODE_ARGS_SECTORS	30
 #endif
+
+#define CONFIG_LAST_STAGE_INIT
 
 /*
  * NOR Flash Definitions
