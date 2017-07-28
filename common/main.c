@@ -76,7 +76,7 @@ int check_SDenv_version(void)
 		blk_dwrite(desc, blk_start, blk_cnt, (uchar *)&sdversion_env);
 		if(sdversion_env.updatepart == '3')
 		{
-			setenv("bootfile","${bootfile_old}");
+			setenv("bootfile", getenv("bootfile_old"));
 			return 0;
 		}
 		else
