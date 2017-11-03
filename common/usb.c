@@ -223,6 +223,9 @@ int usb_control_msg(struct usb_device *dev, unsigned int pipe,
 		return -EINVAL;
 	}
 
+	/* Add delay to support more devices' enumeration */
+	mdelay(10);
+
 	/* set setup command */
 	setup_packet->requesttype = requesttype;
 	setup_packet->request = request;
