@@ -12,10 +12,10 @@
 #include <asm/armv7.h>
 #include <asm/proc-armv/ptrace.h>
 #ifdef CONFIG_ARMV7_TEE
-#ifndef CONFIG_OPTEE_ENTRY
-#error "Error! CONFIG_OPTEE_ENTRY not defined"
+#ifndef SYS_OPTEE_ENTRY
+#error "Error! SYS_OPTEE_ENTRY not defined"
 #endif
-#define OPTEE_ENTRY CONFIG_OPTEE_ENTRY
+#define OPTEE_ENTRY SYS_OPTEE_ENTRY
 #endif
 
 .arch_extension sec

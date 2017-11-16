@@ -200,19 +200,19 @@ int dram_init(void)
 
 
 	/* Configure CCI control override register to terminate all barrier transactions */
-	out_le32(((u32 *)CONFIG_SYS_CCI400_ADDR), CCI_TERMINATE_BARRIER_TX);
+	out_le32(((u32 *)(CONFIG_SYS_IMMR + CONFIG_SYS_CCI400_OFFSET)), CCI_TERMINATE_BARRIER_TX);
 	/* Configure CSU secure access register to disable TZASC bypass mux */
 	out_be32(((u32 *)((u32 *)CONFIG_SYS_FSL_CSU_ADDR + CSU_SEC_ACCESS_REG_OFFSET)), TZASC_BYPASS_MUX_DISABLE);
 	/* Set security permissions for region 0 */
 	tzasc_set_region(SYS_FSL_TZASC_ADDR, 0, 0, 0, 0, 0, TZASC_REGION_SECURITY_NSRW, 0);
 
 	/* Set region 1 */
-	tzasc_set_region(SYS_FSL_TZASC_ADDR, 1, TZASC_REGION_ENABLED, CONFIG_OPTEE_ENTRY,
+	tzasc_set_region(SYS_FSL_TZASC_ADDR, 1, TZASC_REGION_ENABLED, SYS_OPTEE_ENTRY,
 			0, TZASC_REGION_SIZE_64MB, TZASC_REGION_SECURITY_SRW, 0x80);
 
 	/* Set region 2 */
 #define	TEE_RAM_UPPER_SUBREGION_OFFSET	0x03800000
-	tzasc_set_region(SYS_FSL_TZASC_ADDR, 2, TZASC_REGION_ENABLED, (CONFIG_OPTEE_ENTRY + TEE_RAM_UPPER_SUBREGION_OFFSET),
+	tzasc_set_region(SYS_FSL_TZASC_ADDR, 2, TZASC_REGION_ENABLED, (SYS_OPTEE_ENTRY + TEE_RAM_UPPER_SUBREGION_OFFSET),
 	0, TZASC_REGION_SIZE_8MB, TZASC_REGION_SECURITY_SRW, 0xc0);
 #endif
 #endif
