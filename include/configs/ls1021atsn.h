@@ -1,5 +1,6 @@
 /*
  * Copyright 2014 Freescale Semiconductor, Inc.
+ * Copyright 2017 NXP.
  *
  * SPDX-License-Identifier:	GPL-2.0+
  */
@@ -7,23 +8,14 @@
 #ifndef __CONFIG_H
 #define __CONFIG_H
 
-#define CONFIG_LS102XA
-
-#define CONFIG_ARMV7_PSCI_1_0
-
 #define CONFIG_ARMV7_SECURE_BASE	OCRAM_BASE_S_ADDR
 
 #define CONFIG_SYS_FSL_CLK
 
-#define CONFIG_DISPLAY_CPUINFO
-#define CONFIG_DISPLAY_BOARDINFO
-
-#define CONFIG_BOARD_EARLY_INIT_F
 #define CONFIG_DEEP_SLEEP
 #ifdef CONFIG_DEEP_SLEEP
 #define CONFIG_SILENT_CONSOLE
 #endif
-
 
 #ifdef CONFIG_ARMV7_TEE
 #define CONFIG_TEE_RAM_SIZE		0x04000000
@@ -43,40 +35,19 @@
 #define CONFIG_SYS_INIT_RAM_ADDR	OCRAM_BASE_ADDR
 #define CONFIG_SYS_INIT_RAM_SIZE	OCRAM_SIZE
 
-/*
- * USB
- */
-
-/*
- * EHCI Support - disbaled by default as
- * there is no signal coming out of soc on
- * this board for this controller. However,
- * the silicon still has this controller,
- * and anyone can use this controller by
- * taking signals out on their board.
- */
-
-/*#define CONFIG_HAS_FSL_DR_USB*/
-
-#ifdef CONFIG_HAS_FSL_DR_USB
-#define CONFIG_USB_EHCI
-#define CONFIG_USB_EHCI_FSL
-#define CONFIG_EHCI_HCD_INIT_AFTER_RESET
-#endif
-
 /* XHCI Support - enabled by default */
 #define CONFIG_HAS_FSL_XHCI_USB
 
 #ifdef CONFIG_HAS_FSL_XHCI_USB
 #define CONFIG_USB_XHCI_FSL
+#define CONFIG_USB_XHCI_DWC3
 #define CONFIG_USB_MAX_CONTROLLER_COUNT        1
-#define CONFIG_SYS_USB_XHCI_MAX_ROOT_PORTS     2
 #endif
 
-/*
- * Generic Timer Definitions
- */
-#define GENERIC_TIMER_CLK		12500000
+#if defined(CONFIG_HAS_FSL_DR_USB) || defined(CONFIG_HAS_FSL_XHCI_USB)
+#define CONFIG_USB_STORAGE
+#define CONFIG_CMD_EXT2
+#endif
 
 #define CONFIG_SYS_CLK_FREQ		100000000
 #define CONFIG_DDR_CLK_FREQ		100000000
@@ -134,17 +105,9 @@
 
 #ifdef CONFIG_SECURE_BOOT
 #define CONFIG_U_BOOT_HDR_SIZE				(16 << 10)
-/*
- * HDR would be appended at end of image and copied to DDR along
- * with U-Boot image.
- */
-#define CONFIG_SYS_U_BOOT_MAX_SIZE_SECTORS		(0x400 + \
-		(CONFIG_U_BOOT_HDR_SIZE / 512)
-#else
-#define CONFIG_SYS_U_BOOT_MAX_SIZE_SECTORS		0x400
 #endif /* ifdef CONFIG_SECURE_BOOT */
 
-#define CONFIG_SPL_TEXT_BASE		0x10000000
+#define CONFIG_SPL_TEXT_BASE	0x10000000
 #define CONFIG_SPL_MAX_SIZE		0x1a000
 #define CONFIG_SPL_STACK		0x1001d000
 #define CONFIG_SPL_PAD_TO		0x1c000
@@ -165,16 +128,12 @@
  */
 #define CONFIG_SYS_MONITOR_LEN		(0x100000 + CONFIG_U_BOOT_HDR_SIZE)
 #else
-#define CONFIG_SYS_MONITOR_LEN		0x100000
+#define CONFIG_SYS_MONITOR_LEN		0x80000
 #endif /* ifdef CONFIG_U_BOOT_HDR_SIZE */
 #endif
 
 #ifdef CONFIG_QSPI_BOOT
 #define CONFIG_SYS_TEXT_BASE		0x40010000
-#endif
-
-#if defined(CONFIG_QSPI_BOOT) || defined(CONFIG_SD_BOOT_QSPI)
-#define CONFIG_SYS_NO_FLASH
 #endif
 
 #ifndef CONFIG_SYS_TEXT_BASE
@@ -187,10 +146,6 @@
 
 #define CONFIG_SYS_DDR_SDRAM_BASE      0x80000000UL
 #define CONFIG_SYS_SDRAM_BASE          CONFIG_SYS_DDR_SDRAM_BASE
-
-#define CONFIG_SYS_HAS_SERDES
-
-#define CONFIG_FSL_CAAM			/* Enable CAAM */
 
 #if !defined(CONFIG_SD_BOOT) && !defined(CONFIG_NAND_BOOT) && \
 	!defined(CONFIG_QSPI_BOOT)
@@ -257,6 +212,7 @@
 /*
  * I2C
  */
+#define CONFIG_CMD_I2C
 #define CONFIG_SYS_I2C
 #define CONFIG_SYS_I2C_MXC
 #define CONFIG_SYS_I2C_MXC_I2C1		/* enable I2C bus 1 */
@@ -273,11 +229,8 @@
 /*
  * MMC
  */
-#define CONFIG_MMC
+#define CONFIG_CMD_MMC
 #define CONFIG_FSL_ESDHC
-#define CONFIG_GENERIC_MMC
-
-#define CONFIG_DOS_PARTITION
 
 /* SPI */
 #if defined(CONFIG_QSPI_BOOT) || defined(CONFIG_SD_BOOT_QSPI)
@@ -293,26 +246,8 @@
 
 /* DM SPI */
 #if defined(CONFIG_FSL_DSPI) || defined(CONFIG_FSL_QSPI)
+#define CONFIG_CMD_SF
 #define CONFIG_DM_SPI_FLASH
-#endif
-
-/*
- * Video
- */
-#define CONFIG_FSL_DCU_FB
-
-#ifdef CONFIG_FSL_DCU_FB
-#define CONFIG_VIDEO
-#define CONFIG_CMD_BMP
-#define CONFIG_CFB_CONSOLE
-#define CONFIG_VGA_AS_SINGLE_DEVICE
-#define CONFIG_VIDEO_LOGO
-#define CONFIG_VIDEO_BMP_LOGO
-#define CONFIG_SYS_CONSOLE_IS_IN_ENV
-
-#define CONFIG_FSL_DCU_SII9022A
-#define CONFIG_SYS_I2C_DVI_BUS_NUM	0
-#define CONFIG_SYS_I2C_DVI_ADDR		0x39
 #endif
 
 /*
@@ -353,20 +288,27 @@
 #endif
 
 /* PCIe */
+#define CONFIG_PCIE1		/* PCIE controler 1 */
+#define CONFIG_PCIE2		/* PCIE controler 2 */
 #define FSL_PCIE_COMPAT "fsl,ls1021a-pcie"
 #ifdef CONFIG_PCI
-#define CONFIG_PCI_PNP
 #define CONFIG_PCI_SCAN_SHOW
 #define CONFIG_CMD_PCI
 #endif
 
+#define CONFIG_CMD_PING
+#define CONFIG_CMD_DHCP
+#define CONFIG_CMD_MII
 #define CONFIG_CMDLINE_TAG
 #define CONFIG_CMDLINE_EDITING
 
+#if defined(CONFIG_QSPI_BOOT) || defined(CONFIG_SD_BOOT)
+#undef	CONFIG_CMD_IMLS
+#endif
 #define CONFIG_PEN_ADDR_BIG_ENDIAN
 #define CONFIG_LAYERSCAPE_NS_ACCESS
 #define CONFIG_SMP_PEN_ADDR		0x01ee0200
-#define CONFIG_TIMER_CLK_FREQ		12500000
+#define COUNTER_FREQUENCY		12500000
 
 #define CONFIG_HWCONFIG
 #define HWCONFIG_BUFFER_SIZE		256
@@ -397,18 +339,12 @@
 #define CONFIG_SYS_MAXARGS		16	/* max number of command args */
 #define CONFIG_SYS_BARGSIZE		CONFIG_SYS_CBSIZE
 
-#define CONFIG_SYS_MEMTEST_START	0x80000000
-#define CONFIG_SYS_MEMTEST_END		0x9fffffff
+#define CONFIG_CMD_GREPENV
+#define CONFIG_CMD_MEMINFO
 
 #define CONFIG_SYS_LOAD_ADDR		0x82000000
 
 #define CONFIG_LS102XA_STREAM_ID
-
-/*
- * Stack sizes
- * The stack sizes are set up in start.S using the settings below
- */
-#define CONFIG_STACKSIZE		(30 * 1024)
 
 #define CONFIG_SYS_INIT_SP_OFFSET \
 	(CONFIG_SYS_INIT_RAM_SIZE - GENERATED_GBL_DATA_SIZE)
@@ -421,7 +357,7 @@
 #define CONFIG_SYS_MONITOR_BASE CONFIG_SYS_TEXT_BASE    /* start of monitor */
 #endif
 
-#define CONFIG_SYS_QE_FW_ADDR     0x600c0000
+#define CONFIG_SYS_QE_FW_ADDR	0x67f40000
 
 /*
  * Environment
@@ -429,29 +365,21 @@
 #define CONFIG_ENV_OVERWRITE
 
 #if defined(CONFIG_SD_BOOT)
-#define CONFIG_ENV_OFFSET		0x100000
+#define CONFIG_ENV_OFFSET		0x300000
 #define CONFIG_ENV_IS_IN_MMC
 #define CONFIG_SYS_MMC_ENV_DEV		0
 #define CONFIG_ENV_SIZE			0x20000
 #elif defined(CONFIG_QSPI_BOOT)
 #define CONFIG_ENV_IS_IN_SPI_FLASH
 #define CONFIG_ENV_SIZE			0x2000
-#define CONFIG_ENV_OFFSET		0x100000
+#define CONFIG_ENV_OFFSET		0x300000
 #define CONFIG_ENV_SECT_SIZE		0x40000
-#else
-#define CONFIG_ENV_IS_IN_FLASH
-#define CONFIG_ENV_ADDR		(CONFIG_SYS_MONITOR_BASE - CONFIG_ENV_SECT_SIZE)
-#define CONFIG_ENV_SIZE			0x20000
-#define CONFIG_ENV_SECT_SIZE		0x20000 /* 128K (one sector) */
 #endif
 
+#define CONFIG_OF_BOARD_SETUP
+#define CONFIG_OF_STDOUT_VIA_ALIAS
+#define CONFIG_CMD_BOOTZ
 #define CONFIG_MISC_INIT_R
-
-/* Hash command with SHA acceleration supported in hardware */
-#ifdef CONFIG_FSL_CAAM
-#define CONFIG_CMD_HASH
-#define CONFIG_SHA_HW_ACCEL
-#endif
 
 #include <asm/fsl_secure_boot.h>
 #define CONFIG_SYS_BOOTM_LEN	(64 << 20) /* Increase max gunzip size */

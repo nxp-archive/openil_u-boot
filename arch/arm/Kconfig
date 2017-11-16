@@ -1034,11 +1034,13 @@ config TARGET_LS1021ATWR
 
 config TARGET_LS1021ATSN
 	bool "Support ls1021atsn"
+	select BOARD_LATE_INIT
 	select CPU_V7
-	select SUPPORT_SPL
-	select ARCH_SUPPORT_PSCI
 	select CPU_V7_HAS_NONSEC
 	select CPU_V7_HAS_VIRT
+	select SUPPORT_SPL
+	select ARCH_LS1021A
+	select ARCH_SUPPORT_PSCI
 
 config TARGET_LS1021AIOT
 	bool "Support ls1021aiot"
