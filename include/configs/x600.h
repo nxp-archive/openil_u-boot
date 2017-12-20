@@ -16,7 +16,6 @@
  */
 #define CONFIG_SPEAR600				/* SPEAr600 SoC */
 #define CONFIG_X600				/* on X600 board */
-#define CONFIG_SYS_THUMB_BUILD
 
 #include <asm/arch/hardware.h>
 
@@ -44,7 +43,6 @@
 #define CONFIG_PL011_SERIAL
 #define CONFIG_PL011_CLOCK			(48 * 1000 * 1000)
 #define CONFIG_CONS_INDEX			0
-#define CONFIG_BAUDRATE				115200
 #define CONFIG_SYS_BAUDRATE_TABLE		{ 9600, 19200, 38400, \
 						  57600, 115200 }
 #define CONFIG_SYS_LOADS_BAUD_CHANGE
@@ -102,26 +100,20 @@
 #define CONFIG_FPGA_COUNT	1
 
 /* USB EHCI options */
-#define CONFIG_USB_EHCI
 #define CONFIG_USB_EHCI_SPEAR
 #define CONFIG_USB_MAX_CONTROLLER_COUNT	2
 
 /*
  * Command support defines
  */
-#define CONFIG_CMD_DATE
-#define CONFIG_CMD_ENV
-#define CONFIG_CMD_FPGA_LOADMK
 #define CONFIG_CMD_MTDPARTS
 #define CONFIG_CMD_NAND
 #define CONFIG_CMD_SAVES
-#define CONFIG_CMD_UBI
 #define CONFIG_CMD_UBIFS
 #define CONFIG_LZO
 
 /* Filesystem support (for USB key) */
 #define CONFIG_SUPPORT_VFAT
-#define CONFIG_DOS_PARTITION
 
 
 /*
@@ -137,18 +129,15 @@
 
 /* Miscellaneous configurable options */
 #define CONFIG_ARCH_CPU_INIT
-#define CONFIG_DISPLAY_CPUINFO
 #define CONFIG_BOOT_PARAMS_ADDR			0x00000100
 #define CONFIG_CMDLINE_TAG
 #define CONFIG_SETUP_MEMORY_TAGS
 #define CONFIG_MISC_INIT_R
-#define CONFIG_BOARD_LATE_INIT
 #define CONFIG_MX_CYCLIC		/* enable mdc/mwc commands      */
 
 #define CONFIG_SYS_MEMTEST_START		0x00800000
 #define CONFIG_SYS_MEMTEST_END			0x04000000
 #define CONFIG_SYS_MALLOC_LEN			(8 << 20)
-#define CONFIG_IDENT_STRING			"-SPEAr"
 #define CONFIG_SYS_LONGHELP
 #define CONFIG_CMDLINE_EDITING
 #define CONFIG_AUTO_COMPLETE
@@ -158,7 +147,6 @@
 #define CONFIG_SYS_MAXARGS			16
 #define CONFIG_SYS_BARGSIZE			CONFIG_SYS_CBSIZE
 #define CONFIG_SYS_LOAD_ADDR			0x00800000
-#define CONFIG_SYS_CONSOLE_INFO_QUIET
 
 /* Use last 2 lwords in internal SRAM for bootcounter */
 #define CONFIG_BOOTCOUNT_LIMIT
@@ -267,10 +255,6 @@
 #define CONFIG_SPL_LDSCRIPT	"arch/arm/cpu/arm926ejs/spear/u-boot-spl.lds"
 
 #define CONFIG_SPL_FRAMEWORK
-#define CONFIG_SPL_NOR_SUPPORT
-#define CONFIG_SPL_SERIAL_SUPPORT
-#define CONFIG_SPL_LIBCOMMON_SUPPORT	/* image.c */
-#define CONFIG_SPL_LIBGENERIC_SUPPORT	/* string.c */
 
 /*
  * Please select/define only one of the following

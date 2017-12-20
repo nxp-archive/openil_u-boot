@@ -25,8 +25,9 @@ DECLARE_GLOBAL_DATA_PTR;
 #define TX_BUFFER_SIZE		0x40
 #endif
 
-#define OFFSET_BITS_MASK	((FSL_QSPI_FLASH_SIZE  > SZ_16M) ? \
-					GENMASK(27, 0) :  GENMASK(23, 0))
+#define OFFSET_BITS_MASK       ((FSL_QSPI_FLASH_SIZE  > SZ_16M) ? \
+					GENMASK(27, 0) : GENMASK(23, 0))
+
 
 #define FLASH_STATUS_WEL	0x02
 
@@ -164,6 +165,26 @@ static inline u32 qspi_endian_xchg(u32 data)
 #else
 	return data;
 #endif
+}
+static inline u32 qspi_controller_busy(struct fsl_qspi_priv *priv)
+{
+	u32 sr;
+	u32 retry = 5;
+
+	do {
+		sr = qspi_read32(priv->flags, &priv->regs->sr);
+		if ((sr & QSPI_SR_BUSY_MASK) ||
+		    (sr & QSPI_SR_AHB_ACC_MASK) ||
+		    (sr & QSPI_SR_IP_ACC_MASK)) {
+			debug("The controller is busy, sr = 0x%x\n", sr);
+			udelay(1);
+		} else {
+			break;
+		}
+	} while (--retry);
+
+	return (sr & QSPI_SR_BUSY_MASK) ||
+		(sr & QSPI_SR_AHB_ACC_MASK) || (sr & QSPI_SR_IP_ACC_MASK);
 }
 
 static void qspi_set_lut(struct fsl_qspi_priv *priv)
@@ -441,23 +462,13 @@ static void qspi_enable_ddr_mode(struct fsl_qspi_priv *priv)
 static void qspi_init_ahb_read(struct fsl_qspi_priv *priv)
 {
 	struct fsl_qspi_regs *regs = priv->regs;
-	int rx_size = 0x80;
 
 	/* AHB configuration for access buffer 0/1/2 .*/
 	qspi_write32(priv->flags, &regs->buf0cr, QSPI_BUFXCR_INVALID_MSTRID);
 	qspi_write32(priv->flags, &regs->buf1cr, QSPI_BUFXCR_INVALID_MSTRID);
 	qspi_write32(priv->flags, &regs->buf2cr, QSPI_BUFXCR_INVALID_MSTRID);
-
-#ifdef CONFIG_SYS_FSL_ERRATUM_A009282
-	/*A-009282: QuadSPI data pre-fetch can result in incorrect data
-	 *Workaround: Keep the read data size to 64 bits (8 Bytes), which
-	 *disables the prefetch on the AHB buffer,and prevents this issue
-	 *from occurring.
-	*/
-	rx_size = 0x1;
-#endif
 	qspi_write32(priv->flags, &regs->buf3cr, QSPI_BUF3CR_ALLMST_MASK |
-		     (rx_size << QSPI_BUF3CR_ADATSZ_SHIFT));
+		     (0x80 << QSPI_BUF3CR_ADATSZ_SHIFT));
 
 	/* We only use the buffer3 */
 	qspi_write32(priv->flags, &regs->buf0ind, 0);
@@ -768,6 +779,11 @@ int qspi_xfer(struct fsl_qspi_priv *priv, unsigned int bitlen,
 	static u32 wr_sfaddr;
 	u32 txbuf;
 
+	if (qspi_controller_busy(priv)) {
+		printf("ERROR : The controller is busy\n");
+		return -EBUSY;
+	}
+
 	if (dout) {
 		if (flags & SPI_XFER_BEGIN) {
 			priv->cur_seqid = *(u8 *)dout;
@@ -1051,8 +1067,11 @@ static int fsl_qspi_probe(struct udevice *bus)
 	 * setting the size of these devices to 0.  This would ensure
 	 * that the complete memory map is assigned to only one flash device.
 	 */
-	qspi_write32(priv->flags, &priv->regs->sfa1ad, priv->amba_base[1]);
+	qspi_write32(priv->flags, &priv->regs->sfa1ad,
+		     priv->amba_base[0] + amba_size_per_chip);
 	switch (priv->num_chipselect) {
+	case 1:
+		break;
 	case 2:
 		qspi_write32(priv->flags, &priv->regs->sfa2ad,
 			     priv->amba_base[1]);
@@ -1092,7 +1111,7 @@ static int fsl_qspi_ofdata_to_platdata(struct udevice *bus)
 	struct fdt_resource res_regs, res_mem;
 	struct fsl_qspi_platdata *plat = bus->platdata;
 	const void *blob = gd->fdt_blob;
-	int node = bus->of_offset;
+	int node = dev_of_offset(bus);
 	int ret, flash_num = 0, subnode;
 
 	if (fdtdec_get_bool(blob, node, "big-endian"))
@@ -1112,7 +1131,7 @@ static int fsl_qspi_ofdata_to_platdata(struct udevice *bus)
 	}
 
 	/* Count flash numbers */
-	fdt_for_each_subnode(blob, subnode, node)
+	fdt_for_each_subnode(subnode, blob, node)
 		++flash_num;
 
 	if (flash_num == 0) {

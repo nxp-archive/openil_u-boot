@@ -5,7 +5,8 @@
  * SPDX-License-Identifier:	GPL-2.0+
  */
 
-#include <dm/device.h>
+#include <common.h>
+#include <dm.h>
 #include <dm/pinctrl.h>
 
 #include "pinctrl-uniphier.h"
@@ -28,6 +29,12 @@ static const int i2c4_muxvals[] = {1, 1};
 static const unsigned nand_pins[] = {3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14,
 				     15, 16, 17};
 static const int nand_muxvals[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+static const unsigned system_bus_pins[] = {1, 2, 6, 7, 8, 9, 10, 11, 12, 13,
+					   14, 15, 16, 17};
+static const int system_bus_muxvals[] = {0, 0, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
+					 2};
+static const unsigned system_bus_cs1_pins[] = {0};
+static const int system_bus_cs1_muxvals[] = {0};
 static const unsigned uart0_pins[] = {54, 55};
 static const int uart0_muxvals[] = {0, 0};
 static const unsigned uart1_pins[] = {58, 59};
@@ -52,6 +59,8 @@ static const struct uniphier_pinctrl_group uniphier_ld11_groups[] = {
 	UNIPHIER_PINCTRL_GROUP(i2c3),
 	UNIPHIER_PINCTRL_GROUP(i2c4),
 	UNIPHIER_PINCTRL_GROUP(nand),
+	UNIPHIER_PINCTRL_GROUP_SPL(system_bus),
+	UNIPHIER_PINCTRL_GROUP_SPL(system_bus_cs1),
 	UNIPHIER_PINCTRL_GROUP_SPL(uart0),
 	UNIPHIER_PINCTRL_GROUP_SPL(uart1),
 	UNIPHIER_PINCTRL_GROUP_SPL(uart2),
@@ -69,6 +78,7 @@ static const char * const uniphier_ld11_functions[] = {
 	UNIPHIER_PINMUX_FUNCTION(i2c3),
 	UNIPHIER_PINMUX_FUNCTION(i2c4),
 	UNIPHIER_PINMUX_FUNCTION(nand),
+	UNIPHIER_PINMUX_FUNCTION_SPL(system_bus),
 	UNIPHIER_PINMUX_FUNCTION_SPL(uart0),
 	UNIPHIER_PINMUX_FUNCTION_SPL(uart1),
 	UNIPHIER_PINMUX_FUNCTION_SPL(uart2),
@@ -83,7 +93,8 @@ static struct uniphier_pinctrl_socdata uniphier_ld11_pinctrl_socdata = {
 	.groups_count = ARRAY_SIZE(uniphier_ld11_groups),
 	.functions = uniphier_ld11_functions,
 	.functions_count = ARRAY_SIZE(uniphier_ld11_functions),
-	.caps = UNIPHIER_PINCTRL_CAPS_PERPIN_IECTRL,
+	.caps = UNIPHIER_PINCTRL_CAPS_PUPD_SIMPLE |
+		UNIPHIER_PINCTRL_CAPS_PERPIN_IECTRL,
 };
 
 static int uniphier_ld11_pinctrl_probe(struct udevice *dev)

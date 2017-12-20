@@ -38,7 +38,7 @@
 
 #include <u-boot/md5.h>
 #include <u-boot/sha1.h>
-#include <asm/errno.h>
+#include <linux/errno.h>
 #include <asm/io.h>
 
 #ifdef CONFIG_CMD_BDI
@@ -161,9 +161,12 @@ static const table_entry_t uimage_type[] = {
 	{	IH_TYPE_RKIMAGE,    "rkimage",    "Rockchip Boot Image" },
 	{	IH_TYPE_RKSD,       "rksd",       "Rockchip SD Boot Image" },
 	{	IH_TYPE_RKSPI,      "rkspi",      "Rockchip SPI Boot Image" },
+	{	IH_TYPE_VYBRIDIMAGE, "vybridimage",  "Vybrid Boot Image", },
 	{	IH_TYPE_ZYNQIMAGE,  "zynqimage",  "Xilinx Zynq Boot Image" },
 	{	IH_TYPE_ZYNQMPIMAGE, "zynqmpimage", "Xilinx ZynqMP Boot Image" },
 	{	IH_TYPE_FPGA,       "fpga",       "FPGA Image" },
+	{       IH_TYPE_TEE,        "tee",        "Trusted Execution Environment Image",},
+	{	IH_TYPE_FIRMWARE_IVT, "firmware_ivt", "Firmware with HABv4 IVT" },
 	{	-1,		    "",		  "",			},
 };
 
@@ -363,6 +366,11 @@ void image_print_contents(const void *ptr)
 				printf("%s    Offset = 0x%08lx\n", p, data);
 			}
 		}
+	} else if (image_check_type(hdr, IH_TYPE_FIRMWARE_IVT)) {
+		printf("HAB Blocks:   0x%08x   0x0000   0x%08x\n",
+				image_get_load(hdr) - image_get_header_size(),
+				image_get_size(hdr) + image_get_header_size()
+						- 0x1FE0);
 	}
 }
 
@@ -553,7 +561,7 @@ void genimg_print_size(uint32_t size)
 	printf("%d Bytes = ", size);
 	print_size(size, "\n");
 #else
-	printf("%d Bytes = %.2f kB = %.2f MB\n",
+	printf("%d Bytes = %.2f KiB = %.2f MiB\n",
 			size, (double)size / 1.024e3,
 			(double)size / 1.048576e6);
 #endif
@@ -586,10 +594,12 @@ const table_entry_t *get_table_entry(const table_entry_t *table, int id)
 
 static const char *unknown_msg(enum ih_category category)
 {
+	static const char unknown_str[] = "Unknown ";
 	static char msg[30];
 
-	strcpy(msg, "Unknown ");
-	strcat(msg, table_info[category].desc);
+	strcpy(msg, unknown_str);
+	strncat(msg, table_info[category].desc,
+		sizeof(msg) - sizeof(unknown_str));
 
 	return msg;
 }
@@ -1078,7 +1088,7 @@ int boot_get_ramdisk(int argc, char * const argv[], bootm_headers_t *images,
 			rd_addr = map_to_sysmem(images->fit_hdr_os);
 			rd_noffset = fit_get_node_from_config(images,
 					FIT_RAMDISK_PROP, rd_addr);
-			if (rd_noffset == -ENOLINK)
+			if (rd_noffset == -ENOENT)
 				return 0;
 			else if (rd_noffset < 0)
 				return 1;
@@ -1304,7 +1314,7 @@ int boot_get_fpga(int argc, char * const argv[], bootm_headers_t *images,
 	void *buf;
 	int conf_noffset;
 	int fit_img_result;
-	char *uname, *name;
+	const char *uname, *name;
 	int err;
 	int devnum = 0; /* TODO support multi fpga platforms */
 	const fpga_desc * const desc = fpga_get_desc(devnum);
@@ -1331,9 +1341,9 @@ int boot_get_fpga(int argc, char * const argv[], bootm_headers_t *images,
 	case IMAGE_FORMAT_FIT:
 		conf_noffset = fit_conf_get_node(buf, images->fit_uname_cfg);
 
-		err = fdt_get_string_index(buf, conf_noffset, FIT_FPGA_PROP, 0,
-					   (const char **)&uname);
-		if (err < 0) {
+		uname = fdt_stringlist_get(buf, conf_noffset, FIT_FPGA_PROP, 0,
+					   NULL);
+		if (!uname) {
 			debug("## FPGA image is not specified\n");
 			return 0;
 		}
@@ -1371,11 +1381,10 @@ int boot_get_fpga(int argc, char * const argv[], bootm_headers_t *images,
 						img_len, BIT_PARTIAL);
 		}
 
-		printf("   Programming %s bitstream... ", name);
 		if (err)
-			printf("failed\n");
-		else
-			printf("OK\n");
+			return err;
+
+		printf("   Programming %s bitstream... OK\n", name);
 		break;
 	default:
 		printf("The given image format is not supported (corrupt?)\n");
@@ -1385,6 +1394,23 @@ int boot_get_fpga(int argc, char * const argv[], bootm_headers_t *images,
 	return 0;
 }
 #endif
+
+static void fit_loadable_process(uint8_t img_type,
+				 ulong img_data,
+				 ulong img_len)
+{
+	int i;
+	const unsigned int count =
+			ll_entry_count(struct fit_loadable_tbl, fit_loadable);
+	struct fit_loadable_tbl *fit_loadable_handler =
+			ll_entry_start(struct fit_loadable_tbl, fit_loadable);
+	/* For each loadable handler */
+	for (i = 0; i < count; i++, fit_loadable_handler++)
+		/* matching this type */
+		if (fit_loadable_handler->type == img_type)
+			/* call that handler with this image data */
+			fit_loadable_handler->handler(img_data, img_len);
+}
 
 int boot_get_loadable(int argc, char * const argv[], bootm_headers_t *images,
 		uint8_t arch, const ulong *ld_start, ulong * const ld_len)
@@ -1403,7 +1429,8 @@ int boot_get_loadable(int argc, char * const argv[], bootm_headers_t *images,
 	int loadables_index;
 	int conf_noffset;
 	int fit_img_result;
-	char *uname;
+	const char *uname;
+	uint8_t img_type;
 
 	/* Check to see if the images struct has a FIT configuration */
 	if (!genimg_has_config(images)) {
@@ -1427,15 +1454,14 @@ int boot_get_loadable(int argc, char * const argv[], bootm_headers_t *images,
 		conf_noffset = fit_conf_get_node(buf, images->fit_uname_cfg);
 
 		for (loadables_index = 0;
-		     fdt_get_string_index(buf, conf_noffset,
-				FIT_LOADABLE_PROP,
-				loadables_index,
-				(const char **)&uname) == 0;
+		     uname = fdt_stringlist_get(buf, conf_noffset,
+					FIT_LOADABLE_PROP, loadables_index,
+					NULL), uname;
 		     loadables_index++)
 		{
 			fit_img_result = fit_image_load(images,
 				tmp_img_addr,
-				(const char **)&uname,
+				&uname,
 				&(images->fit_uname_cfg), arch,
 				IH_TYPE_LOADABLE,
 				BOOTSTAGE_ID_FIT_LOADABLE_START,
@@ -1445,6 +1471,21 @@ int boot_get_loadable(int argc, char * const argv[], bootm_headers_t *images,
 				/* Something went wrong! */
 				return fit_img_result;
 			}
+
+			fit_img_result = fit_image_get_node(buf, uname);
+			if (fit_img_result < 0) {
+				/* Something went wrong! */
+				return fit_img_result;
+			}
+			fit_img_result = fit_image_get_type(buf,
+							    fit_img_result,
+							    &img_type);
+			if (fit_img_result < 0) {
+				/* Something went wrong! */
+				return fit_img_result;
+			}
+
+			fit_loadable_process(img_type, img_data, img_len);
 		}
 		break;
 	default:
@@ -1535,10 +1576,7 @@ int image_setup_linux(bootm_headers_t *images)
 {
 	ulong of_size = images->ft_len;
 	char **of_flat_tree = &images->ft_addr;
-	ulong *initrd_start = &images->initrd_start;
-	ulong *initrd_end = &images->initrd_end;
 	struct lmb *lmb = &images->lmb;
-	ulong rd_len;
 	int ret;
 
 	if (IMAGE_ENABLE_OF_LIBFDT)
@@ -1551,13 +1589,6 @@ int image_setup_linux(bootm_headers_t *images)
 			puts("ERROR with allocation of cmdline\n");
 			return ret;
 		}
-	}
-	if (IMAGE_ENABLE_RAMDISK_HIGH) {
-		rd_len = images->rd_end - images->rd_start;
-		ret = boot_ramdisk_high(lmb, images->rd_start, rd_len,
-				initrd_start, initrd_end);
-		if (ret)
-			return ret;
 	}
 
 	if (IMAGE_ENABLE_OF_LIBFDT) {

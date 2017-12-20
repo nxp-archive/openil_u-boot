@@ -264,13 +264,13 @@ static int load_devicetree(void)
 #else
 	char *dtbname = getenv("dtb");
 	char *dtbdev = getenv("dtbdev");
-	char *dtppart = getenv("dtbpart");
-	if (!dtbdev || !dtbdev || !dtbname) {
+	char *dtbpart = getenv("dtbpart");
+	if (!dtbdev || !dtbpart || !dtbname) {
 		printf("%s: <dtbdev>/<dtbpart>/<dtb> missing.\n", __func__);
 		return -1;
 	}
 
-	if (fs_set_blk_dev(dtbdev, dtppart, FS_TYPE_EXT)) {
+	if (fs_set_blk_dev(dtbdev, dtbpart, FS_TYPE_EXT)) {
 		puts("load_devicetree: set_blk_dev failed.\n");
 		return -1;
 	}
@@ -684,10 +684,15 @@ int board_eth_init(bd_t *bis)
 	return rv;
 }
 #endif /* defined(CONFIG_DRIVER_TI_CPSW) && !defined(CONFIG_SPL_BUILD) */
-#if defined(CONFIG_GENERIC_MMC) && !defined(CONFIG_SPL_BUILD)
+#if defined(CONFIG_MMC)
 int board_mmc_init(bd_t *bis)
 {
-	return omap_mmc_init(1, 0, 0, -1, -1);
+	int rc = 0;
+
+	rc |= omap_mmc_init(0, 0, 0, -1, -1);
+	rc |= omap_mmc_init(1, 0, 0, -1, -1);
+
+	return rc;
 }
 #endif
 int overwrite_console(void)

@@ -21,7 +21,7 @@
 #include <linux/mtd/partitions.h>
 #include <linux/err.h>
 #include <ubi_uboot.h>
-#include <asm/errno.h>
+#include <linux/errno.h>
 #include <jffs2/load_kernel.h>
 
 #undef ubi_msg
@@ -162,7 +162,7 @@ bad:
 	return err;
 }
 
-static int ubi_create_vol(char *volume, int64_t size, int dynamic)
+static int ubi_create_vol(char *volume, int64_t size, int dynamic, int vol_id)
 {
 	struct ubi_mkvol_req req;
 	int err;
@@ -172,7 +172,7 @@ static int ubi_create_vol(char *volume, int64_t size, int dynamic)
 	else
 		req.vol_type = UBI_STATIC_VOLUME;
 
-	req.vol_id = UBI_VOL_NUM_AUTO;
+	req.vol_id = vol_id;
 	req.alignment = 1;
 	req.bytes = size;
 
@@ -308,7 +308,7 @@ int ubi_volume_begin_write(char *volume, void *buf, size_t size,
 		return ENODEV;
 
 	rsvd_bytes = vol->reserved_pebs * (ubi->leb_size - vol->data_pad);
-	if (size < 0 || size > rsvd_bytes) {
+	if (size > rsvd_bytes) {
 		printf("size > volume size! Aborting!\n");
 		return EINVAL;
 	}
@@ -577,9 +577,16 @@ static int do_ubi(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 
 	if (strncmp(argv[1], "create", 6) == 0) {
 		int dynamic = 1;	/* default: dynamic volume */
+		int id = UBI_VOL_NUM_AUTO;
 
 		/* Use maximum available size */
 		size = 0;
+
+		/* E.g., create volume size type vol_id */
+		if (argc == 6) {
+			id = simple_strtoull(argv[5], NULL, 16);
+			argc--;
+		}
 
 		/* E.g., create volume size type */
 		if (argc == 5) {
@@ -593,7 +600,8 @@ static int do_ubi(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 		}
 		/* E.g., create volume size */
 		if (argc == 4) {
-			size = simple_strtoull(argv[3], NULL, 16);
+			if (argv[3][0] != '-')
+				size = simple_strtoull(argv[3], NULL, 16);
 			argc--;
 		}
 		/* Use maximum available size */
@@ -603,7 +611,7 @@ static int do_ubi(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 		}
 		/* E.g., create volume */
 		if (argc == 3)
-			return ubi_create_vol(argv[2], size, dynamic);
+			return ubi_create_vol(argv[2], size, dynamic, id);
 	}
 
 	if (strncmp(argv[1], "remove", 6) == 0) {
@@ -684,8 +692,9 @@ U_BOOT_CMD(
 		" - Display volume and ubi layout information\n"
 	"ubi check volumename"
 		" - check if volumename exists\n"
-	"ubi create[vol] volume [size] [type]"
-		" - create volume name with size\n"
+	"ubi create[vol] volume [size] [type] [id]\n"
+		" - create volume name with size ('-' for maximum"
+		" available size)\n"
 	"ubi write[vol] address volume size"
 		" - Write volume from address with size\n"
 	"ubi write.part address volume size [fullsize]\n"

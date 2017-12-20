@@ -9,16 +9,13 @@
 
 #ifdef CONFIG_MPC85xx
 #include <asm/config_mpc85xx.h>
-#define CONFIG_SYS_FSL_DDR
 #endif
 
 #ifdef CONFIG_MPC86xx
 #include <asm/config_mpc86xx.h>
-#define CONFIG_SYS_FSL_DDR
 #endif
 
 #ifdef CONFIG_MPC83xx
-#define CONFIG_SYS_FSL_DDR
 #endif
 
 #ifndef HWCONFIG_BUFFER_SIZE
@@ -38,8 +35,7 @@
 #define CONFIG_SYS_BOOT_GET_KBD
 
 #ifndef CONFIG_MAX_MEM_MAPPED
-#if	defined(CONFIG_4xx)		|| \
-	defined(CONFIG_E500)		|| \
+#if	defined(CONFIG_E500)		|| \
 	defined(CONFIG_MPC86xx)		|| \
 	defined(CONFIG_E300)
 #define CONFIG_MAX_MEM_MAPPED	((phys_size_t)2 << 30)
@@ -57,10 +53,6 @@
 #endif
 #endif
 
-#ifndef CONFIG_MAX_CPUS
-#define CONFIG_MAX_CPUS		1
-#endif
-
 /*
  * Provide a default boot page translation virtual address that lines up with
  * Freescale's default e500 reset page.
@@ -71,22 +63,11 @@
 #endif
 #endif
 
-/*
- * SEC (crypto unit) major compatible version determination
- */
-#if defined(CONFIG_MPC83xx)
-#define CONFIG_SYS_FSL_SEC_BE
-#define CONFIG_SYS_FSL_SEC_COMPAT	2
-#endif
-
 /* Since so many PPC SOCs have a semi-common LBC, define this here */
 #if defined(CONFIG_MPC85xx) || defined(CONFIG_MPC86xx) || \
 	defined(CONFIG_MPC83xx)
 #if !defined(CONFIG_FSL_IFC)
 #define CONFIG_FSL_LBC
-#ifndef CONFIG_SYS_FSL_LBC_CLK_DIV
-#define CONFIG_SYS_FSL_LBC_CLK_DIV	1
-#endif
 #endif
 #endif
 

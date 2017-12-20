@@ -20,7 +20,7 @@
 #include <common.h>
 #include <malloc.h>
 #include <mmc.h>
-#include <asm/errno.h>
+#include <linux/errno.h>
 #include <asm/io.h>
 #include <asm/arch/clock.h>
 #include <asm/arch/imx-regs.h>
@@ -304,7 +304,7 @@ mxsmmc_send_cmd(struct mmc *mmc, struct mmc_cmd *cmd, struct mmc_data *data)
 	return 0;
 }
 
-static void mxsmmc_set_ios(struct mmc *mmc)
+static int mxsmmc_set_ios(struct mmc *mmc)
 {
 	struct mxsmmc_priv *priv = mmc->priv;
 	struct mxs_ssp_regs *ssp_regs = priv->regs;
@@ -331,6 +331,8 @@ static void mxsmmc_set_ios(struct mmc *mmc)
 
 	debug("MMC%d: Set %d bits bus width\n",
 		mmc->block_dev.devnum, mmc->bus_width);
+
+	return 0;
 }
 
 static int mxsmmc_init(struct mmc *mmc)

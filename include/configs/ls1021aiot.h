@@ -7,25 +7,18 @@
 #ifndef __CONFIG_H
 #define __CONFIG_H
 
-#define CONFIG_LS102XA
-
 #define CONFIG_ARMV7_SECURE_BASE OCRAM_BASE_S_ADDR
 
 #define CONFIG_SYS_FSL_CLK
 
-#define CONFIG_DISPLAY_CPUINFO
-#define CONFIG_DISPLAY_BOARDINFO
-
-#define CONFIG_BOARD_EARLY_INIT_F
-
 #ifdef CONFIG_ARMV7_TEE
-#define CONFIG_TEE_RAM_SIZE	0x04000000
-#define CONFIG_SYS_MEM_TOP_HIDE	CONFIG_TEE_RAM_SIZE
-#define CONFIG_OPTEE_ENTRY	0xBC000000
+#define SYS_TEE_RAM_SIZE	0x04000000
+#define CONFIG_SYS_MEM_TOP_HIDE	SYS_TEE_RAM_SIZE
+#define SYS_OPTEE_ENTRY	0xBC000000
 #define OPTEE_HEADER_START	0x82060000
 #define OPTEE_IMAGE_START	0x82100000
 #define OPTEE_IMAGE_SIZE	0x80000
-#define OPTEE_IMAGE_ADDR	0x140000
+#define OPTEE_IMAGE_ADDR	0x800000
 #define CONFIG_SYS_MMC_ENV_DEV	0
 #endif
 
@@ -42,14 +35,14 @@
 
 #ifdef CONFIG_HAS_FSL_XHCI_USB
 #define CONFIG_USB_XHCI_FSL
+#define CONFIG_USB_XHCI_DWC3
 #define CONFIG_USB_MAX_CONTROLLER_COUNT		1
-#define CONFIG_SYS_USB_XHCI_MAX_ROOT_PORTS	2
 #endif
 
-/*
- * Generic Timer Definitions
- */
-#define GENERIC_TIMER_CLK		12500000
+#if defined(CONFIG_HAS_FSL_DR_USB) || defined(CONFIG_HAS_FSL_XHCI_USB)
+#define CONFIG_USB_STORAGE
+#define CONFIG_CMD_EXT2
+#endif
 
 #define CONFIG_SYS_CLK_FREQ		100000000
 #define CONFIG_DDR_CLK_FREQ		100000000
@@ -104,7 +97,6 @@
 #define CONFIG_SPL_SERIAL_SUPPORT
 #define CONFIG_SPL_MMC_SUPPORT
 #define CONFIG_SYS_MMCSD_RAW_MODE_U_BOOT_SECTOR	0xe8
-#define CONFIG_SYS_U_BOOT_MAX_SIZE_SECTORS		0x400
 
 #define CONFIG_SPL_TEXT_BASE	0x10000000
 #define CONFIG_SPL_MAX_SIZE		0x1a000
@@ -118,25 +110,16 @@
 #define CONFIG_SPL_BSS_START_ADDR	0x80100000
 #define CONFIG_SPL_BSS_MAX_SIZE		0x80000
 #define CONFIG_SYS_MONITOR_LEN		0x80000
-#define CONFIG_SYS_NO_FLASH
 #endif
 
 #ifdef CONFIG_QSPI_BOOT
 #define CONFIG_SYS_TEXT_BASE		0x40010000
 #endif
 
-#if defined(CONFIG_QSPI_BOOT) || defined(CONFIG_SD_BOOT_QSPI)
-#define CONFIG_SYS_NO_FLASH
-#endif
-
 #define CONFIG_NR_DRAM_BANKS		1
 
 #define CONFIG_SYS_DDR_SDRAM_BASE	0x80000000UL
 #define CONFIG_SYS_SDRAM_BASE		CONFIG_SYS_DDR_SDRAM_BASE
-
-#define CONFIG_SYS_HAS_SERDES
-
-#define CONFIG_FSL_CAAM			/* Enable CAAM */
 
 /*
  * Serial Port
@@ -145,11 +128,11 @@
 #define CONFIG_SYS_NS16550_SERIAL
 #define CONFIG_SYS_NS16550_REG_SIZE	1
 #define CONFIG_SYS_NS16550_CLK		get_serial_clock()
-#define CONFIG_BAUDRATE			115200
 
 /*
  * I2C
  */
+#define CONFIG_CMD_I2C
 #define CONFIG_SYS_I2C
 #define CONFIG_SYS_I2C_MXC
 #define CONFIG_SYS_I2C_MXC_I2C1		/* enable I2C bus 1 */
@@ -166,12 +149,10 @@
 /*
  * MMC
  */
-#define CONFIG_MMC
+#define CONFIG_CMD_MMC
 #define CONFIG_FSL_ESDHC
-#define CONFIG_GENERIC_MMC
 
 /* SATA */
-#define CONFIG_BOARD_LATE_INIT
 #define CONFIG_CMD_SCSI
 #define CONFIG_LIBATA
 #define CONFIG_SCSI_AHCI
@@ -187,8 +168,6 @@
 #define CONFIG_SYS_SCSI_MAX_DEVICE	(CONFIG_SYS_SCSI_MAX_SCSI_ID * \
 		CONFIG_SYS_SCSI_MAX_LUN)
 
-#define CONFIG_DOS_PARTITION
-
 /* SPI */
 #if defined(CONFIG_QSPI_BOOT) || defined(CONFIG_SD_BOOT_QSPI)
 #define CONFIG_SPI_FLASH_SPANSION
@@ -203,6 +182,7 @@
 
 /* DM SPI */
 #if defined(CONFIG_FSL_DSPI) || defined(CONFIG_FSL_QSPI)
+#define CONFIG_CMD_SF
 #define CONFIG_DM_SPI_FLASH
 #endif
 
@@ -240,20 +220,31 @@
 #endif
 
 /* PCIe */
+#define CONFIG_PCIE1		/* PCIE controler 1 */
+#define CONFIG_PCIE2		/* PCIE controler 2 */
+
 #define FSL_PCIE_COMPAT		"fsl,ls1021a-pcie"
+
 #ifdef CONFIG_PCI
-#define CONFIG_PCI_PNP
 #define CONFIG_PCI_SCAN_SHOW
 #define CONFIG_CMD_PCI
 #endif
 
+#define CONFIG_CMD_PING
+#define CONFIG_CMD_DHCP
+#define CONFIG_CMD_MII
+
 #define CONFIG_CMDLINE_TAG
 #define CONFIG_CMDLINE_EDITING
+
+#if defined(CONFIG_QSPI_BOOT) || defined(CONFIG_SD_BOOT)
+#undef	CONFIG_CMD_IMLS
+#endif
 
 #define CONFIG_PEN_ADDR_BIG_ENDIAN
 #define CONFIG_LAYERSCAPE_NS_ACCESS
 #define CONFIG_SMP_PEN_ADDR		0x01ee0200
-#define CONFIG_TIMER_CLK_FREQ		12500000
+#define COUNTER_FREQUENCY		12500000
 
 #define CONFIG_HWCONFIG
 #define HWCONFIG_BUFFER_SIZE		256
@@ -269,6 +260,7 @@
  * Miscellaneous configurable options
  */
 #define CONFIG_SYS_LONGHELP		/* undef to save memory */
+#define CONFIG_SYS_PROMPT_HUSH_PS2	"> "
 #define CONFIG_AUTO_COMPLETE
 #define CONFIG_SYS_CBSIZE	256	/* Console I/O Buffer Size */
 #define CONFIG_SYS_PBSIZE		\
@@ -276,18 +268,12 @@
 #define CONFIG_SYS_MAXARGS	16	/* max number of command args */
 #define CONFIG_SYS_BARGSIZE		CONFIG_SYS_CBSIZE
 
-#define CONFIG_SYS_MEMTEST_START	0x80000000
-#define CONFIG_SYS_MEMTEST_END		0x9fffffff
+#define CONFIG_CMD_GREPENV
+#define CONFIG_CMD_MEMINFO
 
 #define CONFIG_SYS_LOAD_ADDR		0x82000000
 
 #define CONFIG_LS102XA_STREAM_ID
-
-/*
- * Stack sizes
- * The stack sizes are set up in start.S using the settings below
- */
-#define CONFIG_STACKSIZE		(30 * 1024)
 
 #define CONFIG_SYS_INIT_SP_OFFSET \
 	(CONFIG_SYS_INIT_RAM_SIZE - GENERATED_GBL_DATA_SIZE)
@@ -310,29 +296,23 @@
 #define CONFIG_ENV_OVERWRITE
 
 #if defined(CONFIG_SD_BOOT)
-#define CONFIG_ENV_OFFSET		0x100000
+#define CONFIG_ENV_OFFSET		0x300000
 #define CONFIG_ENV_IS_IN_MMC
 #define CONFIG_SYS_MMC_ENV_DEV	0
-#define CONFIG_ENV_SIZE			0x20000
+#define CONFIG_ENV_SIZE			0x2000
 #elif defined(CONFIG_QSPI_BOOT)
 #define CONFIG_ENV_IS_IN_SPI_FLASH
 #define CONFIG_ENV_SIZE			0x2000
-#define CONFIG_ENV_OFFSET		0x100000
+#define CONFIG_ENV_OFFSET		0x300000
 #define CONFIG_ENV_SECT_SIZE	0x10000
 #endif
 
+#define CONFIG_OF_BOARD_SETUP
+#define CONFIG_OF_STDOUT_VIA_ALIAS
+#define CONFIG_CMD_BOOTZ
+
 #define CONFIG_MISC_INIT_R
 
-/* Hash command with SHA acceleration supported in hardware */
-
-#ifdef CONFIG_FSL_CAAM
-
-#define CONFIG_CMD_HASH
-
-#define CONFIG_SHA_HW_ACCEL
-
-#endif
-
 #include <asm/fsl_secure_boot.h>
-
+#define CONFIG_SYS_BOOTM_LEN     (64 << 20) /* Increase max gunzip size */
 #endif

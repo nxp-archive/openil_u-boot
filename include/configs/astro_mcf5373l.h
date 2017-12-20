@@ -59,12 +59,7 @@
 
 /* Define which commands should be available at u-boot command prompt */
 
-#define CONFIG_CMD_DATE
-#if ENABLE_JFFS
-#define CONFIG_CMD_JFFS2
-#endif
 #define CONFIG_CMD_REGINFO
-#define CONFIG_CMD_FPGA_LOADMK
 #define CONFIG_CMDLINE_EDITING
 
 #define CONFIG_MCFRTC
@@ -102,8 +97,6 @@
  * CONFIG_SYS_BAUDRATE_TABLE defines values that can be selected
  * in u-boot command interface
  */
-
-#define CONFIG_BAUDRATE		115200
 
 #define CONFIG_MCFUART
 #define CONFIG_SYS_UART_PORT		(2)

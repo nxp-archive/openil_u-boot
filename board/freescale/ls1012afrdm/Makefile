@@ -5,4 +5,3 @@
 #
 
 obj-y += ls1012afrdm.o
-obj-y += eth.o

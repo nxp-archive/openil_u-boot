@@ -48,7 +48,6 @@
 #define CONFIG_SYS_MEMTEST_END 	(PHYS_SDRAM_1 + 0x2000000 + 16*1024*1024)
 
 #define CONFIG_NR_DRAM_BANKS	1 /* we have 1 bank of DRAM */
-#define CONFIG_STACKSIZE	(256*1024) /* regular stack */
 
 #define CONFIG_SYS_DA850_SYSCFG_SUSPSRC (	\
 	DAVINCI_SYSCFG_SUSPSRC_TIMER0 |		\
@@ -75,8 +74,49 @@
 #define CONFIG_SYS_DA850_PLL1_PLLDIV2  0x8001
 #define CONFIG_SYS_DA850_PLL1_PLLDIV3  0x8003
 
-#define CONFIG_SYS_DA850_PLL0_PLLM     24
+#define CONFIG_SYS_DA850_PLL0_PLLM     37
 #define CONFIG_SYS_DA850_PLL1_PLLM     21
+
+/*
+ * DDR2 memory configuration
+ */
+#define CONFIG_SYS_DA850_DDR2_DDRPHYCR (DV_DDR_PHY_PWRDNEN | \
+					DV_DDR_PHY_EXT_STRBEN | \
+					(0x5 << DV_DDR_PHY_RD_LATENCY_SHIFT))
+
+#define CONFIG_SYS_DA850_DDR2_SDBCR (		  \
+	(1 << DV_DDR_SDCR_DDR2EN_SHIFT)		| \
+	(1 << DV_DDR_SDCR_DDREN_SHIFT)		| \
+	(1 << DV_DDR_SDCR_SDRAMEN_SHIFT)	| \
+	(1 << DV_DDR_SDCR_BUS_WIDTH_SHIFT)	| \
+	(4 << DV_DDR_SDCR_CL_SHIFT)		| \
+	(3 << DV_DDR_SDCR_IBANK_SHIFT)		| \
+	(2 << DV_DDR_SDCR_PAGESIZE_SHIFT))
+
+/* SDBCR2 is only used if IBANK_POS bit in SDBCR is set */
+#define CONFIG_SYS_DA850_DDR2_SDBCR2 0
+
+#define CONFIG_SYS_DA850_DDR2_SDTIMR (		  \
+	(19 << DV_DDR_SDTMR1_RFC_SHIFT)		| \
+	(1 << DV_DDR_SDTMR1_RP_SHIFT)		| \
+	(1 << DV_DDR_SDTMR1_RCD_SHIFT)		| \
+	(2 << DV_DDR_SDTMR1_WR_SHIFT)		| \
+	(6 << DV_DDR_SDTMR1_RAS_SHIFT)		| \
+	(8 << DV_DDR_SDTMR1_RC_SHIFT)		| \
+	(1 << DV_DDR_SDTMR1_RRD_SHIFT)		| \
+	(1 << DV_DDR_SDTMR1_WTR_SHIFT))
+
+#define CONFIG_SYS_DA850_DDR2_SDTIMR2 (		  \
+	(7 << DV_DDR_SDTMR2_RASMAX_SHIFT)	| \
+	(2 << DV_DDR_SDTMR2_XP_SHIFT)		| \
+	(0 << DV_DDR_SDTMR2_ODT_SHIFT)		| \
+	(20 << DV_DDR_SDTMR2_XSNR_SHIFT)	| \
+	(199 << DV_DDR_SDTMR2_XSRD_SHIFT)	| \
+	(1 << DV_DDR_SDTMR2_RTP_SHIFT)		| \
+	(2 << DV_DDR_SDTMR2_CKE_SHIFT))
+
+#define CONFIG_SYS_DA850_DDR2_SDRCR    0x00000492
+#define CONFIG_SYS_DA850_DDR2_PBBPR    0x30
 
 /*
  * Serial Driver info
@@ -86,7 +126,6 @@
 #define CONFIG_SYS_NS16550_COM1	DAVINCI_UART2_BASE /* Base address of UART2 */
 #define CONFIG_SYS_NS16550_CLK	clk_get(DAVINCI_UART2_CLKID)
 #define CONFIG_CONS_INDEX	1		/* use UART0 for console */
-#define CONFIG_BAUDRATE		115200		/* Default baud rate */
 #define CONFIG_SYS_BAUDRATE_TABLE	{ 9600, 19200, 38400, 57600, 115200 }
 
 #define CONFIG_SPI
@@ -97,8 +136,6 @@
 #define CONFIG_ENV_SPI_MAX_HZ	CONFIG_SF_DEFAULT_SPEED
 
 #ifdef CONFIG_USE_SPIFLASH
-#define CONFIG_SPL_SPI_SUPPORT
-#define CONFIG_SPL_SPI_FLASH_SUPPORT
 #define CONFIG_SPL_SPI_LOAD
 #define CONFIG_SYS_SPI_U_BOOT_OFFS	0x8000
 #define CONFIG_SYS_SPI_U_BOOT_SIZE	0x30000
@@ -119,26 +156,50 @@
 #ifdef CONFIG_USE_NAND
 #undef CONFIG_ENV_IS_IN_FLASH
 #define CONFIG_NAND_DAVINCI
-#define CONFIG_SYS_NO_FLASH
 #define CONFIG_ENV_IS_IN_NAND		/* U-Boot env in NAND Flash  */
 #define CONFIG_ENV_OFFSET		0x0 /* Block 0--not used by bootcode */
 #define CONFIG_ENV_SIZE			(128 << 9)
 #define	CONFIG_SYS_NAND_USE_FLASH_BBT
 #define CONFIG_SYS_NAND_4BIT_HW_ECC_OOBFIRST
 #define	CONFIG_SYS_NAND_PAGE_2K
-#define	CONFIG_SYS_NAND_BUSWIDTH_16_BIT
+#define	CONFIG_SYS_NAND_BUSWIDTH_16BIT
 #define CONFIG_SYS_NAND_CS		3
 #define CONFIG_SYS_NAND_BASE		DAVINCI_ASYNC_EMIF_DATA_CE3_BASE
-#define CONFIG_SYS_CLE_MASK		0x10
-#define CONFIG_SYS_ALE_MASK		0x8
+#define CONFIG_SYS_NAND_MASK_CLE	0x10
+#define CONFIG_SYS_NAND_MASK_ALE	0x8
 #undef CONFIG_SYS_NAND_HW_ECC
 #define CONFIG_SYS_MAX_NAND_DEVICE	1 /* Max number of NAND devices */
-#define NAND_MAX_CHIPS			1
+#define CONFIG_SYS_NAND_HW_ECC_OOBFIRST
+#define CONFIG_NAND_6BYTES_OOB_FREE_10BYTES_ECC
+#define CONFIG_SYS_NAND_5_ADDR_CYCLE
+#define CONFIG_SYS_NAND_PAGE_SIZE	(2 << 10)
+#define CONFIG_SYS_NAND_BLOCK_SIZE	(128 << 10)
+#define CONFIG_SYS_NAND_U_BOOT_SIZE	SZ_512K
+#define CONFIG_SYS_NAND_U_BOOT_DST	0xc1080000
+#define CONFIG_SYS_NAND_U_BOOT_START	CONFIG_SYS_NAND_U_BOOT_DST
+#define CONFIG_SYS_NAND_U_BOOT_RELOC_SP	(CONFIG_SYS_NAND_U_BOOT_DST - \
+					CONFIG_SYS_NAND_U_BOOT_SIZE - \
+					CONFIG_SYS_MALLOC_LEN -       \
+					GENERATED_GBL_DATA_SIZE)
+#define CONFIG_SYS_NAND_ECCPOS		{				\
+				6, 7, 8, 9, 10, 11, 12, 13, 14, 15,	\
+				22, 23, 24, 25, 26, 27, 28, 29, 30, 31, \
+				38, 39, 40, 41, 42, 43, 44, 45, 46, 47, \
+				54, 55, 56, 57, 58, 59, 60, 61, 62, 63 }
+#define CONFIG_SYS_NAND_PAGE_COUNT	64
+#define CONFIG_SYS_NAND_BAD_BLOCK_POS	0
+#define CONFIG_SYS_NAND_ECCSIZE		512
+#define CONFIG_SYS_NAND_ECCBYTES	10
+#define CONFIG_SYS_NAND_OOBSIZE		64
+#define CONFIG_SPL_NAND_BASE
+#define CONFIG_SPL_NAND_DRIVERS
+#define CONFIG_SPL_NAND_ECC
+#define CONFIG_SPL_NAND_SIMPLE
+#define CONFIG_SPL_NAND_LOAD
 #endif
 
 #ifdef CONFIG_SYS_USE_NOR
 #define CONFIG_ENV_IS_IN_FLASH
-#undef CONFIG_SYS_NO_FLASH
 #define CONFIG_FLASH_CFI_DRIVER
 #define CONFIG_SYS_FLASH_CFI
 #define CONFIG_SYS_FLASH_PROTECTION
@@ -160,14 +221,12 @@
 #define CONFIG_ENV_SIZE			(64 << 10)
 #define CONFIG_ENV_OFFSET		(256 << 10)
 #define CONFIG_ENV_SECT_SIZE		(64 << 10)
-#define CONFIG_SYS_NO_FLASH
 #endif
 
 /*
  * Network & Ethernet Configuration
  */
 #ifdef CONFIG_DRIVER_TI_EMAC
-#define CONFIG_EMAC_MDIO_PHY_NUM	7
 #define CONFIG_MII
 #undef	CONFIG_DRIVER_TI_EMAC_USE_RMII
 #define CONFIG_BOOTP_DEFAULT
@@ -181,8 +240,7 @@
  * U-Boot general configuration
  */
 #define CONFIG_MISC_INIT_R
-#define CONFIG_BOARD_EARLY_INIT_F
-#define CONFIG_BOOTFILE		"uImage" /* Boot file name */
+#define CONFIG_BOOTFILE		"zImage" /* Boot file name */
 #define CONFIG_SYS_CBSIZE	1024 /* Console I/O Buffer Size	*/
 #define CONFIG_SYS_PBSIZE	(CONFIG_SYS_CBSIZE+sizeof(CONFIG_SYS_PROMPT)+16)
 #define CONFIG_SYS_MAXARGS	16 /* max number of command args */
@@ -191,7 +249,6 @@
 #define CONFIG_AUTO_COMPLETE
 #define CONFIG_CMDLINE_EDITING
 #define CONFIG_SYS_LONGHELP
-#define CONFIG_CRC32_VERIFY
 #define CONFIG_MX_CYCLIC
 
 /*
@@ -201,14 +258,31 @@
 #define CONFIG_CMDLINE_TAG
 #define CONFIG_REVISION_TAG
 #define CONFIG_SETUP_MEMORY_TAGS
-#define CONFIG_BOOTARGS		"console=ttyS2,115200n8 root=/dev/mmcblk0p2 rw rootwait ip=off"
-#define CONFIG_BOOTCOMMAND	"if mmc rescan; then if fatload mmc 0 0xc0600000 boot.scr; then source 0xc0600000; else fatload mmc 0 0xc0700000 uImage; bootm c0700000; fi; else sf probe 0; sf read 0xc0700000 0x80000 0x220000; bootm 0xc0700000; fi"
+#define CONFIG_BOOTCOMMAND \
+		"run envboot; " \
+		"run mmcboot; "
+
+#define DEFAULT_LINUX_BOOT_ENV \
+	"loadaddr=0xc0700000\0" \
+	"fdtaddr=0xc0600000\0" \
+	"scriptaddr=0xc0600000\0"
+
+#include <environment/ti/mmc.h>
+
+#define CONFIG_EXTRA_ENV_SETTINGS \
+	DEFAULT_LINUX_BOOT_ENV \
+	DEFAULT_MMC_TI_ARGS \
+	"bootpart=0:2\0" \
+	"bootdir=/boot\0" \
+	"bootfile=zImage\0" \
+	"fdtfile=da850-lcdk.dtb\0" \
+	"boot_fdt=yes\0" \
+	"boot_fit=0\0" \
+	"console=ttyS2,115200n8\0"
 
 /*
  * U-Boot commands
  */
-#define CONFIG_CMD_ENV
-#define CONFIG_CMD_DIAG
 #define CONFIG_CMD_SAVES
 #ifdef CONFIG_CMD_BDI
 #define CONFIG_CLOCKS
@@ -225,29 +299,18 @@
 #define CONFIG_MTD_PARTITIONS
 #define CONFIG_LZO
 #define CONFIG_RBTREE
-#define CONFIG_CMD_UBI
 #define CONFIG_CMD_UBIFS
-#endif
-
-#ifdef CONFIG_USE_SPIFLASH
 #endif
 
 #if !defined(CONFIG_USE_NAND) && \
 	!defined(CONFIG_SYS_USE_NOR) && \
 	!defined(CONFIG_USE_SPIFLASH)
 #define CONFIG_ENV_IS_NOWHERE
-#define CONFIG_SYS_NO_FLASH
 #define CONFIG_ENV_SIZE		(16 << 10)
-#undef CONFIG_CMD_ENV
 #endif
 
 /* SD/MMC */
-#define CONFIG_MMC
-#define CONFIG_GENERIC_MMC
-#define CONFIG_DAVINCI_MMC
-
 #ifdef CONFIG_MMC
-#define CONFIG_DOS_PARTITION
 #undef CONFIG_ENV_IS_IN_MMC
 #endif
 
@@ -264,13 +327,9 @@
 #ifndef CONFIG_DIRECT_NOR_BOOT
 /* defines for SPL */
 #define CONFIG_SPL_FRAMEWORK
-#define CONFIG_SPL_BOARD_INIT
 #define CONFIG_SYS_SPL_MALLOC_START	(CONFIG_SYS_TEXT_BASE - \
 						CONFIG_SYS_MALLOC_LEN)
 #define CONFIG_SYS_SPL_MALLOC_SIZE	CONFIG_SYS_MALLOC_LEN
-#define CONFIG_SPL_SERIAL_SUPPORT
-#define CONFIG_SPL_LIBCOMMON_SUPPORT
-#define CONFIG_SPL_LIBGENERIC_SUPPORT
 #define CONFIG_SPL_LDSCRIPT	"board/$(BOARDDIR)/u-boot-spl-da850evm.lds"
 #define CONFIG_SPL_STACK	0x8001ff00
 #define CONFIG_SPL_TEXT_BASE	0x80000000
@@ -282,4 +341,7 @@
 #define CONFIG_SYS_SDRAM_BASE		0xc0000000
 #define CONFIG_SYS_INIT_SP_ADDR		(CONFIG_SYS_SDRAM_BASE + 0x1000 - /* Fix this */ \
 					GENERATED_GBL_DATA_SIZE)
+
+#include <asm/arch/hardware.h>
+
 #endif /* __CONFIG_H */

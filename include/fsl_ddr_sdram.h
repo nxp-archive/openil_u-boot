@@ -376,7 +376,7 @@ typedef struct memctl_options_s {
 
 	unsigned int clk_adjust;		/* */
 	unsigned int cpo_override;		/* override timing_cfg_2[CPO]*/
-	unsigned int cpo_sample;                /* optimize debug_29[24:31] */
+	unsigned int cpo_sample;		/* optimize debug_29[24:31] */
 	unsigned int write_data_delay;		/* DQS adjust */
 
 	unsigned int cswl_override;
@@ -477,4 +477,12 @@ typedef struct fixed_ddr_parm{
 	int max_freq;
 	fsl_ddr_cfg_regs_t *ddr_settings;
 } fixed_ddr_parm_t;
+
+/**
+ * fsl_initdram() - Set up the SDRAM
+ *
+ * @return 0 if OK, -ve on error
+ */
+int fsl_initdram(void);
+
 #endif

@@ -15,8 +15,6 @@
 
 #include "tam3517-common.h"
 
-#undef CONFIG_USB_EHCI
-#undef CONFIG_USB_EHCI_OMAP
 #undef CONFIG_USB_OMAP3
 
 /* Our console port is port3 */
@@ -28,7 +26,6 @@
 #define CONFIG_SYS_NS16550_COM3	OMAP34XX_UART3
 #define CONFIG_SERIAL3
 
-#define MACH_TYPE_ECO5_PK	4017
 #define CONFIG_MACH_TYPE	MACH_TYPE_ECO5_PK
 
 #define CONFIG_BOOTFILE		"uImage"

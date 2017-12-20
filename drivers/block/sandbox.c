@@ -12,7 +12,7 @@
 #include <os.h>
 #include <malloc.h>
 #include <sandboxblockdev.h>
-#include <asm/errno.h>
+#include <linux/errno.h>
 #include <dm/device-internal.h>
 
 DECLARE_GLOBAL_DATA_PTR;
@@ -98,7 +98,7 @@ int host_dev_bind(int devnum, char *filename)
 	/* Remove and unbind the old device, if any */
 	ret = blk_get_device(IF_TYPE_HOST, devnum, &dev);
 	if (ret == 0) {
-		ret = device_remove(dev);
+		ret = device_remove(dev, DM_REMOVE_NORMAL);
 		if (ret)
 			return ret;
 		ret = device_unbind(dev);

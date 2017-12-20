@@ -14,9 +14,6 @@
  /* High Level Configuration Options */
 #define CONFIG_MX31		1		/* This is a mx31 */
 
-#define CONFIG_DISPLAY_CPUINFO
-#define CONFIG_DISPLAY_BOARDINFO
-
 #define CONFIG_SYS_TEXT_BASE		0xA0000000
 
 #define CONFIG_MACH_TYPE	MACH_TYPE_MX31ADS
@@ -57,13 +54,6 @@
 /* allow to overwrite serial and ethaddr */
 #define CONFIG_ENV_OVERWRITE
 #define CONFIG_CONS_INDEX	1
-#define CONFIG_BAUDRATE		115200
-
-/***********************************************************
- * Command definition
- ***********************************************************/
-#define CONFIG_CMD_DATE
-
 
 #define CONFIG_LOADADDR		0x80800000	/* loadaddr env var */
 
@@ -124,7 +114,6 @@
 #define CONFIG_NR_DRAM_BANKS	1
 #define PHYS_SDRAM_1		CSD0_BASE
 #define PHYS_SDRAM_1_SIZE	(128 * 1024 * 1024)
-#define CONFIG_BOARD_EARLY_INIT_F
 
 #define CONFIG_SYS_SDRAM_BASE		PHYS_SDRAM_1
 #define CONFIG_SYS_INIT_RAM_ADDR	IRAM_BASE_ADDR

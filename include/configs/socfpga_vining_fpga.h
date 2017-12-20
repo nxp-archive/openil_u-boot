@@ -8,14 +8,7 @@
 
 #include <asm/arch/base_addr_ac5.h>
 
-/* U-Boot Commands */
-#define CONFIG_SYS_NO_FLASH
-#define CONFIG_DOS_PARTITION
-#define CONFIG_FAT_WRITE
 #define CONFIG_HW_WATCHDOG
-
-#define CONFIG_CMD_EEPROM
-#define CONFIG_CMD_LED
 
 /* Memory configurations */
 #define PHYS_SDRAM_1_SIZE		0x40000000	/* 1GiB on VINING_FPGA */
@@ -43,21 +36,6 @@
  *   2 ... Bottom Green
  *   3 ... Bottom Red
  */
-#define CONFIG_STATUS_LED
-#define CONFIG_GPIO_LED
-#define CONFIG_BOARD_SPECIFIC_LED
-#define STATUS_LED_BIT		48
-#define STATUS_LED_STATE	STATUS_LED_OFF
-#define STATUS_LED_PERIOD	(CONFIG_SYS_HZ / 2)
-#define STATUS_LED_BIT1		53
-#define STATUS_LED_STATE1	STATUS_LED_OFF
-#define STATUS_LED_PERIOD1	(CONFIG_SYS_HZ / 2)
-#define STATUS_LED_BIT2		54
-#define STATUS_LED_STATE2	STATUS_LED_OFF
-#define STATUS_LED_PERIOD2	(CONFIG_SYS_HZ / 2)
-#define STATUS_LED_BIT3		65
-#define STATUS_LED_STATE3	STATUS_LED_OFF
-#define STATUS_LED_PERIOD3	(CONFIG_SYS_HZ / 2)
 
 /* Ethernet on SoC (EMAC) */
 #if defined(CONFIG_CMD_NET)
@@ -192,9 +170,7 @@
 		"else echo \"Unsupported boot mode: \"${bootmode} ; "	\
 		"fi\0"							\
 
-#define CONFIG_CMD_UBI
 #define CONFIG_CMD_UBIFS
-#define CONFIG_MTD_UBI_FASTMAP
 #define CONFIG_RBTREE
 #define CONFIG_LZO
 #define MTDPARTS_DEFAULT			\
@@ -215,11 +191,6 @@
 	(CONFIG_ENV_OFFSET + CONFIG_ENV_SECT_SIZE)
 
 #define CONFIG_MISC_INIT_R
-#define CONFIG_BOARD_LATE_INIT
-
-/* Enable DFU to SF and RAM */
-#define CONFIG_DFU_RAM
-#define CONFIG_DFU_SF
 
 /* Support changing the prompt string */
 #define CONFIG_CMDLINE_PS_SUPPORT

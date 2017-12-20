@@ -28,10 +28,12 @@ int dram_init(void)
 	return 0;
 }
 
-void dram_init_banksize(void)
+int dram_init_banksize(void)
 {
 	gd->bd->bi_dram[0].start = CONFIG_SYS_SDRAM_BASE;
 	gd->bd->bi_dram[0].size = gd->ram_size;
+
+	return 0;
 }
 #endif
 
@@ -105,7 +107,6 @@ void davinci_sync_env_enetaddr(uint8_t *rom_enetaddr)
 #endif	/* CONFIG_DRIVER_TI_EMAC */
 
 #if defined(CONFIG_SOC_DA8XX)
-#ifndef CONFIG_USE_IRQ
 void irq_init(void)
 {
 	/*
@@ -120,7 +121,6 @@ void irq_init(void)
 	writel(0xffffffff, &davinci_aintc_regs->ecr2);
 	writel(0xffffffff, &davinci_aintc_regs->ecr3);
 }
-#endif
 
 /*
  * Enable PSC for various peripherals.

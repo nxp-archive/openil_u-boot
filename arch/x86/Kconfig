@@ -5,6 +5,52 @@ config SYS_ARCH
 	default "x86"
 
 choice
+	prompt "Run U-Boot in 32/64-bit mode"
+	default X86_RUN_32BIT
+	help
+	  U-Boot can be built as a 32-bit binary which runs in 32-bit mode
+	  even on 64-bit machines. In this case SPL is not used, and U-Boot
+	  runs directly from the reset vector (via 16-bit start-up).
+
+	  Alternatively it can be run as a 64-bit binary, thus requiring a
+	  64-bit machine. In this case SPL runs in 32-bit mode (via 16-bit
+	  start-up) then jumps to U-Boot in 64-bit mode.
+
+	  For now, 32-bit mode is recommended, as 64-bit is still
+	  experimental and is missing a lot of features.
+
+config X86_RUN_32BIT
+	bool "32-bit"
+	help
+	  Build U-Boot as a 32-bit binary with no SPL. This is the currently
+	  supported normal setup. U-Boot will stay in 32-bit mode even on
+	  64-bit machines. When booting a 64-bit kernel, U-Boot will switch
+	  to 64-bit just before starting the kernel. Only the bottom 4GB of
+	  memory can be accessed through normal means, although
+	  arch_phys_memset() can be used for basic access to other memory.
+
+config X86_RUN_64BIT
+	bool "64-bit"
+	select X86_64
+	select SUPPORT_SPL
+	select SPL
+	select SPL_SEPARATE_BSS
+	help
+	  Build U-Boot as a 64-bit binary with a 32-bit SPL. This is
+	  experimental and many features are missing. U-Boot SPL starts up,
+	  runs through the 16-bit and 32-bit init, then switches to 64-bit
+	  mode and jumps to U-Boot proper.
+
+endchoice
+
+config X86_64
+	bool
+
+config SPL_X86_64
+	bool
+	depends on SPL
+
+choice
 	prompt "Mainboard vendor"
 	default VENDOR_EMULATION
 
@@ -33,6 +79,22 @@ config VENDOR_INTEL
 	bool "Intel"
 
 endchoice
+
+# subarchitectures-specific options below
+config INTEL_MID
+	bool "Intel MID platform support"
+	select REGMAP
+	select SYSCON
+	help
+	  Select to build a U-Boot capable of supporting Intel MID
+	  (Mobile Internet Device) platform systems which do not have
+	  the PCI legacy interfaces.
+
+	  If you are building for a PC class system say N here.
+
+	  Intel MID platforms are based on an Intel processor and
+	  chipset which consume less power than most of the x86
+	  derivatives.
 
 # board-specific options below
 source "board/advantech/Kconfig"
@@ -89,6 +151,46 @@ config X86_RESET_VECTOR
 	bool
 	default n
 
+# The following options control where the 16-bit and 32-bit init lies
+# If SPL is enabled then it normally holds this init code, and U-Boot proper
+# is normally a 64-bit build.
+#
+# The 16-bit init refers to the reset vector and the small amount of code to
+# get the processor into 32-bit mode. It may be in SPL or in U-Boot proper,
+# or missing altogether if U-Boot is started from EFI or coreboot.
+#
+# The 32-bit init refers to processor init, running binary blobs including
+# FSP, setting up interrupts and anything else that needs to be done in
+# 32-bit code. It is normally in the same place as 16-bit init if that is
+# enabled (i.e. they are both in SPL, or both in U-Boot proper).
+config X86_16BIT_INIT
+	bool
+	depends on X86_RESET_VECTOR
+	default y if X86_RESET_VECTOR && !SPL
+	help
+	  This is enabled when 16-bit init is in U-Boot proper
+
+config SPL_X86_16BIT_INIT
+	bool
+	depends on X86_RESET_VECTOR
+	default y if X86_RESET_VECTOR && SPL
+	help
+	  This is enabled when 16-bit init is in SPL
+
+config X86_32BIT_INIT
+	bool
+	depends on X86_RESET_VECTOR
+	default y if X86_RESET_VECTOR && !SPL
+	help
+	  This is enabled when 32-bit init is in U-Boot proper
+
+config SPL_X86_32BIT_INIT
+	bool
+	depends on X86_RESET_VECTOR
+	default y if X86_RESET_VECTOR && SPL
+	help
+	  This is enabled when 32-bit init is in SPL
+
 config RESET_SEG_START
 	hex
 	depends on X86_RESET_VECTOR
@@ -108,6 +210,14 @@ config SYS_X86_START16
 	hex
 	depends on X86_RESET_VECTOR
 	default 0xfffff800
+
+config X86_LOAD_FROM_32_BIT
+	bool "Boot from a 32-bit program"
+	help
+	  Define this to boot U-Boot from a 32-bit program which sets
+	  the GDT differently. This can be used to boot directly from
+	  any stage of coreboot, for example, bypassing the normal
+	  payload-loading feature.
 
 config BOARD_ROMSIZE_KB_512
 	bool
@@ -207,6 +317,22 @@ config X86_RAMTEST
 	  very simple RAM test that quickly checks whether the SDRAM seems
 	  to work correctly. It is not exhaustive but can save time by
 	  detecting obvious failures.
+
+config FLASH_DESCRIPTOR_FILE
+	string "Flash descriptor binary filename"
+	depends on HAVE_INTEL_ME
+	default "descriptor.bin"
+	help
+	  The filename of the file to use as flash descriptor in the
+	  board directory.
+
+config INTEL_ME_FILE
+	string "Intel Management Engine binary filename"
+	depends on HAVE_INTEL_ME
+	default "me.bin"
+	help
+	  The filename of the file to use as Intel Management Engine in the
+	  board directory.
 
 config HAVE_FSP
 	bool "Add an Firmware Support Package binary"
@@ -461,34 +587,39 @@ config GENERATE_ACPI_TABLE
 	  by the operating system. It defines platform-independent interfaces
 	  for configuration and power management monitoring.
 
-config GENERATE_SMBIOS_TABLE
-	bool "Generate an SMBIOS (System Management BIOS) table"
-	default y
-	help
-	  The System Management BIOS (SMBIOS) specification addresses how
-	  motherboard and system vendors present management information about
-	  their products in a standard format by extending the BIOS interface
-	  on Intel architecture systems.
-
-	  Check http://www.dmtf.org/standards/smbios for details.
-
-config SMBIOS_MANUFACTURER
-	string "SMBIOS Manufacturer"
-	depends on GENERATE_SMBIOS_TABLE
-	default SYS_VENDOR
-	help
-	  The board manufacturer to store in SMBIOS structures.
-	  Change this to override the default one (CONFIG_SYS_VENDOR).
-
-config SMBIOS_PRODUCT_NAME
-	string "SMBIOS Product Name"
-	depends on GENERATE_SMBIOS_TABLE
-	default SYS_BOARD
-	help
-	  The product name to store in SMBIOS structures.
-	  Change this to override the default one (CONFIG_SYS_BOARD).
-
 endmenu
+
+config HAVE_ACPI_RESUME
+	bool "Enable ACPI S3 resume"
+	help
+	  Select this to enable ACPI S3 resume. S3 is an ACPI-defined sleeping
+	  state where all system context is lost except system memory. U-Boot
+	  is responsible for restoring the machine state as it was before sleep.
+	  It needs restore the memory controller, without overwriting memory
+	  which is not marked as reserved. For the peripherals which lose their
+	  registers, U-Boot needs to write the original value. When everything
+	  is done, U-Boot needs to find out the wakeup vector provided by OSes
+	  and jump there.
+
+config S3_VGA_ROM_RUN
+	bool "Re-run VGA option ROMs on S3 resume"
+	depends on HAVE_ACPI_RESUME
+	default y if HAVE_ACPI_RESUME
+	help
+	  Execute VGA option ROMs in U-Boot when resuming from S3. Normally
+	  this is needed when graphics console is being used in the kernel.
+
+	  Turning it off can reduce some resume time, but be aware that your
+	  graphics console won't work without VGA options ROMs. Set it to N
+	  if your kernel is only on a serial console.
+
+config STACK_SIZE
+	hex
+	depends on HAVE_ACPI_RESUME
+	default 0x1000
+	help
+	  Estimated U-Boot's runtime stack size that needs to be reserved
+	  during an ACPI S3 resume.
 
 config MAX_PIRQ_LINKS
 	int
@@ -545,12 +676,6 @@ config I8254_TIMER
 	help
 	  Intel 8254 timer contains three counters which have fixed uses.
 	  Include this to have U-Boot set up the timer correctly.
-
-config I8042_KEYB
-	default y
-
-config DM_KEYBOARD
-	default y
 
 config SEABIOS
 	bool "Support booting SeaBIOS"

@@ -69,8 +69,7 @@ ARM ALTERA SOCFPGA
 M:	Marek Vasut <marex@denx.de>
 S:	Maintainted
 T:	git git://git.denx.de/u-boot-socfpga.git
-F:	arch/arm/cpu/armv7/socfpga/
-F:	board/altera/socfpga/
+F:	arch/arm/mach-socfpga/
 
 ARM ATMEL AT91
 M:	Andreas Bießmann <andreas@biessmann.org>
@@ -79,8 +78,8 @@ T:	git git://git.denx.de/u-boot-atmel.git
 F:	arch/arm/mach-at91/
 
 ARM BROADCOM BCM283X
-M:	Stephen Warren <swarren@wwwdotorg.org>
-S:	Maintained
+#M:	Stephen Warren <swarren@wwwdotorg.org>
+S:	Orphaned (Since 2017-07)
 F:	arch/arm/mach-bcm283x/
 F:	drivers/gpio/bcm2835_gpio.c
 F:	drivers/mmc/bcm2835_sdhci.c
@@ -90,14 +89,14 @@ F:	include/dm/platform_data/serial_bcm283x_mu.h
 
 ARM FREESCALE IMX
 M:	Stefano Babic <sbabic@denx.de>
+M:	Fabio Estevam <fabio.estevam@nxp.com>
 S:	Maintained
 T:	git git://git.denx.de/u-boot-imx.git
 F:	arch/arm/cpu/arm1136/mx*/
 F:	arch/arm/cpu/arm926ejs/mx*/
-F:	arch/arm/cpu/arm926ejs/imx/
 F:	arch/arm/cpu/armv7/mx*/
 F:	arch/arm/cpu/armv7/vf610/
-F:	arch/arm/cpu/imx-common/
+F:	arch/arm/imx-common/
 F:	arch/arm/include/asm/arch-imx/
 F:	arch/arm/include/asm/arch-mx*/
 F:	arch/arm/include/asm/arch-vf610/
@@ -134,9 +133,11 @@ F:	arch/arm/mach-rmobile/
 
 ARM ROCKCHIP
 M:	Simon Glass <sjg@chromium.org>
+M:	Philipp Tomsich <philipp.tomsich@theobroma-systems.com>
 S:	Maintained
 T:	git git://git.denx.de/u-boot-rockchip.git
 F:	arch/arm/mach-rockchip/
+F:	board/rockchip/
 
 ARM SAMSUNG
 M:	Minkyu Kang <mk7.kang@samsung.com>
@@ -166,13 +167,21 @@ S:	Maintained
 F:	arch/arm/cpu/armv7/stv0991/
 F:	arch/arm/include/asm/arch-stv0991/
 
+ARM STI
+M:	Patrice Chotard <patrice.chotard@st.com>
+S:	Maintained
+F:	arch/arm/mach-sti/
+F:	arch/arm/include/asm/arch-sti*/
+
 ARM SUNXI
-M:	Ian Campbell <ijc@hellion.org.uk>
-M:	Hans De Goede <hdegoede@redhat.com>
+M:	Jagan Teki <jagan@openedev.com>
+M:	Maxime Ripard <maxime.ripard@free-electrons.com>
 S:	Maintained
 T:	git git://git.denx.de/u-boot-sunxi.git
 F:	arch/arm/cpu/armv7/sunxi/
 F:	arch/arm/include/asm/arch-sunxi/
+F:	arch/arm/mach-sunxi/
+F:	board/sunxi/
 
 ARM TEGRA
 M:	Tom Warren <twarren@nvidia.com>
@@ -212,18 +221,6 @@ S:	Maintained
 F:	arch/arm/cpu/armv8/zynqmp/
 F:	arch/arm/include/asm/arch-zynqmp/
 
-AVR32
-M:	Andreas Bießmann <andreas@biessmann.org>
-S:	Maintained
-T:	git git://git.denx.de/u-boot-avr32.git
-F:	arch/avr32/
-
-BLACKFIN
-M:	Sonic Zhang <sonic.adi@gmail.com>
-S:	Maintained
-T:	git git://git.denx.de/u-boot-blackfin.git
-F:	arch/blackfin/
-
 BUILDMAN
 M:	Simon Glass <sjg@chromium.org>
 S:	Maintained
@@ -244,7 +241,7 @@ T:	git git://git.denx.de/u-boot-coldfire.git
 F:	arch/m68k/
 
 DFU
-M:	Lukasz Majewski <l.majewski@samsung.com>
+M:	Lukasz Majewski <lukma@denx.de>
 S:	Maintained
 T:	git git://git.denx.de/u-boot-dfu.git
 F:	drivers/dfu/
@@ -261,6 +258,7 @@ F:	test/dm/
 EFI PAYLOAD
 M:	Alexander Graf <agraf@suse.de>
 S:	Maintained
+T:	git git://github.com/agraf/u-boot.git
 F:	include/efi_loader.h
 F:	lib/efi_loader/
 F:	cmd/bootefi.c
@@ -273,7 +271,7 @@ F:	lib/fdtdec*
 F:	lib/libfdt/
 F:	include/fdt*
 F:	include/libfdt*
-F.	common/cmd_fdt.c
+F:	cmd/fdt.c
 F:	common/fdt_support.c
 
 FREEBSD
@@ -310,11 +308,6 @@ S:	Maintained
 T:	git git://git.denx.de/u-boot-mmc.git
 F:	drivers/mmc/
 
-OPENRISC
-M:	Stefan Kristiansson <stefan.kristiansson@saunalahti.fi>
-S:	Maintained
-F:	arch/openrisc/
-
 PATMAN
 M:	Simon Glass <sjg@chromium.org>
 S:	Maintained
@@ -325,14 +318,8 @@ M:	Wolfgang Denk <wd@denx.de>
 S:	Maintained
 F:	arch/powerpc/
 
-POWERPC MPC5XXX
-M:	Wolfgang Denk <wd@denx.de>
-S:	Maintained
-T:	git git://git.denx.de/u-boot-mpc5xxx.git
-F:	arch/powerpc/cpu/mpc5*/
-
 POWERPC MPC8XX
-M:	Wolfgang Denk <wd@denx.de>
+M:	Christophe Leroy <christophe.leroy@c-s.fr>
 S:	Maintained
 T:	git git://git.denx.de/u-boot-mpc8xx.git
 F:	arch/powerpc/cpu/mpc8xx/
@@ -344,8 +331,8 @@ T:	git git://git.denx.de/u-boot-mpc82xx.git
 F:	arch/powerpc/cpu/mpc82*/
 
 POWERPC MPC83XX
-#M:	Kim Phillips <kim.phillips@freescale.com>
-S:	Orphaned (Since 2016-02)
+M:	Mario Six <mario.six@gdsys.cc>
+S:	Maintained
 T:	git git://git.denx.de/u-boot-mpc83xx.git
 F:	arch/powerpc/cpu/mpc83xx/
 F:	arch/powerpc/include/asm/arch-mpc83xx/
@@ -367,6 +354,12 @@ M:	Stefan Roese <sr@denx.de>
 S:	Maintained
 T:	git git://git.denx.de/u-boot-ppc4xx.git
 F:	arch/powerpc/cpu/ppc4xx/
+
+POWER
+M:	Jaehoon Chung <jh80.chung@samsung.com>
+S:	Maintained
+T:	git git://git.denx.de/u-boot-pmic.git
+F:	drivers/power/
 
 NETWORK
 M:	Joe Hershberger <joe.hershberger@ni.com>
@@ -394,8 +387,8 @@ T:	git git://git.denx.de/u-boot-nios.git
 F:	arch/nios2/
 
 ONENAND
-M:	Lukasz Majewski <l.majewski@samsung.com>
-S:	Maintained
+#M:	Lukasz Majewski <l.majewski@majess.pl>
+S:	Orphaned (Since 2017-01)
 T:	git git://git.denx.de/u-boot-onenand.git
 F:	drivers/mtd/onenand/
 
@@ -410,14 +403,8 @@ S:	Maintained
 T:	git git://git.denx.de/u-boot-sh.git
 F:	arch/sh/
 
-SPARC
-#M:	Francois Retief <fgretief@spaceteq.co.za>
-S:	Orphaned (Since 2016-02)
-T:	git git://git.denx.de/u-boot-sparc.git
-F:	arch/sparc/
-
 SPI
-M:	Jagan Teki <jteki@openedev.com>
+M:	Jagan Teki <jagan@openedev.com>
 S:	Maintained
 T:	git git://git.denx.de/u-boot-spi.git
 F:	drivers/mtd/spi/
@@ -429,6 +416,21 @@ M:	Mateusz Kulikowski <mateusz.kulikowski@gmail.com>
 S:	Maintained
 F:	drivers/spmi/
 F:	include/spmi/
+
+TI SYSTEM SECURITY
+M:	Andrew F. Davis <afd@ti.com>
+S:	Supported
+F:	arch/arm/mach-omap2/omap5/sec_entry_cpu1.S
+F:	arch/arm/mach-omap2/omap5/sec-fxns.c
+F:	arch/arm/mach-omap2/sec-common.c
+F:	arch/arm/mach-omap2/config_secure.mk
+F:	configs/am335x_hs_evm_defconfig
+F:	configs/am43xx_hs_evm_defconfig
+F:	configs/am57xx_hs_evm_defconfig
+F:	configs/dra7xx_hs_evm_defconfig
+F:	configs/k2hk_hs_evm_defconfig
+F:	configs/k2e_hs_evm_defconfig
+F:	configs/k2g_hs_evm_defconfig
 
 TQ GROUP
 #M:	Martin Krause <martin.krause@tq-systems.de>

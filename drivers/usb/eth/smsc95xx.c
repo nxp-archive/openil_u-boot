@@ -519,9 +519,11 @@ static int smsc95xx_init_common(struct usb_device *udev, struct ueth_data *dev,
 		debug("timeout waiting for PHY Reset\n");
 		return -ETIMEDOUT;
 	}
+#ifndef CONFIG_DM_ETH
 	if (!priv->have_hwaddr && smsc95xx_init_mac_address(enetaddr, udev) ==
 			0)
 		priv->have_hwaddr = 1;
+#endif
 	if (!priv->have_hwaddr) {
 		puts("Error: SMSC95xx: No MAC address set - set usbethaddr\n");
 		return -EADDRNOTAVAIL;
@@ -996,7 +998,7 @@ int smsc95xx_eth_recv(struct udevice *dev, int flags, uchar **packetp)
 	}
 
 	*packetp = ptr + sizeof(packet_len);
-	return packet_len;
+	return packet_len - 4;
 
 err:
 	usb_ether_advance_rxbuf(ueth, -1);
@@ -1007,7 +1009,7 @@ static int smsc95xx_free_pkt(struct udevice *dev, uchar *packet, int packet_len)
 {
 	struct smsc95xx_private *priv = dev_get_priv(dev);
 
-	packet_len = ALIGN(packet_len, 4);
+	packet_len = ALIGN(packet_len + sizeof(u32), 4);
 	usb_ether_advance_rxbuf(&priv->ueth, sizeof(u32) + packet_len);
 
 	return 0;
@@ -1020,6 +1022,19 @@ int smsc95xx_write_hwaddr(struct udevice *dev)
 	struct smsc95xx_private *priv = dev_get_priv(dev);
 
 	return smsc95xx_write_hwaddr_common(udev, priv, pdata->enetaddr);
+}
+
+int smsc95xx_read_rom_hwaddr(struct udevice *dev)
+{
+	struct usb_device *udev = dev_get_parent_priv(dev);
+	struct eth_pdata *pdata = dev_get_platdata(dev);
+	int ret;
+
+	ret = smsc95xx_init_mac_address(pdata->enetaddr, udev);
+	if (ret)
+		memset(pdata->enetaddr, 0, 6);
+
+	return 0;
 }
 
 static int smsc95xx_eth_probe(struct udevice *dev)
@@ -1037,6 +1052,7 @@ static const struct eth_ops smsc95xx_eth_ops = {
 	.free_pkt = smsc95xx_free_pkt,
 	.stop	= smsc95xx_eth_stop,
 	.write_hwaddr = smsc95xx_write_hwaddr,
+	.read_rom_hwaddr = smsc95xx_read_rom_hwaddr,
 };
 
 U_BOOT_DRIVER(smsc95xx_eth) = {

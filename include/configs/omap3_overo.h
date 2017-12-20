@@ -20,10 +20,6 @@
 
 #define CONFIG_BCH
 
-/* Display CPU and Board information */
-#define CONFIG_DISPLAY_CPUINFO
-#define CONFIG_DISPLAY_BOARDINFO
-
 /* call misc_init_r */
 #define CONFIG_MISC_INIT_R
 
@@ -44,22 +40,11 @@
 #define CONFIG_TWL4030_LED
 
 /* USB EHCI */
-#define CONFIG_USB_EHCI
-#define CONFIG_USB_EHCI_OMAP
 #define CONFIG_OMAP_EHCI_PHY1_RESET_GPIO	183
-#define CONFIG_SYS_USB_EHCI_MAX_ROOT_PORTS	3
-
-/* Initialize GPIOs by default */
-#define CONFIG_OMAP3_GPIO_2	/* GPIO32..63 is in GPIO Bank 2 */
-#define CONFIG_OMAP3_GPIO_3	/* GPIO64..95 is in GPIO Bank 3 */
-#define CONFIG_OMAP3_GPIO_4	/* GPIO96..127 is in GPIO Bank 4 */
-#define CONFIG_OMAP3_GPIO_5	/* GPIO128..159 is in GPIO Bank 5 */
-#define CONFIG_OMAP3_GPIO_6	/* GPIO160..191 is in GPIO Bank 6 */
 
 /* commands to include */
 
 #ifdef CONFIG_NAND
-#define CONFIG_CMD_UBI		/* UBI-formated MTD partition support */
 #define CONFIG_CMD_UBIFS	/* Read-only UBI volume operations */
 
 #define CONFIG_RBTREE		/* required by CONFIG_CMD_UBI */

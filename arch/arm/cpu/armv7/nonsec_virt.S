@@ -12,10 +12,10 @@
 #include <asm/armv7.h>
 #include <asm/proc-armv/ptrace.h>
 #ifdef CONFIG_ARMV7_TEE
-#ifndef CONFIG_OPTEE_ENTRY
-#error "Error! CONFIG_OPTEE_ENTRY not defined"
+#ifndef SYS_OPTEE_ENTRY
+#error "Error! SYS_OPTEE_ENTRY not defined"
 #endif
-#define OPTEE_ENTRY CONFIG_OPTEE_ENTRY
+#define OPTEE_ENTRY SYS_OPTEE_ENTRY
 #endif
 
 .arch_extension sec
@@ -285,11 +285,11 @@ ENTRY(_nonsec_init)
  * we do this here instead.
  * But first check if we have the generic timer.
  */
-#ifdef CONFIG_TIMER_CLK_FREQ
+#ifdef COUNTER_FREQUENCY
 	mrc	p15, 0, r0, c0, c1, 1		@ read ID_PFR1
 	and	r0, r0, #CPUID_ARM_GENTIMER_MASK	@ mask arch timer bits
 	cmp	r0, #(1 << CPUID_ARM_GENTIMER_SHIFT)
-	ldreq	r1, =CONFIG_TIMER_CLK_FREQ
+	ldreq	r1, =COUNTER_FREQUENCY
 	mcreq	p15, 0, r1, c14, c0, 0		@ write CNTFRQ
 #endif
 

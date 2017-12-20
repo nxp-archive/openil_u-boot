@@ -20,6 +20,8 @@
 #include <asm/pci.h>
 #include <asm/arch/pch.h>
 
+DECLARE_GLOBAL_DATA_PTR;
+
 #define NMI_OFF				0
 
 #define ENABLE_ACPI_MODE_IN_COREBOOT	0
@@ -84,7 +86,7 @@ static int pch_pirq_init(struct udevice *pch)
 {
 	uint8_t route[8], *ptr;
 
-	if (fdtdec_get_byte_array(gd->fdt_blob, pch->of_offset,
+	if (fdtdec_get_byte_array(gd->fdt_blob, dev_of_offset(pch),
 				  "intel,pirq-routing", route, sizeof(route)))
 		return -EINVAL;
 	ptr = route;
@@ -111,7 +113,7 @@ static int pch_gpi_routing(struct udevice *pch)
 	u32 reg;
 	int gpi;
 
-	if (fdtdec_get_byte_array(gd->fdt_blob, pch->of_offset,
+	if (fdtdec_get_byte_array(gd->fdt_blob, dev_of_offset(pch),
 				  "intel,gpi-routing", route, sizeof(route)))
 		return -EINVAL;
 
@@ -126,7 +128,7 @@ static int pch_gpi_routing(struct udevice *pch)
 static int pch_power_options(struct udevice *pch)
 {
 	const void *blob = gd->fdt_blob;
-	int node = pch->of_offset;
+	int node = dev_of_offset(pch);
 	u8 reg8;
 	u16 reg16, pmbase;
 	u32 reg32;
@@ -213,10 +215,10 @@ static int pch_power_options(struct udevice *pch)
 	dm_pci_read_config16(pch, 0x40, &pmbase);
 	pmbase &= 0xfffe;
 
-	writel(pmbase + GPE0_EN, fdtdec_get_int(blob, node,
-						"intel,gpe0-enable", 0));
-	writew(pmbase + ALT_GP_SMI_EN, fdtdec_get_int(blob, node,
-						"intel,alt-gp-smi-enable", 0));
+	writel(fdtdec_get_int(blob, node, "intel,gpe0-enable", 0),
+	       (ulong)pmbase + GPE0_EN);
+	writew(fdtdec_get_int(blob, node, "intel,alt-gp-smi-enable", 0),
+	       (ulong)pmbase + ALT_GP_SMI_EN);
 
 	/* Set up power management block and determine sleep mode */
 	reg32 = inl(pmbase + 0x04); /* PM1_CNT */
@@ -355,10 +357,10 @@ static void enable_clock_gating(struct udevice *pch)
 	reg16 |= (1 << 2) | (1 << 11);
 	dm_pci_write_config16(pch, GEN_PMCON_1, reg16);
 
-	pch_iobp_update(pch, 0xEB007F07, ~0UL, (1 << 31));
-	pch_iobp_update(pch, 0xEB004000, ~0UL, (1 << 7));
-	pch_iobp_update(pch, 0xEC007F07, ~0UL, (1 << 31));
-	pch_iobp_update(pch, 0xEC004000, ~0UL, (1 << 7));
+	pch_iobp_update(pch, 0xeb007f07, ~0U, 1 << 31);
+	pch_iobp_update(pch, 0xeb004000, ~0U, 1 << 7);
+	pch_iobp_update(pch, 0xec007f07, ~0U, 1 << 31);
+	pch_iobp_update(pch, 0xec004000, ~0U, 1 << 7);
 
 	reg32 = readl(RCB_REG(CG));
 	reg32 |= (1 << 31);

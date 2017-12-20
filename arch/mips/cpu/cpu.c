@@ -8,9 +8,11 @@
 #include <common.h>
 #include <command.h>
 #include <linux/compiler.h>
+#include <asm/cache.h>
 #include <asm/mipsregs.h>
 #include <asm/reboot.h>
 
+#ifndef CONFIG_SYSRESET
 void __weak _machine_restart(void)
 {
 	fprintf(stderr, "*** reset failed ***\n");
@@ -25,6 +27,7 @@ int do_reset(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 
 	return 0;
 }
+#endif
 
 void write_one_tlb(int index, u32 pagemask, u32 hi, u32 low0, u32 low1)
 {
@@ -34,4 +37,10 @@ void write_one_tlb(int index, u32 pagemask, u32 hi, u32 low0, u32 low1)
 	write_c0_entryhi(hi);
 	write_c0_index(index);
 	tlb_write_indexed();
+}
+
+int arch_cpu_init(void)
+{
+	mips_cache_probe();
+	return 0;
 }

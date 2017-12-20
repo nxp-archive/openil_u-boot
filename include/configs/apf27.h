@@ -11,7 +11,6 @@
 #define __CONFIG_H
 
 #define CONFIG_ENV_VERSION	10
-#define CONFIG_IDENT_STRING	" apf27 patch 3.10"
 #define CONFIG_BOARD_NAME apf27
 
 /*
@@ -23,13 +22,6 @@
 /*
  * Enable the call to miscellaneous platform dependent initialization.
  */
-#define CONFIG_SYS_NO_FLASH
-
-/*
- * Board display option
- */
-#define CONFIG_DISPLAY_BOARDINFO
-#define CONFIG_DISPLAY_CPUINFO
 
 /*
  * SPL
@@ -38,10 +30,8 @@
 #define CONFIG_SPL_LDSCRIPT	"arch/$(ARCH)/cpu/u-boot-spl.lds"
 #define CONFIG_SPL_MAX_SIZE	2048
 #define CONFIG_SPL_TEXT_BASE    0xA0000000
-#define CONFIG_SPL_SERIAL_SUPPORT
 
 /* NAND boot config */
-#define CONFIG_SPL_NAND_SUPPORT
 #define CONFIG_SYS_NAND_U_BOOT_START    CONFIG_SYS_TEXT_BASE
 #define CONFIG_SYS_NAND_U_BOOT_OFFS	0x800
 #define CONFIG_SYS_NAND_U_BOOT_DST	CONFIG_SYS_TEXT_BASE
@@ -64,15 +54,10 @@
 /*
  * U-Boot Commands
  */
-#define CONFIG_CMD_BSP		/* Board Specific functions	*/
-#define CONFIG_CMD_DATE
-#define CONFIG_CMD_EEPROM
-#define CONFIG_CMD_IMX_FUSE	/* imx iim fuse                 */
 #define CONFIG_CMD_MTDPARTS	/* MTD partition support	*/
 #define CONFIG_CMD_NAND		/* NAND support			*/
 #define CONFIG_CMD_NAND_LOCK_UNLOCK
 #define CONFIG_CMD_NAND_TRIMFFS
-#define CONFIG_CMD_UBI
 #define CONFIG_CMD_UBIFS
 
 /*
@@ -211,7 +196,6 @@
  */
 #define CONFIG_MXC_UART
 #define CONFIG_CONS_INDEX		1
-#define CONFIG_BAUDRATE			115200
 #define CONFIG_MXC_UART_BASE		UART1_BASE
 
 /*
@@ -251,7 +235,6 @@
  */
 #define CONFIG_MTD_DEVICE
 #define CONFIG_MTD_PARTITIONS
-#define CONFIG_DOS_PARTITION
 #define CONFIG_SUPPORT_VFAT
 
 /*
@@ -318,9 +301,6 @@
  * SD/MMC
  */
 #ifdef CONFIG_CMD_MMC
-#define CONFIG_MMC
-#define CONFIG_GENERIC_MMC
-#define CONFIG_MXC_MMC
 #define CONFIG_MXC_MCI_REGS_BASE	0x10014000
 #endif
 

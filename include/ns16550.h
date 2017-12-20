@@ -57,6 +57,7 @@ struct ns16550_platdata {
 	int reg_shift;
 	int clock;
 	int reg_offset;
+	u32 fcr;
 };
 
 struct udevice;
@@ -116,6 +117,14 @@ typedef struct NS16550 *NS16550_t;
 
 #define UART_FCR_RXSR		0x02 /* Receiver soft reset */
 #define UART_FCR_TXSR		0x04 /* Transmitter soft reset */
+
+/* Ingenic JZ47xx specific UART-enable bit. */
+#define UART_FCR_UME		0x10
+
+/* Clear & enable FIFOs */
+#define UART_FCR_DEFVAL (UART_FCR_FIFO_EN | \
+			UART_FCR_RXSR |	\
+			UART_FCR_TXSR)
 
 /*
  * These are the definitions for the Modem Control Register

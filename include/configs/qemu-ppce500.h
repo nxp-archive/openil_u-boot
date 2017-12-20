@@ -12,11 +12,6 @@
 
 #define CONFIG_CMD_REGINFO
 
-/* High Level Configuration Options */
-#define CONFIG_BOOKE
-#define CONFIG_E500			/* BOOKE e500 family */
-#define CONFIG_QEMU_E500
-
 #undef CONFIG_SYS_TEXT_BASE
 #define CONFIG_SYS_TEXT_BASE	0xf01000 /* 15 MB */
 
@@ -24,7 +19,6 @@
 
 #define CONFIG_SYS_RAMBOOT
 
-#define CONFIG_PCI			/* Enable PCI/PCIE */
 #define CONFIG_PCI1		1	/* PCI controller 1 */
 #define CONFIG_FSL_PCI_INIT		/* Use common FSL init code */
 #define CONFIG_SYS_PCI_64BIT		/* enable 64-bit PCI resources */
@@ -42,7 +36,6 @@
 #define CONFIG_PANIC_HANG	/* do not reset board on panic */
 
 /* Needed to fill the ccsrbar pointer */
-#define CONFIG_BOARD_EARLY_INIT_F
 
 /* Virtual address to CCSRBAR */
 #define CONFIG_SYS_CCSRBAR		0xe0000000
@@ -73,8 +66,6 @@ extern unsigned long long get_phys_ccsrbar_addr_early(void);
 #define CONFIG_CHIP_SELECTS_PER_CTRL	0
 
 #define CONFIG_SYS_CLK_FREQ        33000000
-
-#define CONFIG_SYS_NO_FLASH
 
 #define CONFIG_SYS_BOOT_BLOCK		0x00000000	/* boot TLB */
 
@@ -118,14 +109,11 @@ extern unsigned long long get_phys_ccsrbar_addr_early(void);
 
 #ifdef CONFIG_PCI
 #define CONFIG_PCI_INDIRECT_BRIDGE
-#define CONFIG_PCI_PNP			/* do pci plug-and-play */
 
 #define CONFIG_PCI_SCAN_SHOW		/* show pci devices on startup */
-#define CONFIG_DOS_PARTITION
 #endif	/* CONFIG_PCI */
 
 #define CONFIG_LBA48
-#define CONFIG_DOS_PARTITION
 
 /*
  * Environment
@@ -139,7 +127,6 @@ extern unsigned long long get_phys_ccsrbar_addr_early(void);
 /*
  * Command line configuration.
  */
-#define CONFIG_CMD_IRQ
 
 #ifdef CONFIG_PCI
 #define CONFIG_CMD_PCI
@@ -174,8 +161,6 @@ extern unsigned long long get_phys_ccsrbar_addr_early(void);
 
 /* default location for tftp and bootm */
 #define CONFIG_LOADADDR		1000000
-
-#define CONFIG_BAUDRATE	115200
 
 #define CONFIG_BOOTCOMMAND		\
 	"test -n \"$qemu_kernel_addr\" && bootm $qemu_kernel_addr - $fdt_addr_r\0"

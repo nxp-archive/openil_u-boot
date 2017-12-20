@@ -126,6 +126,9 @@ int do_bootm(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 	return do_bootm_states(cmdtp, flag, argc, argv, BOOTM_STATE_START |
 		BOOTM_STATE_FINDOS | BOOTM_STATE_FINDOTHER |
 		BOOTM_STATE_LOADOS |
+#ifdef CONFIG_SYS_BOOT_RAMDISK_HIGH
+		BOOTM_STATE_RAMDISK |
+#endif
 #if defined(CONFIG_PPC) || defined(CONFIG_MIPS)
 		BOOTM_STATE_OS_CMDLINE |
 #endif
@@ -162,7 +165,7 @@ static char bootm_help_text[] =
 #endif
 #if defined(CONFIG_FIT)
 	"\t\nFor the new multi component uImage format (FIT) addresses\n"
-	"\tmust be extened to include component or configuration unit name:\n"
+	"\tmust be extended to include component or configuration unit name:\n"
 	"\taddr:<subimg_uname> - direct component image specification\n"
 	"\taddr#<conf_uname>   - configuration specification\n"
 	"\tUse iminfo command to get the list of existing component\n"
@@ -387,7 +390,7 @@ static int nand_imls_legacyimage(struct mtd_info *mtd, int nand_dev,
 		return -ENOMEM;
 	}
 
-	ret = nand_read_skip_bad(mtd, off, &len, imgdata);
+	ret = nand_read_skip_bad(mtd, off, &len, NULL, mtd->size, imgdata);
 	if (ret < 0 && ret != -EUCLEAN) {
 		free(imgdata);
 		return ret;
@@ -427,7 +430,7 @@ static int nand_imls_fitimage(struct mtd_info *mtd, int nand_dev, loff_t off,
 		return -ENOMEM;
 	}
 
-	ret = nand_read_skip_bad(mtd, off, &len, imgdata);
+	ret = nand_read_skip_bad(mtd, off, &len, NULL, mtd->size, imgdata);
 	if (ret < 0 && ret != -EUCLEAN) {
 		free(imgdata);
 		return ret;

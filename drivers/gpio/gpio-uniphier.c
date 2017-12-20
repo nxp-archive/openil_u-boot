@@ -6,11 +6,11 @@
  */
 
 #include <common.h>
-#include <dm/device.h>
+#include <dm.h>
 #include <linux/bitops.h>
 #include <linux/io.h>
 #include <linux/sizes.h>
-#include <asm/errno.h>
+#include <linux/errno.h>
 #include <asm/gpio.h>
 
 #define UNIPHIER_GPIO_PORTS_PER_BANK	8
@@ -95,7 +95,7 @@ static int uniphier_gpio_probe(struct udevice *dev)
 	fdt_addr_t addr;
 	unsigned int tmp;
 
-	addr = dev_get_addr(dev);
+	addr = devfdt_get_addr(dev);
 	if (addr == FDT_ADDR_T_NONE)
 		return -EINVAL;
 

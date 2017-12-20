@@ -20,26 +20,11 @@
 
 #define	CONFIG_SYS_TEXT_BASE	0xFE000000
 
-#ifdef CONFIG_HRCON_DH
-#define CONFIG_IDENT_STRING	" hrcon dh 0.01"
-#else
-#define CONFIG_IDENT_STRING	" hrcon 0.01"
-#endif
-
-#define CONFIG_BOARD_EARLY_INIT_F
 #define CONFIG_BOARD_EARLY_INIT_R
 #define CONFIG_LAST_STAGE_INIT
 
-#define CONFIG_MMC
 #define CONFIG_FSL_ESDHC
 #define CONFIG_SYS_FSL_ESDHC_ADDR	CONFIG_SYS_MPC83xx_ESDHC_ADDR
-#define CONFIG_SYS_FSL_ERRATUM_ESDHC111
-
-#define CONFIG_GENERIC_MMC
-#define CONFIG_DOS_PARTITION
-
-#define CONFIG_CMD_FPGAD
-#define CONFIG_CMD_IOLOOP
 
 /*
  * System Clock Setup
@@ -229,8 +214,6 @@
 #define CONFIG_SYS_FLASH_CFI_WIDTH	FLASH_CFI_16BIT
 #define CONFIG_FLASH_CFI_LEGACY
 #define CONFIG_SYS_FLASH_LEGACY_512Kx16
-#else
-#define CONFIG_SYS_NO_FLASH
 #endif
 
 #define CONFIG_SYS_FLASH_BASE		0xFE000000 /* FLASH base address */
@@ -480,11 +463,8 @@ void fpga_control_clear(unsigned int bus, int pin);
 /* enable PCIE clock */
 #define CONFIG_SYS_SCCR_PCIEXP1CM	1
 
-#define CONFIG_PCI
 #define CONFIG_PCI_INDIRECT_BRIDGE
 #define CONFIG_PCIE
-
-#define CONFIG_PCI_PNP		/* do pci plug-and-play */
 
 #define CONFIG_SYS_PCI_SUBSYS_VENDORID 0x1957	/* Freescale */
 #define CONFIG_83XX_GENERIC_PCIE_REGISTER_HOSES 1
@@ -544,8 +524,6 @@ void fpga_control_clear(unsigned int bus, int pin);
 #define CONFIG_SYS_HZ		1000	/* decrementer freq: 1ms ticks */
 
 #define CONFIG_SYS_CBSIZE	1024 /* Console I/O Buffer Size */
-
-#define CONFIG_SYS_CONSOLE_INFO_QUIET
 
 /* Print Buffer Size */
 #define CONFIG_SYS_PBSIZE (CONFIG_SYS_CBSIZE + sizeof(CONFIG_SYS_PROMPT) + 16)
@@ -614,8 +592,6 @@ void fpga_control_clear(unsigned int bus, int pin);
 #if defined(CONFIG_TSEC_ENET)
 #define CONFIG_HAS_ETH0
 #endif
-
-#define CONFIG_BAUDRATE 115200
 
 #define CONFIG_LOADADDR	800000	/* default location for tftp and bootm */
 

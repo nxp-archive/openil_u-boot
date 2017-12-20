@@ -1,4 +1,4 @@
-if TARGET_CYRUS
+if TARGET_CYRUS_P5020 || TARGET_CYRUS_P5040
 
 config SYS_BOARD
 	default "cyrus"
@@ -8,5 +8,7 @@ config SYS_VENDOR
 
 config SYS_CONFIG_NAME
 	default "cyrus"
+
+source "board/freescale/common/Kconfig"
 
 endif

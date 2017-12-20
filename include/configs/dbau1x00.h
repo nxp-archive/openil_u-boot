@@ -15,8 +15,6 @@
 #define CONFIG_DBAU1X00		1
 #define CONFIG_SOC_AU1X00	1  /* alchemy series cpu */
 
-#define CONFIG_DISPLAY_BOARDINFO
-
 #ifdef CONFIG_DBAU1000
 /* Also known as Merlot */
 #define CONFIG_SOC_AU1000	1
@@ -36,9 +34,6 @@
 #endif
 #endif
 #endif
-
-
-#define CONFIG_BAUDRATE		115200
 
 /* valid baudrates */
 
@@ -71,17 +66,10 @@
 /*
  * Command line configuration.
  */
-#undef CONFIG_CMD_BEDBUG
 
 #ifdef CONFIG_DBAU1550
 
-#undef CONFIG_CMD_IDE
 #undef CONFIG_CMD_PCMCIA
-
-#else
-
-#define CONFIG_CMD_IDE
-
 #endif
 
 /*
@@ -175,7 +163,6 @@
 #define CONFIG_PCMCIA_SLOT_A
 
 #define CONFIG_ATAPI 1
-#define CONFIG_MAC_PARTITION 1
 
 /* We run CF in "true ide" mode or a harddrive via pcmcia */
 #define CONFIG_IDE_PCMCIA 1

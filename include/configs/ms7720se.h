@@ -14,13 +14,12 @@
 
 #define CONFIG_CMD_SDRAM
 #define CONFIG_CMD_PCMCIA
-#define CONFIG_CMD_IDE
 
-#define CONFIG_BAUDRATE		115200
 #define CONFIG_BOOTARGS		"console=ttySC0,115200"
 #define CONFIG_BOOTFILE		"/boot/zImage"
 #define CONFIG_LOADADDR		0x8E000000
 
+#define CONFIG_DISPLAY_BOARDINFO
 #undef  CONFIG_SHOW_BOOT_PROGRESS
 
 /* MEMORY */
@@ -91,7 +90,6 @@
 
 #define CONFIG_SYS_PIO_MODE		1
 #define CONFIG_SYS_IDE_MAXBUS		1
-#define CONFIG_DOS_PARTITION	1
 #define CONFIG_SYS_ATA_BASE_ADDR	CONFIG_SYS_MARUBUN_IO	/* base address */
 #define CONFIG_SYS_ATA_IDE0_OFFSET	0x01F0		/* ide0 offste */
 #define CONFIG_SYS_ATA_DATA_OFFSET	0		/* data reg offset */

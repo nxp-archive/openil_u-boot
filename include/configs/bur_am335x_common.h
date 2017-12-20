@@ -12,19 +12,13 @@
 #ifndef __BUR_AM335X_COMMON_H__
 #define __BUR_AM335X_COMMON_H__
 /* ------------------------------------------------------------------------- */
-#define CONFIG_AM33XX
-#define CONFIG_OMAP
-#define CONFIG_OMAP_COMMON
 #define CONFIG_MAX_RAM_BANK_SIZE	(1024 << 20)	/* 1GB */
 
 /* Timer information */
 #define CONFIG_SYS_PTV			2	/* Divisor: 2^(PTV+1) => 8 */
 #define CONFIG_SYS_TIMERBASE		0x48040000	/* Use Timer2 */
 #define CONFIG_SPL_AM33XX_ENABLE_RTC32K_OSC	/* enable 32kHz OSC at bootime */
-#define CONFIG_SPL_POWER_SUPPORT
 #define CONFIG_POWER_TPS65217
-
-#define CONFIG_SYS_NO_FLASH		/* have no NOR-flash */
 
 #include <asm/arch/omap.h>
 
@@ -33,7 +27,6 @@
 #define CONFIG_SYS_NS16550_REG_SIZE	(-4)
 #define CONFIG_SYS_NS16550_CLK		48000000
 #define CONFIG_SYS_NS16550_COM1		0x44e09000	/* UART0 */
-#define CONFIG_BAUDRATE			115200
 
 /* Network defines */
 #define CONFIG_DRIVER_TI_CPSW		/* Driver for IP block */
@@ -81,8 +74,6 @@
 #define CONFIG_SYS_OMAP24_I2C_SPEED	100000
 #define CONFIG_SYS_OMAP24_I2C_SLAVE	1
 #define CONFIG_SYS_I2C_OMAP24XX
-/* GPIO */
-#define CONFIG_OMAP_GPIO
 
 /*
  * Our platforms make use of SPL to initalize the hardware (primarily
@@ -113,12 +104,6 @@
 #define CONFIG_SYS_SPL_MALLOC_SIZE	CONFIG_SYS_MALLOC_LEN
 
 /* General parts of the framework, required. */
-#define CONFIG_SPL_I2C_SUPPORT
-#define CONFIG_SPL_LIBCOMMON_SUPPORT
-#define CONFIG_SPL_LIBGENERIC_SUPPORT
-#define CONFIG_SPL_SERIAL_SUPPORT
-#define CONFIG_SPL_BOARD_INIT
-#define CONFIG_SPL_YMODEM_SUPPORT
-#define CONFIG_SPL_LDSCRIPT		"$(CPUDIR)/am33xx/u-boot-spl.lds"
+#define CONFIG_SPL_LDSCRIPT		"arch/arm/mach-omap2/u-boot-spl.lds"
 
 #endif	/* ! __BUR_AM335X_COMMON_H__ */

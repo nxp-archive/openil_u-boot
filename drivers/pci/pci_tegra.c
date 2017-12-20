@@ -531,7 +531,7 @@ static int tegra_pcie_parse_dt(const void *fdt, int node, enum tegra_pci_id id,
 	}
 #endif
 
-	fdt_for_each_subnode(fdt, subnode, node) {
+	fdt_for_each_subnode(subnode, fdt, node) {
 		unsigned int index = 0, num_lanes = 0;
 		struct tegra_pcie_port *port;
 
@@ -1099,7 +1099,7 @@ static int pci_tegra_ofdata_to_platdata(struct udevice *dev)
 
 	INIT_LIST_HEAD(&pcie->ports);
 
-	if (tegra_pcie_parse_dt(gd->fdt_blob, dev->of_offset, id, pcie))
+	if (tegra_pcie_parse_dt(gd->fdt_blob, dev_of_offset(dev), id, pcie))
 		return -EINVAL;
 
 	return 0;

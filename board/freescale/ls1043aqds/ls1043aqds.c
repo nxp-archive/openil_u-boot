@@ -7,17 +7,19 @@
 #include <common.h>
 #include <i2c.h>
 #include <fdt_support.h>
+#include <fsl_ddr_sdram.h>
 #include <asm/io.h>
 #include <asm/arch/clock.h>
 #include <asm/arch/fsl_serdes.h>
+#include <asm/arch/ppa.h>
 #include <asm/arch/fdt.h>
+#include <asm/arch/mmu.h>
 #include <asm/arch/soc.h>
 #include <ahci.h>
 #include <hwconfig.h>
 #include <mmc.h>
 #include <scsi.h>
 #include <fm_eth.h>
-#include <fsl_csu.h>
 #include <fsl_esdhc.h>
 #include <fsl_ifc.h>
 #include <spl.h>
@@ -153,7 +155,11 @@ int dram_init(void)
 	 * before accessing DDR SPD.
 	 */
 	select_i2c_ch_pca9547(I2C_MUX_CH_DEFAULT);
-	gd->ram_size = initdram(0);
+	fsl_initdram();
+#if !defined(CONFIG_SPL) || defined(CONFIG_SPL_BUILD)
+	/* This will break-before-make MMU for DDR */
+	update_early_mmu_table();
+#endif
 
 	return 0;
 }
@@ -309,6 +315,10 @@ int misc_init_r(void)
 
 int board_init(void)
 {
+#ifdef CONFIG_SYS_FSL_ERRATUM_A010315
+	erratum_a010315();
+#endif
+
 	select_i2c_ch_pca9547(I2C_MUX_CH_DEFAULT);
 	board_retimer_init();
 
@@ -316,9 +326,10 @@ int board_init(void)
 	config_serdes_mux();
 #endif
 
-#ifdef CONFIG_LAYERSCAPE_NS_ACCESS
-	enable_layerscape_ns_access();
+#ifdef CONFIG_FSL_LS_PPA
+	ppa_init();
 #endif
+
 	return 0;
 }
 

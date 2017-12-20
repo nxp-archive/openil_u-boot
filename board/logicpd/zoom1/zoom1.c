@@ -47,7 +47,8 @@ static const u32 gpmc_lab_enet[] = {
 static const struct ns16550_platdata zoom1_serial = {
 	.base = OMAP34XX_UART3,
 	.reg_shift = 2,
-	.clock = V_NS16550_CLK
+	.clock = V_NS16550_CLK,
+	.fcr = UART_FCR_DEFVAL,
 };
 
 U_BOOT_DEVICE(zoom1_uart) = {
@@ -105,7 +106,7 @@ void set_muxconf_regs(void)
 	MUX_ZOOM1_MDK();
 }
 
-#ifdef CONFIG_GENERIC_MMC
+#ifdef CONFIG_MMC
 int board_mmc_init(bd_t *bis)
 {
 	return omap_mmc_init(0, 0, 0, -1, -1);

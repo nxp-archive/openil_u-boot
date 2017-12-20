@@ -32,7 +32,10 @@ int eth_getenv_enetaddr(const char *name, uchar *enetaddr)
 
 int eth_setenv_enetaddr(const char *name, const uchar *enetaddr)
 {
-	char buf[20];
+	char buf[ARP_HLEN_ASCII + 1];
+
+	if (eth_getenv_enetaddr(name, (uchar *)buf))
+		return -EEXIST;
 
 	sprintf(buf, "%pM", enetaddr);
 

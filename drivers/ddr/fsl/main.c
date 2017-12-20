@@ -15,6 +15,8 @@
 #include <fsl_ddr_sdram.h>
 #include <fsl_ddr.h>
 
+DECLARE_GLOBAL_DATA_PTR;
+
 /*
  * CONFIG_SYS_FSL_DDR_SDRAM_BASE_PHY is the physical address from the view
  * of DDR controllers. It is the same as CONFIG_SYS_DDR_SDRAM_BASE for
@@ -40,35 +42,35 @@ void fsl_ddr_set_intl3r(const unsigned int granule_size);
 #if defined(SPD_EEPROM_ADDRESS) || \
     defined(SPD_EEPROM_ADDRESS1) || defined(SPD_EEPROM_ADDRESS2) || \
     defined(SPD_EEPROM_ADDRESS3) || defined(SPD_EEPROM_ADDRESS4)
-#if (CONFIG_NUM_DDR_CONTROLLERS == 1) && (CONFIG_DIMM_SLOTS_PER_CTLR == 1)
-u8 spd_i2c_addr[CONFIG_NUM_DDR_CONTROLLERS][CONFIG_DIMM_SLOTS_PER_CTLR] = {
+#if (CONFIG_SYS_NUM_DDR_CTLRS == 1) && (CONFIG_DIMM_SLOTS_PER_CTLR == 1)
+u8 spd_i2c_addr[CONFIG_SYS_NUM_DDR_CTLRS][CONFIG_DIMM_SLOTS_PER_CTLR] = {
 	[0][0] = SPD_EEPROM_ADDRESS,
 };
-#elif (CONFIG_NUM_DDR_CONTROLLERS == 1) && (CONFIG_DIMM_SLOTS_PER_CTLR == 2)
-u8 spd_i2c_addr[CONFIG_NUM_DDR_CONTROLLERS][CONFIG_DIMM_SLOTS_PER_CTLR] = {
+#elif (CONFIG_SYS_NUM_DDR_CTLRS == 1) && (CONFIG_DIMM_SLOTS_PER_CTLR == 2)
+u8 spd_i2c_addr[CONFIG_SYS_NUM_DDR_CTLRS][CONFIG_DIMM_SLOTS_PER_CTLR] = {
 	[0][0] = SPD_EEPROM_ADDRESS1,	/* controller 1 */
 	[0][1] = SPD_EEPROM_ADDRESS2,	/* controller 1 */
 };
-#elif (CONFIG_NUM_DDR_CONTROLLERS == 2) && (CONFIG_DIMM_SLOTS_PER_CTLR == 1)
-u8 spd_i2c_addr[CONFIG_NUM_DDR_CONTROLLERS][CONFIG_DIMM_SLOTS_PER_CTLR] = {
+#elif (CONFIG_SYS_NUM_DDR_CTLRS == 2) && (CONFIG_DIMM_SLOTS_PER_CTLR == 1)
+u8 spd_i2c_addr[CONFIG_SYS_NUM_DDR_CTLRS][CONFIG_DIMM_SLOTS_PER_CTLR] = {
 	[0][0] = SPD_EEPROM_ADDRESS1,	/* controller 1 */
 	[1][0] = SPD_EEPROM_ADDRESS2,	/* controller 2 */
 };
-#elif (CONFIG_NUM_DDR_CONTROLLERS == 2) && (CONFIG_DIMM_SLOTS_PER_CTLR == 2)
-u8 spd_i2c_addr[CONFIG_NUM_DDR_CONTROLLERS][CONFIG_DIMM_SLOTS_PER_CTLR] = {
+#elif (CONFIG_SYS_NUM_DDR_CTLRS == 2) && (CONFIG_DIMM_SLOTS_PER_CTLR == 2)
+u8 spd_i2c_addr[CONFIG_SYS_NUM_DDR_CTLRS][CONFIG_DIMM_SLOTS_PER_CTLR] = {
 	[0][0] = SPD_EEPROM_ADDRESS1,	/* controller 1 */
 	[0][1] = SPD_EEPROM_ADDRESS2,	/* controller 1 */
 	[1][0] = SPD_EEPROM_ADDRESS3,	/* controller 2 */
 	[1][1] = SPD_EEPROM_ADDRESS4,	/* controller 2 */
 };
-#elif (CONFIG_NUM_DDR_CONTROLLERS == 3) && (CONFIG_DIMM_SLOTS_PER_CTLR == 1)
-u8 spd_i2c_addr[CONFIG_NUM_DDR_CONTROLLERS][CONFIG_DIMM_SLOTS_PER_CTLR] = {
+#elif (CONFIG_SYS_NUM_DDR_CTLRS == 3) && (CONFIG_DIMM_SLOTS_PER_CTLR == 1)
+u8 spd_i2c_addr[CONFIG_SYS_NUM_DDR_CTLRS][CONFIG_DIMM_SLOTS_PER_CTLR] = {
 	[0][0] = SPD_EEPROM_ADDRESS1,	/* controller 1 */
 	[1][0] = SPD_EEPROM_ADDRESS2,	/* controller 2 */
 	[2][0] = SPD_EEPROM_ADDRESS3,	/* controller 3 */
 };
-#elif (CONFIG_NUM_DDR_CONTROLLERS == 3) && (CONFIG_DIMM_SLOTS_PER_CTLR == 2)
-u8 spd_i2c_addr[CONFIG_NUM_DDR_CONTROLLERS][CONFIG_DIMM_SLOTS_PER_CTLR] = {
+#elif (CONFIG_SYS_NUM_DDR_CTLRS == 3) && (CONFIG_DIMM_SLOTS_PER_CTLR == 2)
+u8 spd_i2c_addr[CONFIG_SYS_NUM_DDR_CTLRS][CONFIG_DIMM_SLOTS_PER_CTLR] = {
 	[0][0] = SPD_EEPROM_ADDRESS1,	/* controller 1 */
 	[0][1] = SPD_EEPROM_ADDRESS2,	/* controller 1 */
 	[1][0] = SPD_EEPROM_ADDRESS3,	/* controller 2 */
@@ -146,7 +148,7 @@ void fsl_ddr_get_spd(generic_spd_eeprom_t *ctrl_dimms_spd,
 	unsigned int i;
 	unsigned int i2c_address = 0;
 
-	if (ctrl_num >= CONFIG_NUM_DDR_CONTROLLERS) {
+	if (ctrl_num >= CONFIG_SYS_NUM_DDR_CTLRS) {
 		printf("%s unexpected ctrl_num = %u\n", __FUNCTION__, ctrl_num);
 		return;
 	}
@@ -430,7 +432,7 @@ fsl_ddr_compute(fsl_ddr_info_t *pinfo, unsigned int start_step,
 		assert_reset = pinfo->board_need_mem_reset();
 
 	/* data bus width capacity adjust shift amount */
-	unsigned int dbw_capacity_adjust[CONFIG_NUM_DDR_CONTROLLERS];
+	unsigned int dbw_capacity_adjust[CONFIG_SYS_NUM_DDR_CTLRS];
 
 	for (i = first_ctrl; i <= last_ctrl; i++)
 		dbw_capacity_adjust[i] = 0;
@@ -720,7 +722,7 @@ phys_size_t __fsl_ddr_sdram(fsl_ddr_info_t *pinfo)
 						&pinfo->common_timing_params[i],
 						law_memctl, i);
 				}
-#if CONFIG_NUM_DDR_CONTROLLERS > 3
+#if CONFIG_SYS_NUM_DDR_CTLRS > 3
 				else if (i == 2) {
 					law_memctl = LAW_TRGT_IF_DDR_INTLV_34;
 					fsl_ddr_set_lawbar(
@@ -784,7 +786,7 @@ phys_size_t __fsl_ddr_sdram(fsl_ddr_info_t *pinfo)
 		print_size(total_memory, " of memory\n");
 		printf("       This U-Boot only supports < 4G of DDR\n");
 		printf("       You could rebuild it with CONFIG_PHYS_64BIT\n");
-		printf("       "); /* re-align to match init_func_ram print */
+		printf("       "); /* re-align to match init_dram print */
 		total_memory = CONFIG_MAX_MEM_MAPPED;
 	}
 #endif
@@ -794,7 +796,7 @@ phys_size_t __fsl_ddr_sdram(fsl_ddr_info_t *pinfo)
 
 /*
  * fsl_ddr_sdram(void) -- this is the main function to be
- * called by initdram() in the board file.
+ * called by dram_init() in the board file.
  *
  * It returns amount of memory configured in bytes.
  */

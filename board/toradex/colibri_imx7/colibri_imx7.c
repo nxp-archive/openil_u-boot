@@ -12,18 +12,23 @@
 #include <asm/gpio.h>
 #include <asm/imx-common/boot_mode.h>
 #include <asm/imx-common/iomux-v3.h>
-#include <asm/imx-common/mxc_i2c.h>
 #include <asm/io.h>
 #include <common.h>
 #include <dm.h>
 #include <dm/platform_data/serial_mxc.h>
+#include <fdt_support.h>
 #include <fsl_esdhc.h>
-#include <i2c.h>
+#include <jffs2/load_kernel.h>
 #include <linux/sizes.h>
 #include <mmc.h>
 #include <miiphy.h>
+#include <mtd_node.h>
 #include <netdev.h>
+#include <power/pmic.h>
+#include <power/rn5t567_pmic.h>
+#include <usb.h>
 #include <usb/ehci-ci.h>
+#include "../common/tdx-common.h"
 
 DECLARE_GLOBAL_DATA_PTR;
 
@@ -38,9 +43,6 @@ DECLARE_GLOBAL_DATA_PTR;
 
 #define ENET_RX_PAD_CTRL  (PAD_CTL_PUS_PU100KOHM | PAD_CTL_DSE_3P3V_49OHM)
 
-#define I2C_PAD_CTRL    (PAD_CTL_DSE_3P3V_32OHM | PAD_CTL_SRE_SLOW | \
-	PAD_CTL_HYS | PAD_CTL_PUE | PAD_CTL_PUS_PU100KOHM)
-
 #define LCD_PAD_CTRL    (PAD_CTL_HYS | PAD_CTL_PUS_PU100KOHM | \
 	PAD_CTL_DSE_3P3V_49OHM)
 
@@ -48,35 +50,7 @@ DECLARE_GLOBAL_DATA_PTR;
 
 #define NAND_PAD_READY0_CTRL (PAD_CTL_DSE_3P3V_49OHM | PAD_CTL_PUS_PU5KOHM)
 
-#ifdef CONFIG_SYS_I2C_MXC
-#define PC MUX_PAD_CTRL(I2C_PAD_CTRL)
-/* I2C1 for PMIC */
-static struct i2c_pads_info i2c_pad_info1 = {
-	.scl = {
-		.i2c_mode = MX7D_PAD_GPIO1_IO04__I2C1_SCL | PC,
-		.gpio_mode = MX7D_PAD_GPIO1_IO04__GPIO1_IO4 | PC,
-		.gp = IMX_GPIO_NR(1, 4),
-	},
-	.sda = {
-		.i2c_mode = MX7D_PAD_GPIO1_IO05__I2C1_SDA | PC,
-		.gpio_mode = MX7D_PAD_GPIO1_IO05__GPIO1_IO5 | PC,
-		.gp = IMX_GPIO_NR(1, 5),
-	},
-};
-/* I2C4 for Colibri I2C */
-static struct i2c_pads_info i2c_pad_info4 = {
-	.scl = {
-		.i2c_mode = MX7D_PAD_ENET1_RGMII_TD2__I2C4_SCL | PC,
-		.gpio_mode = MX7D_PAD_ENET1_RGMII_TD2__GPIO7_IO8 | PC,
-		.gp = IMX_GPIO_NR(7, 8),
-	},
-	.sda = {
-		.i2c_mode = MX7D_PAD_ENET1_RGMII_TD3__I2C4_SDA | PC,
-		.gpio_mode = MX7D_PAD_ENET1_RGMII_TD3__GPIO7_IO9 | PC,
-		.gp = IMX_GPIO_NR(7, 9),
-	},
-};
-#endif
+#define USB_CDET_GPIO	IMX_GPIO_NR(7, 14)
 
 int dram_init(void)
 {
@@ -102,6 +76,12 @@ static iomux_v3_cfg_t const usdhc1_pads[] = {
 
 	MX7D_PAD_GPIO1_IO00__GPIO1_IO0 | MUX_PAD_CTRL(NO_PAD_CTRL),
 };
+
+#ifdef CONFIG_USB_EHCI_MX7
+static iomux_v3_cfg_t const usb_cdet_pads[] = {
+	MX7D_PAD_ENET1_CRS__GPIO7_IO14 | MUX_PAD_CTRL(NO_PAD_CTRL),
+};
+#endif
 
 #ifdef CONFIG_NAND_MXS
 static iomux_v3_cfg_t const gpmi_pads[] = {
@@ -130,22 +110,6 @@ static void setup_gpmi_nand(void)
 	set_clk_nand();
 }
 #endif
-
-static iomux_v3_cfg_t const usdhc3_emmc_pads[] = {
-	MX7D_PAD_SD3_CLK__SD3_CLK | MUX_PAD_CTRL(USDHC_PAD_CTRL),
-	MX7D_PAD_SD3_CMD__SD3_CMD | MUX_PAD_CTRL(USDHC_PAD_CTRL),
-	MX7D_PAD_SD3_DATA0__SD3_DATA0 | MUX_PAD_CTRL(USDHC_PAD_CTRL),
-	MX7D_PAD_SD3_DATA1__SD3_DATA1 | MUX_PAD_CTRL(USDHC_PAD_CTRL),
-	MX7D_PAD_SD3_DATA2__SD3_DATA2 | MUX_PAD_CTRL(USDHC_PAD_CTRL),
-	MX7D_PAD_SD3_DATA3__SD3_DATA3 | MUX_PAD_CTRL(USDHC_PAD_CTRL),
-	MX7D_PAD_SD3_DATA4__SD3_DATA4 | MUX_PAD_CTRL(USDHC_PAD_CTRL),
-	MX7D_PAD_SD3_DATA5__SD3_DATA5 | MUX_PAD_CTRL(USDHC_PAD_CTRL),
-	MX7D_PAD_SD3_DATA6__SD3_DATA6 | MUX_PAD_CTRL(USDHC_PAD_CTRL),
-	MX7D_PAD_SD3_DATA7__SD3_DATA7 | MUX_PAD_CTRL(USDHC_PAD_CTRL),
-	MX7D_PAD_SD3_STROBE__SD3_STROBE	 | MUX_PAD_CTRL(USDHC_PAD_CTRL),
-
-	MX7D_PAD_SD3_RESET_B__GPIO6_IO11 | MUX_PAD_CTRL(USDHC_PAD_CTRL),
-};
 
 #ifdef CONFIG_VIDEO_MXS
 static iomux_v3_cfg_t const lcd_pads[] = {
@@ -331,11 +295,6 @@ int board_early_init_f(void)
 {
 	setup_iomux_uart();
 
-#ifdef CONFIG_SYS_I2C_MXC
-	setup_i2c(0, CONFIG_SYS_I2C_SPEED, 0x7f, &i2c_pad_info1);
-	setup_i2c(3, CONFIG_SYS_I2C_SPEED, 0x7f, &i2c_pad_info4);
-#endif
-
 	return 0;
 }
 
@@ -354,6 +313,11 @@ int board_init(void)
 
 #ifdef CONFIG_VIDEO_MXS
 	setup_lcd();
+#endif
+
+#ifdef CONFIG_USB_EHCI_MX7
+	imx_iomux_v3_setup_multiple_pads(usb_cdet_pads, ARRAY_SIZE(usb_cdet_pads));
+	gpio_request(USB_CDET_GPIO, "usb-cdet-gpio");
 #endif
 
 	return 0;
@@ -377,6 +341,62 @@ int board_late_init(void)
 	return 0;
 }
 
+#ifdef CONFIG_DM_PMIC
+int power_init_board(void)
+{
+	struct udevice *dev;
+	int reg, ver;
+	int ret;
+
+
+	ret = pmic_get("rn5t567", &dev);
+	if (ret)
+		return ret;
+	ver = pmic_reg_read(dev, RN5T567_LSIVER);
+	reg = pmic_reg_read(dev, RN5T567_OTPVER);
+
+	printf("PMIC:  RN5T567 LSIVER=0x%02x OTPVER=0x%02x\n", ver, reg);
+
+	/* set judge and press timer of N_OE to minimal values */
+	pmic_clrsetbits(dev, RN5T567_NOETIMSETCNT, 0x7, 0);
+
+	/* configure sleep slot for 3.3V Ethernet */
+	reg = pmic_reg_read(dev, RN5T567_LDO1_SLOT);
+	reg = (reg & 0xf0) | reg >> 4;
+	pmic_reg_write(dev, RN5T567_LDO1_SLOT, reg);
+
+	/* disable DCDC2 discharge to avoid backfeeding through VFB2 */
+	pmic_clrsetbits(dev, RN5T567_DC2CTL, 0x2, 0);
+
+	/* configure sleep slot for ARM rail */
+	reg = pmic_reg_read(dev, RN5T567_DC2_SLOT);
+	reg = (reg & 0xf0) | reg >> 4;
+	pmic_reg_write(dev, RN5T567_DC2_SLOT, reg);
+
+	/* disable LDO2 discharge to avoid backfeeding from +V3.3_SD */
+	pmic_clrsetbits(dev, RN5T567_LDODIS1, 0x2, 0);
+
+	return 0;
+}
+
+void reset_cpu(ulong addr)
+{
+	struct udevice *dev;
+
+	pmic_get("rn5t567", &dev);
+
+	/* Use PMIC to reset, set REPWRTIM to 0 and REPWRON to 1 */
+	pmic_reg_write(dev, RN5T567_REPCNT, 0x1);
+	pmic_reg_write(dev, RN5T567_SLPCNT, 0x1);
+
+	/*
+	 * Re-power factor detection on PMIC side is not instant. 1ms
+	 * proved to be enough time until reset takes effect.
+	 */
+	mdelay(1);
+}
+#endif
+
 int checkboard(void)
 {
 	printf("Model: Toradex Colibri iMX7%c\n",
@@ -384,6 +404,23 @@ int checkboard(void)
 
 	return 0;
 }
+
+#if defined(CONFIG_OF_LIBFDT) && defined(CONFIG_OF_BOARD_SETUP)
+int ft_board_setup(void *blob, bd_t *bd)
+{
+#if defined(CONFIG_FDT_FIXUP_PARTITIONS)
+	static struct node_info nodes[] = {
+		{ "fsl,imx7d-gpmi-nand", MTD_DEV_TYPE_NAND, }, /* NAND flash */
+	};
+
+	/* Update partition nodes using info from mtdparts env var */
+	puts("   Updating MTD partitions...\n");
+	fdt_fixup_mtdparts(blob, nodes, ARRAY_SIZE(nodes));
+#endif
+
+	return ft_common_board_setup(blob, bd);
+}
+#endif
 
 #ifdef CONFIG_USB_EHCI_MX7
 static iomux_v3_cfg_t const usb_otg2_pads[] = {
@@ -407,14 +444,18 @@ int board_ehci_hcd_init(int port)
 	}
 	return 0;
 }
+
+int board_usb_phy_mode(int port)
+{
+	switch (port) {
+	case 0:
+		if (gpio_get_value(USB_CDET_GPIO))
+			return USB_INIT_DEVICE;
+		else
+			return USB_INIT_HOST;
+	case 1:
+	default:
+		return USB_INIT_HOST;
+	}
+}
 #endif
-
-static struct mxc_serial_platdata mxc_serial_plat = {
-	.reg = (struct mxc_uart *)UART1_IPS_BASE_ADDR,
-	.use_dte = true,
-};
-
-U_BOOT_DEVICE(mxc_serial) = {
-	.name = "serial_mxc",
-	.platdata = &mxc_serial_plat,
-};

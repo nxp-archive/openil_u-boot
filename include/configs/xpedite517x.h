@@ -14,7 +14,6 @@
 /*
  * High Level Configuration Options
  */
-#define CONFIG_MPC8641		1	/* MPC8641 specific */
 #define CONFIG_XPEDITE5140	1	/* MPC8641HPCN board specific */
 #define CONFIG_SYS_BOARD_NAME	"XPedite5170"
 #define CONFIG_SYS_FORM_3U_VPX	1
@@ -23,31 +22,25 @@
 #define CONFIG_BAT_RW		1	/* Use common BAT rw code */
 #define CONFIG_HIGH_BATS	1	/* High BATs supported and enabled */
 #define CONFIG_ALTIVEC		1
-#define CONFIG_DISPLAY_BOARDINFO
 
 #define	CONFIG_SYS_TEXT_BASE	0xfff00000
 
-#define CONFIG_PCI		1	/* Enable PCI/PCIE */
-#define CONFIG_PCI_PNP		1	/* do pci plug-and-play */
 #define CONFIG_PCI_SCAN_SHOW	1	/* show pci devices on startup */
 #define CONFIG_PCIE1		1	/* PCIE controller 1 */
 #define CONFIG_PCIE2		1	/* PCIE controller 2 */
 #define CONFIG_FSL_PCI_INIT	1	/* Use common FSL init code */
 #define CONFIG_PCI_INDIRECT_BRIDGE 1	/* indirect PCI bridge support */
 #define CONFIG_SYS_PCI_64BIT	1	/* enable 64-bit PCI resources */
-#define CONFIG_FSL_LAW		1	/* Use common FSL init code */
 
 /*
  * DDR config
  */
-#define CONFIG_SYS_FSL_DDR2
 #define CONFIG_SPD_EEPROM		/* Use SPD EEPROM for DDR setup */
 #define CONFIG_DDR_SPD
 #define CONFIG_MEM_INIT_VALUE		0xdeadbeef
 #define SPD_EEPROM_ADDRESS1		0x54	/* Both channels use the */
 #define SPD_EEPROM_ADDRESS2		0x54	/* same SPD data         */
 #define SPD_EEPROM_OFFSET		0x200	/* OFFSET of SPD in EEPROM */
-#define CONFIG_NUM_DDR_CONTROLLERS	2
 #define CONFIG_DIMM_SLOTS_PER_CTLR	1
 #define CONFIG_CHIP_SELECTS_PER_CTRL	1
 #define CONFIG_DDR_ECC
@@ -80,7 +73,6 @@ extern unsigned long get_board_sys_clk(unsigned long dummy);
  * Base addresses -- Note these are effective addresses where the
  * actual resources get mapped (not physical addresses)
  */
-#define CONFIG_SYS_CCSRBAR_DEFAULT	0xff700000	/* CCSRBAR Default */
 #define CONFIG_SYS_CCSRBAR		0xef000000	/* relocated CCSRBAR */
 #define CONFIG_SYS_CCSRBAR_PHYS		CONFIG_SYS_CCSRBAR
 #define CONFIG_SYS_CCSRBAR_PHYS_LOW	CONFIG_SYS_CCSRBAR
@@ -95,17 +87,6 @@ extern unsigned long get_board_sys_clk(unsigned long dummy);
 #define CONFIG_SYS_MEMTEST_END		0x20000000
 #define CONFIG_POST			(CONFIG_SYS_POST_MEMORY |\
 					 CONFIG_SYS_POST_I2C)
-#define I2C_ADDR_LIST			{CONFIG_SYS_I2C_DS1621_ADDR,	\
-					 CONFIG_SYS_I2C_DS4510_ADDR,	\
-					 CONFIG_SYS_I2C_EEPROM_ADDR,	\
-					 CONFIG_SYS_I2C_LM90_ADDR,	\
-					 CONFIG_SYS_I2C_PCA9553_ADDR,	\
-					 CONFIG_SYS_I2C_PCA953X_ADDR0,	\
-					 CONFIG_SYS_I2C_PCA953X_ADDR1,	\
-					 CONFIG_SYS_I2C_PCA953X_ADDR2,	\
-					 CONFIG_SYS_I2C_PCA953X_ADDR3,	\
-					 CONFIG_SYS_I2C_PEX8518_ADDR,	\
-					 CONFIG_SYS_I2C_RTC_ADDR}
 /* The XPedite5170 can host an XMC which has an EEPROM at address 0x50 */
 #define I2C_ADDR_IGNORE_LIST		{0x50}
 
@@ -221,7 +202,6 @@ extern unsigned long get_board_sys_clk(unsigned long dummy);
 #define CONFIG_SYS_NS16550_COM2	(CONFIG_SYS_CCSRBAR+0x4600)
 #define CONFIG_SYS_BAUDRATE_TABLE	\
 	{300, 600, 1200, 2400, 4800, 9600, 19200, 38400, 115200}
-#define CONFIG_BAUDRATE			115200
 #define CONFIG_LOADS_ECHO		1	/* echo on for serial download */
 #define CONFIG_SYS_LOADS_BAUD_CHANGE	1	/* allow baudrate change */
 
@@ -241,9 +221,6 @@ extern unsigned long get_board_sys_clk(unsigned long dummy);
 #define CONFIG_SYS_I2C_PEX8518_ADDR	0x70
 
 /* I2C DS1631 temperature sensor */
-#define CONFIG_SYS_I2C_DS1621_ADDR	0x48
-#define CONFIG_DTT_DS1621
-#define CONFIG_DTT_SENSORS		{ 0 }
 #define CONFIG_SYS_I2C_LM90_ADDR	0x4c
 
 /* I2C EEPROM - AT24C128B */
@@ -256,10 +233,6 @@ extern unsigned long get_board_sys_clk(unsigned long dummy);
 #define CONFIG_RTC_M41T11		1
 #define CONFIG_SYS_I2C_RTC_ADDR		0x68
 #define CONFIG_SYS_M41T11_BASE_YEAR	2000
-
-/* GPIO/EEPROM/SRAM */
-#define CONFIG_DS4510
-#define CONFIG_SYS_I2C_DS4510_ADDR	0x51
 
 /* GPIO */
 #define CONFIG_PCA953X
@@ -511,13 +484,6 @@ extern unsigned long get_board_sys_clk(unsigned long dummy);
 /*
  * Command configuration.
  */
-#define CONFIG_CMD_DATE
-#define CONFIG_CMD_DS4510
-#define CONFIG_CMD_DS4510_INFO
-#define CONFIG_CMD_DTT
-#define CONFIG_CMD_EEPROM
-#define CONFIG_CMD_IRQ
-#define CONFIG_CMD_JFFS2
 #define CONFIG_CMD_NAND
 #define CONFIG_CMD_PCA953X
 #define CONFIG_CMD_PCA953X_INFO

@@ -44,6 +44,16 @@ int cpu_get_count(struct udevice *dev)
 	return ops->get_count(dev);
 }
 
+int cpu_get_vendor(struct udevice *dev, char *buf, int size)
+{
+	struct cpu_ops *ops = cpu_get_ops(dev);
+
+	if (!ops->get_vendor)
+		return -ENOSYS;
+
+	return ops->get_vendor(dev, buf, size);
+}
+
 U_BOOT_DRIVER(cpu_bus) = {
 	.name	= "cpu_bus",
 	.id	= UCLASS_SIMPLE_BUS,
@@ -53,11 +63,11 @@ U_BOOT_DRIVER(cpu_bus) = {
 static int uclass_cpu_init(struct uclass *uc)
 {
 	struct udevice *dev;
-	int node;
+	ofnode node;
 	int ret;
 
-	node = fdt_path_offset(gd->fdt_blob, "/cpus");
-	if (node < 0)
+	node = ofnode_path("/cpus");
+	if (!ofnode_valid(node))
 		return 0;
 
 	ret = device_bind_driver_to_node(dm_root(), "cpu_bus", "cpus", node,

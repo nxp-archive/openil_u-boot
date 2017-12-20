@@ -12,20 +12,14 @@
 #include <asm/arch/at91_rstc.h>
 #include <asm/arch/clk.h>
 #include <asm/arch/gpio.h>
+#include <debug_uart.h>
 #include <lcd.h>
 #include <atmel_hlcdc.h>
-#include <atmel_mci.h>
-#ifdef CONFIG_MACB
-#include <net.h>
-#endif
-#include <netdev.h>
 #ifdef CONFIG_LCD_INFO
 #include <nand.h>
 #include <version.h>
 #endif
-#ifdef CONFIG_ATMEL_SPI
-#include <spi.h>
-#endif
+#include <asm/mach-types.h>
 
 DECLARE_GLOBAL_DATA_PTR;
 
@@ -77,35 +71,20 @@ static void at91sam9x5ek_nand_hw_init(void)
 	/* Enable NandFlash */
 	at91_set_gpio_output(CONFIG_SYS_NAND_ENABLE_PIN, 1);
 
-	at91_set_a_periph(AT91_PIO_PORTD, 0, 1);	/* NAND OE */
-	at91_set_a_periph(AT91_PIO_PORTD, 1, 1);	/* NAND WE */
-	at91_set_a_periph(AT91_PIO_PORTD, 2, 1);	/* NAND ALE */
-	at91_set_a_periph(AT91_PIO_PORTD, 3, 1);	/* NAND CLE */
-	at91_set_a_periph(AT91_PIO_PORTD, 6, 1);
-	at91_set_a_periph(AT91_PIO_PORTD, 7, 1);
-	at91_set_a_periph(AT91_PIO_PORTD, 8, 1);
-	at91_set_a_periph(AT91_PIO_PORTD, 9, 1);
-	at91_set_a_periph(AT91_PIO_PORTD, 10, 1);
-	at91_set_a_periph(AT91_PIO_PORTD, 11, 1);
-	at91_set_a_periph(AT91_PIO_PORTD, 12, 1);
-	at91_set_a_periph(AT91_PIO_PORTD, 13, 1);
+	at91_pio3_set_a_periph(AT91_PIO_PORTD, 0, 1);	/* NAND OE */
+	at91_pio3_set_a_periph(AT91_PIO_PORTD, 1, 1);	/* NAND WE */
+	at91_pio3_set_a_periph(AT91_PIO_PORTD, 2, 1);	/* NAND ALE */
+	at91_pio3_set_a_periph(AT91_PIO_PORTD, 3, 1);	/* NAND CLE */
+	at91_pio3_set_a_periph(AT91_PIO_PORTD, 6, 1);
+	at91_pio3_set_a_periph(AT91_PIO_PORTD, 7, 1);
+	at91_pio3_set_a_periph(AT91_PIO_PORTD, 8, 1);
+	at91_pio3_set_a_periph(AT91_PIO_PORTD, 9, 1);
+	at91_pio3_set_a_periph(AT91_PIO_PORTD, 10, 1);
+	at91_pio3_set_a_periph(AT91_PIO_PORTD, 11, 1);
+	at91_pio3_set_a_periph(AT91_PIO_PORTD, 12, 1);
+	at91_pio3_set_a_periph(AT91_PIO_PORTD, 13, 1);
 }
 #endif
-
-int board_eth_init(bd_t *bis)
-{
-	int rc = 0;
-
-#ifdef CONFIG_MACB
-	if (has_emac0())
-		rc = macb_eth_initialize(0,
-			(void *)ATMEL_BASE_EMAC0, 0x00);
-	if (has_emac1())
-		rc = macb_eth_initialize(1,
-			(void *)ATMEL_BASE_EMAC1, 0x00);
-#endif
-	return rc;
-}
 
 #ifdef CONFIG_LCD
 vidinfo_t panel_info = {
@@ -128,49 +107,49 @@ vidinfo_t panel_info = {
 void lcd_enable(void)
 {
 	if (has_lcdc())
-		at91_set_a_periph(AT91_PIO_PORTC, 29, 1);	/* power up */
+		at91_pio3_set_a_periph(AT91_PIO_PORTC, 29, 1);	/* power up */
 }
 
 void lcd_disable(void)
 {
 	if (has_lcdc())
-		at91_set_a_periph(AT91_PIO_PORTC, 29, 0);	/* power down */
+		at91_pio3_set_a_periph(AT91_PIO_PORTC, 29, 0);	/* power down */
 }
 
 static void at91sam9x5ek_lcd_hw_init(void)
 {
 	if (has_lcdc()) {
-		at91_set_a_periph(AT91_PIO_PORTC, 26, 0);	/* LCDPWM */
-		at91_set_a_periph(AT91_PIO_PORTC, 27, 0);	/* LCDVSYNC */
-		at91_set_a_periph(AT91_PIO_PORTC, 28, 0);	/* LCDHSYNC */
-		at91_set_a_periph(AT91_PIO_PORTC, 24, 0);	/* LCDDISP */
-		at91_set_a_periph(AT91_PIO_PORTC, 29, 0);	/* LCDDEN */
-		at91_set_a_periph(AT91_PIO_PORTC, 30, 0);	/* LCDPCK */
+		at91_pio3_set_a_periph(AT91_PIO_PORTC, 26, 0);	/* LCDPWM */
+		at91_pio3_set_a_periph(AT91_PIO_PORTC, 27, 0);	/* LCDVSYNC */
+		at91_pio3_set_a_periph(AT91_PIO_PORTC, 28, 0);	/* LCDHSYNC */
+		at91_pio3_set_a_periph(AT91_PIO_PORTC, 24, 0);	/* LCDDISP */
+		at91_pio3_set_a_periph(AT91_PIO_PORTC, 29, 0);	/* LCDDEN */
+		at91_pio3_set_a_periph(AT91_PIO_PORTC, 30, 0);	/* LCDPCK */
 
-		at91_set_a_periph(AT91_PIO_PORTC, 0, 0);	/* LCDD0 */
-		at91_set_a_periph(AT91_PIO_PORTC, 1, 0);	/* LCDD1 */
-		at91_set_a_periph(AT91_PIO_PORTC, 2, 0);	/* LCDD2 */
-		at91_set_a_periph(AT91_PIO_PORTC, 3, 0);	/* LCDD3 */
-		at91_set_a_periph(AT91_PIO_PORTC, 4, 0);	/* LCDD4 */
-		at91_set_a_periph(AT91_PIO_PORTC, 5, 0);	/* LCDD5 */
-		at91_set_a_periph(AT91_PIO_PORTC, 6, 0);	/* LCDD6 */
-		at91_set_a_periph(AT91_PIO_PORTC, 7, 0);	/* LCDD7 */
-		at91_set_a_periph(AT91_PIO_PORTC, 8, 0);	/* LCDD8 */
-		at91_set_a_periph(AT91_PIO_PORTC, 9, 0);	/* LCDD9 */
-		at91_set_a_periph(AT91_PIO_PORTC, 10, 0);	/* LCDD10 */
-		at91_set_a_periph(AT91_PIO_PORTC, 11, 0);	/* LCDD11 */
-		at91_set_a_periph(AT91_PIO_PORTC, 12, 0);	/* LCDD12 */
-		at91_set_a_periph(AT91_PIO_PORTC, 13, 0);	/* LCDD13 */
-		at91_set_a_periph(AT91_PIO_PORTC, 14, 0);	/* LCDD14 */
-		at91_set_a_periph(AT91_PIO_PORTC, 15, 0);	/* LCDD15 */
-		at91_set_a_periph(AT91_PIO_PORTC, 16, 0);	/* LCDD16 */
-		at91_set_a_periph(AT91_PIO_PORTC, 17, 0);	/* LCDD17 */
-		at91_set_a_periph(AT91_PIO_PORTC, 18, 0);	/* LCDD18 */
-		at91_set_a_periph(AT91_PIO_PORTC, 19, 0);	/* LCDD19 */
-		at91_set_a_periph(AT91_PIO_PORTC, 20, 0);	/* LCDD20 */
-		at91_set_a_periph(AT91_PIO_PORTC, 21, 0);	/* LCDD21 */
-		at91_set_a_periph(AT91_PIO_PORTC, 22, 0);	/* LCDD22 */
-		at91_set_a_periph(AT91_PIO_PORTC, 23, 0);	/* LCDD23 */
+		at91_pio3_set_a_periph(AT91_PIO_PORTC, 0, 0);	/* LCDD0 */
+		at91_pio3_set_a_periph(AT91_PIO_PORTC, 1, 0);	/* LCDD1 */
+		at91_pio3_set_a_periph(AT91_PIO_PORTC, 2, 0);	/* LCDD2 */
+		at91_pio3_set_a_periph(AT91_PIO_PORTC, 3, 0);	/* LCDD3 */
+		at91_pio3_set_a_periph(AT91_PIO_PORTC, 4, 0);	/* LCDD4 */
+		at91_pio3_set_a_periph(AT91_PIO_PORTC, 5, 0);	/* LCDD5 */
+		at91_pio3_set_a_periph(AT91_PIO_PORTC, 6, 0);	/* LCDD6 */
+		at91_pio3_set_a_periph(AT91_PIO_PORTC, 7, 0);	/* LCDD7 */
+		at91_pio3_set_a_periph(AT91_PIO_PORTC, 8, 0);	/* LCDD8 */
+		at91_pio3_set_a_periph(AT91_PIO_PORTC, 9, 0);	/* LCDD9 */
+		at91_pio3_set_a_periph(AT91_PIO_PORTC, 10, 0);	/* LCDD10 */
+		at91_pio3_set_a_periph(AT91_PIO_PORTC, 11, 0);	/* LCDD11 */
+		at91_pio3_set_a_periph(AT91_PIO_PORTC, 12, 0);	/* LCDD12 */
+		at91_pio3_set_a_periph(AT91_PIO_PORTC, 13, 0);	/* LCDD13 */
+		at91_pio3_set_a_periph(AT91_PIO_PORTC, 14, 0);	/* LCDD14 */
+		at91_pio3_set_a_periph(AT91_PIO_PORTC, 15, 0);	/* LCDD15 */
+		at91_pio3_set_a_periph(AT91_PIO_PORTC, 16, 0);	/* LCDD16 */
+		at91_pio3_set_a_periph(AT91_PIO_PORTC, 17, 0);	/* LCDD17 */
+		at91_pio3_set_a_periph(AT91_PIO_PORTC, 18, 0);	/* LCDD18 */
+		at91_pio3_set_a_periph(AT91_PIO_PORTC, 19, 0);	/* LCDD19 */
+		at91_pio3_set_a_periph(AT91_PIO_PORTC, 20, 0);	/* LCDD20 */
+		at91_pio3_set_a_periph(AT91_PIO_PORTC, 21, 0);	/* LCDD21 */
+		at91_pio3_set_a_periph(AT91_PIO_PORTC, 22, 0);	/* LCDD22 */
+		at91_pio3_set_a_periph(AT91_PIO_PORTC, 23, 0);	/* LCDD23 */
 
 		at91_periph_clk_enable(ATMEL_ID_LCDC);
 	}
@@ -205,54 +184,22 @@ void lcd_show_board_info(void)
 #endif /* CONFIG_LCD_INFO */
 #endif /* CONFIG_LCD */
 
-/* SPI chip select control */
-#ifdef CONFIG_ATMEL_SPI
-int spi_cs_is_valid(unsigned int bus, unsigned int cs)
+#ifdef CONFIG_DEBUG_UART_BOARD_INIT
+void board_debug_uart_init(void)
 {
-	return bus == 0 && cs < 2;
-}
-
-void spi_cs_activate(struct spi_slave *slave)
-{
-	switch (slave->cs) {
-	case 1:
-		at91_set_pio_output(AT91_PIO_PORTA, 7, 0);
-		break;
-	case 0:
-	default:
-		at91_set_pio_output(AT91_PIO_PORTA, 14, 0);
-		break;
-	}
-}
-
-void spi_cs_deactivate(struct spi_slave *slave)
-{
-	switch (slave->cs) {
-	case 1:
-		at91_set_pio_output(AT91_PIO_PORTA, 7, 1);
-		break;
-	case 0:
-	default:
-		at91_set_pio_output(AT91_PIO_PORTA, 14, 1);
-		break;
-	}
-}
-#endif /* CONFIG_ATMEL_SPI */
-
-#ifdef CONFIG_GENERIC_ATMEL_MCI
-int board_mmc_init(bd_t *bd)
-{
-	at91_mci_hw_init();
-
-	return atmel_mci_init((void *)ATMEL_BASE_HSMCI0);
+	at91_seriald_hw_init();
 }
 #endif
 
+#ifdef CONFIG_BOARD_EARLY_INIT_F
 int board_early_init_f(void)
 {
-	at91_seriald_hw_init();
+#ifdef CONFIG_DEBUG_UART
+	debug_uart_init();
+#endif
 	return 0;
 }
+#endif
 
 int board_init(void)
 {
@@ -266,15 +213,7 @@ int board_init(void)
 	at91sam9x5ek_nand_hw_init();
 #endif
 
-#ifdef CONFIG_ATMEL_SPI
-	at91_spi0_hw_init(1 << 4);
-#endif
-
-#ifdef CONFIG_MACB
-	at91_macb_hw_init();
-#endif
-
-#if defined(CONFIG_USB_OHCI_NEW) || defined(CONFIG_USB_EHCI)
+#if defined(CONFIG_USB_OHCI_NEW) || defined(CONFIG_USB_EHCI_HCD)
 	at91_uhp_hw_init();
 #endif
 #ifdef CONFIG_LCD
@@ -300,8 +239,6 @@ void at91_spl_board_init(void)
 	at91_mci_hw_init();
 #elif CONFIG_SYS_USE_NANDFLASH
 	at91sam9x5ek_nand_hw_init();
-#elif CONFIG_SYS_USE_SPIFLASH
-	at91_spi0_hw_init(1 << 4);
 #endif
 }
 

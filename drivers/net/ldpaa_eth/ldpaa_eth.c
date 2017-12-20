@@ -420,13 +420,14 @@ static int ldpaa_eth_open(struct eth_device *net_dev, bd_t *bd)
 		goto err_dpmac_setup;
 
 #ifdef CONFIG_PHYLIB
-	if (priv->phydev)
+	if (priv->phydev) {
 		err = phy_startup(priv->phydev);
 		if (err) {
 			printf("%s: Could not initialize\n",
 			       priv->phydev->dev->name);
 			goto err_dpamc_bind;
 		}
+	}
 #else
 	priv->phydev = (struct phy_device *)malloc(sizeof(struct phy_device));
 	memset(priv->phydev, 0, sizeof(struct phy_device));
@@ -586,8 +587,10 @@ static void ldpaa_eth_stop(struct eth_device *net_dev)
 #ifdef CONFIG_PHYLIB
 	if (priv->phydev && bus != NULL)
 		phy_shutdown(priv->phydev);
-	else
+	else {
 		free(priv->phydev);
+		priv->phydev = NULL;
+	}
 #endif
 
 	ldpaa_dpbp_free();

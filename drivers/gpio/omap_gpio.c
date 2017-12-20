@@ -23,7 +23,7 @@
 #include <fdtdec.h>
 #include <asm/gpio.h>
 #include <asm/io.h>
-#include <asm/errno.h>
+#include <linux/errno.h>
 #include <malloc.h>
 
 DECLARE_GLOBAL_DATA_PTR;
@@ -305,7 +305,7 @@ static int omap_gpio_bind(struct udevice *dev)
 	if (plat)
 		return 0;
 
-	base_addr = dev_get_addr(dev);
+	base_addr = devfdt_get_addr(dev);
 	if (base_addr == FDT_ADDR_T_NONE)
 		return -ENODEV;
 
@@ -320,7 +320,7 @@ static int omap_gpio_bind(struct udevice *dev)
 		return -ENOMEM;
 
 	plat->base = base_addr;
-	plat->port_name = fdt_get_name(gd->fdt_blob, dev->of_offset, NULL);
+	plat->port_name = fdt_get_name(gd->fdt_blob, dev_of_offset(dev), NULL);
 	dev->platdata = plat;
 
 	return 0;

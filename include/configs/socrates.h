@@ -18,23 +18,16 @@
 #define __CONFIG_H
 
 /* High Level Configuration Options */
-#define CONFIG_BOOKE		1	/* BOOKE			*/
-#define CONFIG_E500		1	/* BOOKE e500 family		*/
-#define CONFIG_MPC8544		1
 #define CONFIG_SOCRATES		1
-#define CONFIG_DISPLAY_BOARDINFO
 
 #define	CONFIG_SYS_TEXT_BASE	0xfff80000
 
-#define CONFIG_PCI
 #define CONFIG_PCI_INDIRECT_BRIDGE
 
 #define CONFIG_TSEC_ENET		/* tsec ethernet support	*/
 
 #define CONFIG_MISC_INIT_R	1	/* Call misc_init_r		*/
 #define CONFIG_BOARD_EARLY_INIT_R 1	/* Call board_early_init_r	*/
-
-#define CONFIG_FSL_LAW		1	/* Use common FSL init code */
 
 /*
  * Only possible on E500 Version 2 or newer cores.
@@ -75,7 +68,6 @@
 #define CONFIG_SYS_CCSRBAR_PHYS_LOW	CONFIG_SYS_CCSRBAR
 
 /* DDR Setup */
-#define CONFIG_SYS_FSL_DDR2
 #undef CONFIG_FSL_DDR_INTERACTIVE
 #define CONFIG_SPD_EEPROM		/* Use SPD EEPROM for DDR setup */
 #define CONFIG_DDR_SPD
@@ -87,7 +79,6 @@
 #define CONFIG_SYS_SDRAM_BASE		CONFIG_SYS_DDR_SDRAM_BASE
 #define CONFIG_VERY_BIG_RAM
 
-#define CONFIG_NUM_DDR_CONTROLLERS	1
 #define CONFIG_DIMM_SLOTS_PER_CTLR	1
 #define CONFIG_CHIP_SELECTS_PER_CTRL	2
 
@@ -169,18 +160,12 @@
 #define CONFIG_SYS_BR2_PRELIM		0xc80018a1	/* UPMB, 32-bit	*/
 #define CONFIG_SYS_OR2_PRELIM		0xfc000000	/* 64 MB	*/
 
-#define CONFIG_VIDEO
 #define CONFIG_VIDEO_MB862xx
 #define CONFIG_VIDEO_MB862xx_ACCEL
-#define CONFIG_CFB_CONSOLE
 #define CONFIG_VIDEO_LOGO
 #define CONFIG_VIDEO_BMP_LOGO
-#define CONFIG_CONSOLE_EXTRA_INFO
 #define VIDEO_FB_16BPP_PIXEL_SWAP
 #define VIDEO_FB_16BPP_WORD_SWAP
-#define CONFIG_VGA_AS_SINGLE_DEVICE
-#define CONFIG_SYS_CONSOLE_IS_IN_ENV
-#define CONFIG_VIDEO_SW_CURSOR
 #define CONFIG_SPLASH_SCREEN
 #define CONFIG_VIDEO_BMP_GZIP
 #define CONFIG_SYS_VIDEO_LOGO_MAX_SIZE	(2 << 20)	/* decompressed img */
@@ -199,8 +184,6 @@
 
 #define CONFIG_SYS_NS16550_COM1	(CONFIG_SYS_CCSRBAR+0x4500)
 #define CONFIG_SYS_NS16550_COM2	(CONFIG_SYS_CCSRBAR+0x4600)
-
-#define CONFIG_BAUDRATE         115200
 
 #define CONFIG_SYS_BAUDRATE_TABLE  \
 	{300, 600, 1200, 2400, 4800, 9600, 19200, 38400,115200}
@@ -227,13 +210,6 @@
 /* I2C W83782G HW-Monitoring IC */
 #define CONFIG_SYS_I2C_W83782G_ADDR	0x28	/* W83782G address 		*/
 
-/* I2C temp sensor */
-/* Socrates uses Maxim's	DS75, which is compatible with LM75 */
-#define CONFIG_DTT_LM75		1
-#define CONFIG_DTT_SENSORS	{4}		/* Sensor addresses	*/
-#define CONFIG_SYS_DTT_MAX_TEMP	125
-#define CONFIG_SYS_DTT_LOW_TEMP	-55
-#define CONFIG_SYS_DTT_HYSTERESIS	3
 #define CONFIG_SYS_EEPROM_PAGE_WRITE_BITS	4
 
 /*
@@ -252,7 +228,6 @@
 #define CONFIG_SYS_PCI1_IO_SIZE	0x01000000	/* 16M			*/
 
 #if defined(CONFIG_PCI)
-#define CONFIG_PCI_PNP			/* do pci plug-and-play		*/
 #undef CONFIG_PCI_SCAN_SHOW		/* show pci devices on startup	*/
 #endif	/* CONFIG_PCI */
 
@@ -304,10 +279,6 @@
 /*
  * Command line configuration.
  */
-#define CONFIG_CMD_BMP
-#define CONFIG_CMD_DATE
-#define CONFIG_CMD_DTT
-#undef CONFIG_CMD_EEPROM
 #define CONFIG_CMD_SDRAM
 #define CONFIG_CMD_REGINFO
 
@@ -419,6 +390,5 @@
 #define CONFIG_SYS_USB_OHCI_MAX_ROOT_PORTS	15
 #define CONFIG_SYS_USB_OHCI_SLOT_NAME		"ohci_pci"
 #define CONFIG_SYS_OHCI_SWAP_REG_ACCESS	1
-#define CONFIG_DOS_PARTITION		1
 
 #endif	/* __CONFIG_H */

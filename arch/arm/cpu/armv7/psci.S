@@ -152,7 +152,7 @@ _psci_table:
 	.word	0
 
 _smc_psci:
-	push	{r4-r12,lr}
+	push	{r4-r7,lr}
 
 	@ Switch to secure
 	mrc	p15, 0, r7, c1, c1, 0
@@ -175,7 +175,7 @@ _smc_psci:
 	@ Switch back to non-secure
 2:	mcr	p15, 0, r7, c1, c1, 0
 
-	pop	{r4-r12, lr}
+	pop	{r4-r7, lr}
 	movs	pc, lr			@ Return to the kernel
 
 @ Requires dense and single-cluster CPU ID space
@@ -187,7 +187,7 @@ ENDPROC(psci_get_cpu_id)
 .weak psci_get_cpu_id
 
 /* Imported from Linux kernel */
-LENTRY(v7_flush_dcache_all)
+ENTRY(psci_v7_flush_dcache_all)
 	stmfd	sp!, {r4-r5, r7, r9-r11, lr}
 	dmb					@ ensure ordering with previous memory accesses
 	mrc	p15, 1, r0, c0, c0, 1		@ read clidr
@@ -234,7 +234,7 @@ finished:
 	isb
 	ldmfd	sp!, {r4-r5, r7, r9-r11, lr}
 	bx	lr
-ENDPROC(v7_flush_dcache_all)
+ENDPROC(psci_v7_flush_dcache_all)
 
 ENTRY(psci_disable_smp)
 	mrc	p15, 0, r0, c1, c0, 1		@ ACTLR
@@ -258,13 +258,17 @@ ENDPROC(psci_enable_smp)
 ENTRY(psci_cpu_off_common)
 	push	{lr}
 
+	bl	psci_v7_flush_dcache_all
+
+	clrex					@ Why???
+
 	mrc	p15, 0, r0, c1, c0, 0		@ SCTLR
 	bic	r0, r0, #(1 << 2)		@ Clear C bit
 	mcr	p15, 0, r0, c1, c0, 0		@ SCTLR
 	isb
 	dsb
 
-	bl	v7_flush_dcache_all
+	bl	psci_v7_flush_dcache_all
 
 	clrex					@ Why???
 

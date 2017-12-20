@@ -16,9 +16,6 @@
 #define CONFIG_MX27
 #define CONFIG_MX27_CLK32	32768		/* OSC32K frequency */
 
-#define CONFIG_DISPLAY_BOARDINFO
-#define CONFIG_DISPLAY_CPUINFO
-
 #define CONFIG_SYS_TEXT_BASE		0xc0000000
 
 #define CONFIG_CMDLINE_TAG		1	/* enable passing of ATAGs */
@@ -88,7 +85,6 @@
 #define CONFIG_MXC_UART
 #define CONFIG_MXC_UART_BASE	UART1_BASE
 #define CONFIG_CONS_INDEX	1		/* use UART0 for console */
-#define CONFIG_BAUDRATE		115200		/* Default baud rate */
 
 /*
  * Flash & Environment
@@ -138,14 +134,6 @@
 #define CONFIG_MXC_NAND_HWECC
 
 /*
- * SD/MMC
- */
-#define CONFIG_MMC
-#define CONFIG_GENERIC_MMC
-#define CONFIG_MXC_MMC
-#define CONFIG_DOS_PARTITION
-
-/*
  * GPIO
  */
 #define CONFIG_MXC_GPIO
@@ -171,8 +159,6 @@
 /*
  * U-Boot commands
  */
-#define CONFIG_CMD_DIAG
-#define CONFIG_CMD_JFFS2
 #define CONFIG_CMD_NAND
 
 

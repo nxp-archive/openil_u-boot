@@ -12,7 +12,6 @@
 #ifndef __CONFIG_TI_AM335X_COMMON_H__
 #define __CONFIG_TI_AM335X_COMMON_H__
 
-#define CONFIG_AM33XX
 #define CONFIG_ARCH_CPU_INIT
 #define CONFIG_MAX_RAM_BANK_SIZE	(1024 << 20)	/* 1GB */
 #define CONFIG_SYS_TIMERBASE		0x48040000	/* Use Timer2 */
@@ -23,7 +22,9 @@
 /* NS16550 Configuration */
 #ifdef CONFIG_SPL_BUILD
 #define CONFIG_SYS_NS16550_SERIAL
+#ifndef CONFIG_DM_SERIAL
 #define CONFIG_SYS_NS16550_REG_SIZE	(-4)
+#endif
 #endif
 #define CONFIG_SYS_NS16550_CLK		48000000
 
@@ -46,10 +47,6 @@
  */
 #define CONFIG_SYS_BOOTCOUNT_ADDR	0x44E3E000
 
-/* Enable the HW watchdog, since we can use this with bootcount */
-#define CONFIG_HW_WATCHDOG
-#define CONFIG_OMAP_WATCHDOG
-
 /*
  * SPL related defines.  The Public RAM memory map the ROM defines the
  * area between 0x402F0400 and 0x4030B800 as a download area and
@@ -57,12 +54,11 @@
  * supports X-MODEM loading via UART, and we leverage this and then use
  * Y-MODEM to load u-boot.img, when booted over UART.
  */
-#define CONFIG_SPL_TEXT_BASE		0x402F0400
+#define CONFIG_SPL_TEXT_BASE		CONFIG_ISW_ENTRY_ADDR
 #define CONFIG_SYS_SPL_ARGS_ADDR	(CONFIG_SYS_SDRAM_BASE + \
 					 (128 << 20))
 
 /* Enable the watchdog inside of SPL */
-#define CONFIG_SPL_WATCHDOG_SUPPORT
 
 /*
  * Since SPL did pll and ddr initialization for us,
@@ -77,9 +73,6 @@
  * we need to call board_early_init_f.  This is taken care of in
  * s_init when we have SPL used.
  */
-#if !defined(CONFIG_SKIP_LOWLEVEL_INIT) && !defined(CONFIG_SPL)
-#define CONFIG_BOARD_EARLY_INIT_F
-#endif
 
 #ifdef CONFIG_NAND
 #define CONFIG_SPL_NAND_AM33XX_BCH	/* ELM support */

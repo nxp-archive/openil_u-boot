@@ -21,8 +21,6 @@
 /* Size of malloc() pool */
 #define CONFIG_SYS_MALLOC_LEN		(64 * SZ_1M)
 
-#define CONFIG_BOARD_EARLY_INIT_F
-
 #define CONFIG_MXC_UART
 
 /* MMC Configs */
@@ -43,9 +41,6 @@
 #define CONFIG_SF_DEFAULT_MODE		SPI_MODE_0
 #define CONFIG_SYS_SPI_ST_ENABLE_WP_PIN
 
-/* Command definition */
-#define CONFIG_CMD_BMODE
-
 #define CONFIG_EXTRA_ENV_SETTINGS \
 	"script=u-boot.scr\0" \
 	"fit_file=/boot/system.itb\0" \
@@ -57,7 +52,7 @@
 	"rescue_sys_length=f10000\0" \
 	"panel=lb07wv8\0" \
 	"splashpos=m,m\0" \
-	"console=" CONFIG_CONSOLE_DEV "\0" \
+	"console=" CONSOLE_DEV "\0" \
 	"fdt_high=0xffffffff\0"	  \
 	"initrd_high=0xffffffff\0" \
 	"addmtd=setenv bootargs ${bootargs} ${mtdparts}\0" \
@@ -150,8 +145,6 @@
 #define CONFIG_SYS_MEMTEST_END		(CONFIG_SYS_MEMTEST_START + 0x100000)
 #define CONFIG_SYS_MEMTEST_SCRATCH	0x10800000
 
-#define CONFIG_STACKSIZE		(128 * 1024)
-
 /* Physical Memory Map */
 #define CONFIG_NR_DRAM_BANKS		1
 #define PHYS_SDRAM			MMDC0_ARB_BASE_ADDR
@@ -207,11 +200,8 @@
 #define CONFIG_SYS_I2C_RTC_ADDR	0x68
 #define CONFIG_SYS_RTC_BUS_NUM	2
 #define CONFIG_RTC_M41T11
-#define CONFIG_CMD_DATE
 
 /* USB Configs */
-#define CONFIG_USB_EHCI
-#define CONFIG_USB_EHCI_MX6
 #define CONFIG_USB_MAX_CONTROLLER_COUNT 2
 #define CONFIG_EHCI_HCD_INIT_AFTER_RESET	/* For OTG port */
 #define CONFIG_MXC_USB_PORTSC	(PORT_PTS_UTMI | PORT_PTS_PTW)
@@ -223,23 +213,14 @@
 #define CONFIG_MTD_PARTITIONS
 #define CONFIG_MTD_DEVICE
 #define CONFIG_RBTREE
-#define CONFIG_CMD_UBI
 #define CONFIG_CMD_UBIFS
-
-#define CONFIG_MTD_UBI_FASTMAP
-#define CONFIG_MTD_UBI_FASTMAP_AUTOCONVERT	1
 
 #define CONFIG_HW_WATCHDOG
 #define CONFIG_IMX_WATCHDOG
 
 /* Framebuffer */
-#define CONFIG_VIDEO
 #define CONFIG_VIDEO_IPUV3
 /* check this console not needed, after test remove it */
-#define CONFIG_CFB_CONSOLE
-#define CONFIG_VGA_AS_SINGLE_DEVICE
-#define CONFIG_SYS_CONSOLE_IS_IN_ENV
-#define CONFIG_SYS_CONSOLE_OVERWRITE_ROUTINE
 #define CONFIG_VIDEO_BMP_RLE8
 #define CONFIG_SPLASH_SCREEN
 #define CONFIG_SPLASH_SCREEN_ALIGN
@@ -248,8 +229,6 @@
 #define CONFIG_VIDEO_BMP_LOGO
 #define CONFIG_IPUV3_CLK 198000000
 #define CONFIG_IMX_VIDEO_SKIP
-
-#define CONFIG_CMD_BMP
 
 #define CONFIG_PWM_IMX
 #define CONFIG_IMX6_PWM_PER_CLK	66000000

@@ -9,27 +9,15 @@
 import copy
 from optparse import OptionError, OptionParser
 import os
+import struct
 import sys
-
-import fdt_util
 
 # Bring in the patman libraries
 our_path = os.path.dirname(os.path.realpath(__file__))
 sys.path.append(os.path.join(our_path, '../patman'))
 
-# Bring in either the normal fdt library (which relies on libfdt) or the
-# fallback one (which uses fdtget and is slower). Both provide the same
-# interfface for this file to use.
-try:
-    from fdt import Fdt
-    import fdt
-    have_libfdt = True
-except ImportError:
-    have_libfdt = False
-    from fdt_fallback import Fdt
-    import fdt_fallback as fdt
-
-import struct
+import fdt
+import fdt_util
 
 # When we see these properties we ignore them - i.e. do not create a structure member
 PROP_IGNORE_LIST = [
@@ -41,14 +29,16 @@ PROP_IGNORE_LIST = [
     "status",
     'phandle',
     'u-boot,dm-pre-reloc',
+    'u-boot,dm-tpl',
+    'u-boot,dm-spl',
 ]
 
 # C type declarations for the tyues we support
 TYPE_NAMES = {
-    fdt_util.TYPE_INT: 'fdt32_t',
-    fdt_util.TYPE_BYTE: 'unsigned char',
-    fdt_util.TYPE_STRING: 'const char *',
-    fdt_util.TYPE_BOOL: 'bool',
+    fdt.TYPE_INT: 'fdt32_t',
+    fdt.TYPE_BYTE: 'unsigned char',
+    fdt.TYPE_STRING: 'const char *',
+    fdt.TYPE_BOOL: 'bool',
 };
 
 STRUCT_PREFIX = 'dtd_'
@@ -65,13 +55,14 @@ def Conv_name_to_c(name):
     str = name.replace('@', '_at_')
     str = str.replace('-', '_')
     str = str.replace(',', '_')
+    str = str.replace('.', '_')
     str = str.replace('/', '__')
     return str
 
 def TabTo(num_tabs, str):
     if len(str) >= num_tabs * 8:
         return str + ' '
-    return str + '\t' * (num_tabs - len(str) / 8)
+    return str + '\t' * (num_tabs - len(str) // 8)
 
 class DtbPlatdata:
     """Provide a means to convert device tree binary data to platform data
@@ -150,13 +141,13 @@ class DtbPlatdata:
             type: Data type (fdt_util)
             value: Data value, as a string of bytes
         """
-        if type == fdt_util.TYPE_INT:
+        if type == fdt.TYPE_INT:
             return '%#x' % fdt_util.fdt32_to_cpu(value)
-        elif type == fdt_util.TYPE_BYTE:
+        elif type == fdt.TYPE_BYTE:
             return '%#x' % ord(value[0])
-        elif type == fdt_util.TYPE_STRING:
+        elif type == fdt.TYPE_STRING:
             return '"%s"' % value
-        elif type == fdt_util.TYPE_BOOL:
+        elif type == fdt.TYPE_BOOL:
             return 'true'
 
     def GetCompatName(self, node):
@@ -178,8 +169,22 @@ class DtbPlatdata:
         Once this is done, self.fdt.GetRoot() can be called to obtain the
         device tree root node, and progress from there.
         """
-        self.fdt = Fdt(self._dtb_fname)
-        self.fdt.Scan()
+        self.fdt = fdt.FdtScan(self._dtb_fname)
+
+    def ScanNode(self, root):
+        for node in root.subnodes:
+            if 'compatible' in node.props:
+                status = node.props.get('status')
+                if (not options.include_disabled and not status or
+                    status.value != 'disabled'):
+                    self._valid_nodes.append(node)
+                    phandle_prop = node.props.get('phandle')
+                    if phandle_prop:
+                        phandle = phandle_prop.GetPhandle()
+                        self._phandle_node[phandle] = node
+
+            # recurse to handle any subnodes
+            self.ScanNode(node);
 
     def ScanTree(self):
         """Scan the device tree for useful information
@@ -189,8 +194,10 @@ class DtbPlatdata:
             _valid_nodes: A list of nodes we wish to consider include in the
                 platform data
         """
-        node_list = []
         self._phandle_node = {}
+        self._valid_nodes = []
+        return self.ScanNode(self.fdt.GetRoot());
+
         for node in self.fdt.GetRoot().subnodes:
             if 'compatible' in node.props:
                 status = node.props.get('status')
@@ -236,14 +243,14 @@ class DtbPlatdata:
             fields = {}
 
             # Get a list of all the valid properties in this node.
-            for name, prop in node.props.iteritems():
+            for name, prop in node.props.items():
                 if name not in PROP_IGNORE_LIST and name[0] != '#':
                     fields[name] = copy.deepcopy(prop)
 
             # If we've seen this node_name before, update the existing struct.
             if node_name in structs:
                 struct = structs[node_name]
-                for name, prop in fields.iteritems():
+                for name, prop in fields.items():
                     oldprop = struct.get(name)
                     if oldprop:
                         oldprop.Widen(prop)
@@ -258,11 +265,38 @@ class DtbPlatdata:
         for node in self._valid_nodes:
             node_name = self.GetCompatName(node)
             struct = structs[node_name]
-            for name, prop in node.props.iteritems():
+            for name, prop in node.props.items():
                 if name not in PROP_IGNORE_LIST and name[0] != '#':
                     prop.Widen(struct[name])
             upto += 1
         return structs
+
+    def ScanPhandles(self):
+        """Figure out what phandles each node uses
+
+        We need to be careful when outputing nodes that use phandles since
+        they must come after the declaration of the phandles in the C file.
+        Otherwise we get a compiler error since the phandle struct is not yet
+        declared.
+
+        This function adds to each node a list of phandle nodes that the node
+        depends on. This allows us to output things in the right order.
+        """
+        for node in self._valid_nodes:
+            node.phandles = set()
+            for pname, prop in node.props.items():
+                if pname in PROP_IGNORE_LIST or pname[0] == '#':
+                    continue
+                if type(prop.value) == list:
+                    if self.IsPhandle(prop):
+                        # Process the list as pairs of (phandle, id)
+                        it = iter(prop.value)
+                        for phandle_cell, id_cell in zip(it, it):
+                            phandle = fdt_util.fdt32_to_cpu(phandle_cell)
+                            id = fdt_util.fdt32_to_cpu(id_cell)
+                            target_node = self._phandle_node[phandle]
+                            node.phandles.add(target_node)
+
 
     def GenerateStructs(self, structs):
         """Generate struct defintions for the platform data
@@ -293,6 +327,59 @@ class DtbPlatdata:
                 self.Out(';\n')
             self.Out('};\n')
 
+    def OutputNode(self, node):
+        """Output the C code for a node
+
+        Args:
+            node: node to output
+        """
+        struct_name = self.GetCompatName(node)
+        var_name = Conv_name_to_c(node.name)
+        self.Buf('static struct %s%s %s%s = {\n' %
+            (STRUCT_PREFIX, struct_name, VAL_PREFIX, var_name))
+        for pname, prop in node.props.items():
+            if pname in PROP_IGNORE_LIST or pname[0] == '#':
+                continue
+            ptype = TYPE_NAMES[prop.type]
+            member_name = Conv_name_to_c(prop.name)
+            self.Buf('\t%s= ' % TabTo(3, '.' + member_name))
+
+            # Special handling for lists
+            if type(prop.value) == list:
+                self.Buf('{')
+                vals = []
+                # For phandles, output a reference to the platform data
+                # of the target node.
+                if self.IsPhandle(prop):
+                    # Process the list as pairs of (phandle, id)
+                    it = iter(prop.value)
+                    for phandle_cell, id_cell in zip(it, it):
+                        phandle = fdt_util.fdt32_to_cpu(phandle_cell)
+                        id = fdt_util.fdt32_to_cpu(id_cell)
+                        target_node = self._phandle_node[phandle]
+                        name = Conv_name_to_c(target_node.name)
+                        vals.append('{&%s%s, %d}' % (VAL_PREFIX, name, id))
+                else:
+                    for val in prop.value:
+                        vals.append(self.GetValue(prop.type, val))
+                self.Buf(', '.join(vals))
+                self.Buf('}')
+            else:
+                self.Buf(self.GetValue(prop.type, prop.value))
+            self.Buf(',\n')
+        self.Buf('};\n')
+
+        # Add a device declaration
+        self.Buf('U_BOOT_DEVICE(%s) = {\n' % var_name)
+        self.Buf('\t.name\t\t= "%s",\n' % struct_name)
+        self.Buf('\t.platdata\t= &%s%s,\n' % (VAL_PREFIX, var_name))
+        self.Buf('\t.platdata_size\t= sizeof(%s%s),\n' %
+                    (VAL_PREFIX, var_name))
+        self.Buf('};\n')
+        self.Buf('\n')
+
+        self.Out(''.join(self.GetBuf()))
+
     def GenerateTables(self):
         """Generate device defintions for the platform data
 
@@ -304,64 +391,18 @@ class DtbPlatdata:
         self.Out('#include <dm.h>\n')
         self.Out('#include <dt-structs.h>\n')
         self.Out('\n')
-        node_txt_list = []
-        for node in self._valid_nodes:
-            struct_name = self.GetCompatName(node)
-            var_name = Conv_name_to_c(node.name)
-            self.Buf('static struct %s%s %s%s = {\n' %
-                (STRUCT_PREFIX, struct_name, VAL_PREFIX, var_name))
-            for pname, prop in node.props.iteritems():
-                if pname in PROP_IGNORE_LIST or pname[0] == '#':
-                    continue
-                ptype = TYPE_NAMES[prop.type]
-                member_name = Conv_name_to_c(prop.name)
-                self.Buf('\t%s= ' % TabTo(3, '.' + member_name))
+        nodes_to_output = list(self._valid_nodes)
 
-                # Special handling for lists
-                if type(prop.value) == list:
-                    self.Buf('{')
-                    vals = []
-                    # For phandles, output a reference to the platform data
-                    # of the target node.
-                    if self.IsPhandle(prop):
-                        # Process the list as pairs of (phandle, id)
-                        it = iter(prop.value)
-                        for phandle_cell, id_cell in zip(it, it):
-                            phandle = fdt_util.fdt32_to_cpu(phandle_cell)
-                            id = fdt_util.fdt32_to_cpu(id_cell)
-                            target_node = self._phandle_node[phandle]
-                            name = Conv_name_to_c(target_node.name)
-                            vals.append('{&%s%s, %d}' % (VAL_PREFIX, name, id))
-                    else:
-                        for val in prop.value:
-                            vals.append(self.GetValue(prop.type, val))
-                    self.Buf(', '.join(vals))
-                    self.Buf('}')
-                else:
-                    self.Buf(self.GetValue(prop.type, prop.value))
-                self.Buf(',\n')
-            self.Buf('};\n')
-
-            # Add a device declaration
-            self.Buf('U_BOOT_DEVICE(%s) = {\n' % var_name)
-            self.Buf('\t.name\t\t= "%s",\n' % struct_name)
-            self.Buf('\t.platdata\t= &%s%s,\n' % (VAL_PREFIX, var_name))
-            self.Buf('\t.platdata_size\t= sizeof(%s%s),\n' %
-                     (VAL_PREFIX, var_name))
-            self.Buf('};\n')
-            self.Buf('\n')
-
-            # Output phandle target nodes first, since they may be referenced
-            # by others
-            if 'phandle' in node.props:
-                self.Out(''.join(self.GetBuf()))
-            else:
-                node_txt_list.append(self.GetBuf())
-
-        # Output all the nodes which are not phandle targets themselves, but
-        # may reference them. This avoids the need for forward declarations.
-        for node_txt in node_txt_list:
-            self.Out(''.join(node_txt))
+        # Keep outputing nodes until there is none left
+        while nodes_to_output:
+            node = nodes_to_output[0]
+            # Output all the node's dependencies first
+            for req_node in node.phandles:
+                if req_node in nodes_to_output:
+                    self.OutputNode(req_node)
+                    nodes_to_output.remove(req_node)
+            self.OutputNode(node)
+            nodes_to_output.remove(node)
 
 
 if __name__ != "__main__":
@@ -384,6 +425,7 @@ plat.ScanDtb()
 plat.ScanTree()
 plat.SetupOutput(options.output)
 structs = plat.ScanStructs()
+plat.ScanPhandles()
 
 for cmd in args[0].split(','):
     if cmd == 'struct':

@@ -37,8 +37,9 @@ static bool efi_is_direct_boot = true;
  * In most cases we want to pass an FDT to the payload, so reserve one slot of
  * config table space for it. The pointer gets populated by do_bootefi_exec().
  */
-static struct efi_configuration_table EFI_RUNTIME_DATA efi_conf_table[1];
+static struct efi_configuration_table __efi_runtime_data efi_conf_table[2];
 
+#ifdef CONFIG_ARM
 /*
  * The "gd" pointer lives in a register on ARM and AArch64 that we declare
  * fixed when compiling U-Boot. However, the payload does not know about that
@@ -46,16 +47,20 @@ static struct efi_configuration_table EFI_RUNTIME_DATA efi_conf_table[1];
  * EFI callback entry/exit.
  */
 static volatile void *efi_gd, *app_gd;
+#endif
 
 /* Called from do_bootefi_exec() */
 void efi_save_gd(void)
 {
+#ifdef CONFIG_ARM
 	efi_gd = gd;
+#endif
 }
 
 /* Called on every callback entry */
 void efi_restore_gd(void)
 {
+#ifdef CONFIG_ARM
 	/* Only restore if we're already in EFI context */
 	if (!efi_gd)
 		return;
@@ -63,12 +68,16 @@ void efi_restore_gd(void)
 	if (gd != efi_gd)
 		app_gd = gd;
 	gd = efi_gd;
+#endif
 }
 
 /* Called on every callback exit */
 efi_status_t efi_exit_func(efi_status_t ret)
 {
+#ifdef CONFIG_ARM
 	gd = app_gd;
+#endif
+
 	return ret;
 }
 
@@ -95,9 +104,9 @@ static void EFIAPI efi_restore_tpl(unsigned long old_tpl)
 	EFI_EXIT(efi_unsupported(__func__));
 }
 
-efi_status_t EFIAPI efi_allocate_pages_ext(int type, int memory_type,
-					   unsigned long pages,
-					   uint64_t *memory)
+static efi_status_t EFIAPI efi_allocate_pages_ext(int type, int memory_type,
+						  unsigned long pages,
+						  uint64_t *memory)
 {
 	efi_status_t r;
 
@@ -106,7 +115,8 @@ efi_status_t EFIAPI efi_allocate_pages_ext(int type, int memory_type,
 	return EFI_EXIT(r);
 }
 
-efi_status_t EFIAPI efi_free_pages_ext(uint64_t memory, unsigned long pages)
+static efi_status_t EFIAPI efi_free_pages_ext(uint64_t memory,
+					      unsigned long pages)
 {
 	efi_status_t r;
 
@@ -115,11 +125,12 @@ efi_status_t EFIAPI efi_free_pages_ext(uint64_t memory, unsigned long pages)
 	return EFI_EXIT(r);
 }
 
-efi_status_t EFIAPI efi_get_memory_map_ext(unsigned long *memory_map_size,
-					   struct efi_mem_desc *memory_map,
-					   unsigned long *map_key,
-					   unsigned long *descriptor_size,
-					   uint32_t *descriptor_version)
+static efi_status_t EFIAPI efi_get_memory_map_ext(
+					unsigned long *memory_map_size,
+					struct efi_mem_desc *memory_map,
+					unsigned long *map_key,
+					unsigned long *descriptor_size,
+					uint32_t *descriptor_version)
 {
 	efi_status_t r;
 
@@ -130,22 +141,23 @@ efi_status_t EFIAPI efi_get_memory_map_ext(unsigned long *memory_map_size,
 	return EFI_EXIT(r);
 }
 
-static efi_status_t EFIAPI efi_allocate_pool(int pool_type, unsigned long size,
-					     void **buffer)
+static efi_status_t EFIAPI efi_allocate_pool_ext(int pool_type,
+						 unsigned long size,
+						 void **buffer)
 {
 	efi_status_t r;
 
 	EFI_ENTRY("%d, %ld, %p", pool_type, size, buffer);
-	r = efi_allocate_pages(0, pool_type, (size + 0xfff) >> 12, (void*)buffer);
+	r = efi_allocate_pool(pool_type, size, buffer);
 	return EFI_EXIT(r);
 }
 
-static efi_status_t EFIAPI efi_free_pool(void *buffer)
+static efi_status_t EFIAPI efi_free_pool_ext(void *buffer)
 {
 	efi_status_t r;
 
 	EFI_ENTRY("%p", buffer);
-	r = efi_free_pages((ulong)buffer, 0);
+	r = efi_free_pool(buffer);
 	return EFI_EXIT(r);
 }
 
@@ -159,7 +171,7 @@ static struct {
 	u32 trigger_time;
 	u64 trigger_next;
 	unsigned long notify_tpl;
-	void (*notify_function) (void *event, void *context);
+	void (EFIAPI *notify_function) (void *event, void *context);
 	void *notify_context;
 } efi_event = {
 	/* Disable timers on bootup */
@@ -168,7 +180,8 @@ static struct {
 
 static efi_status_t EFIAPI efi_create_event(
 			enum efi_event_type type, ulong notify_tpl,
-			void (*notify_function) (void *event, void *context),
+			void (EFIAPI *notify_function) (void *event,
+							void *context),
 			void *notify_context, void **event)
 {
 	EFI_ENTRY("%d, 0x%lx, %p, %p", type, notify_tpl, notify_function,
@@ -177,6 +190,16 @@ static efi_status_t EFIAPI efi_create_event(
 		/* We only support one event at a time */
 		return EFI_EXIT(EFI_OUT_OF_RESOURCES);
 	}
+
+	if (event == NULL)
+		return EFI_EXIT(EFI_INVALID_PARAMETER);
+
+	if ((type & EVT_NOTIFY_SIGNAL) && (type & EVT_NOTIFY_WAIT))
+		return EFI_EXIT(EFI_INVALID_PARAMETER);
+
+	if ((type & (EVT_NOTIFY_SIGNAL|EVT_NOTIFY_WAIT)) &&
+	    notify_function == NULL)
+		return EFI_EXIT(EFI_INVALID_PARAMETER);
 
 	efi_event.type = type;
 	efi_event.notify_tpl = notify_tpl;
@@ -199,7 +222,9 @@ void efi_timer_check(void)
 		/* Triggering! */
 		if (efi_event.trigger_type == EFI_TIMER_PERIODIC)
 			efi_event.trigger_next += efi_event.trigger_time / 10;
-		efi_event.notify_function(&efi_event, efi_event.notify_context);
+		if (efi_event.type & (EVT_NOTIFY_WAIT | EVT_NOTIFY_SIGNAL))
+			efi_event.notify_function(&efi_event,
+			                          efi_event.notify_context);
 	}
 
 	WATCHDOG_RESET();
@@ -375,31 +400,35 @@ static efi_status_t EFIAPI efi_locate_device_path(efi_guid_t *protocol,
 	return EFI_EXIT(EFI_NOT_FOUND);
 }
 
-static efi_status_t EFIAPI efi_install_configuration_table(efi_guid_t *guid,
-							   void *table)
+efi_status_t efi_install_configuration_table(const efi_guid_t *guid, void *table)
 {
 	int i;
-
-	EFI_ENTRY("%p, %p", guid, table);
 
 	/* Check for guid override */
 	for (i = 0; i < systab.nr_tables; i++) {
 		if (!guidcmp(guid, &efi_conf_table[i].guid)) {
 			efi_conf_table[i].table = table;
-			return EFI_EXIT(EFI_SUCCESS);
+			return EFI_SUCCESS;
 		}
 	}
 
 	/* No override, check for overflow */
 	if (i >= ARRAY_SIZE(efi_conf_table))
-		return EFI_EXIT(EFI_OUT_OF_RESOURCES);
+		return EFI_OUT_OF_RESOURCES;
 
 	/* Add a new entry */
 	memcpy(&efi_conf_table[i].guid, guid, sizeof(*guid));
 	efi_conf_table[i].table = table;
-	systab.nr_tables = i;
+	systab.nr_tables = i + 1;
 
-	return EFI_EXIT(EFI_SUCCESS);
+	return EFI_SUCCESS;
+}
+
+static efi_status_t EFIAPI efi_install_configuration_table_ext(efi_guid_t *guid,
+							       void *table)
+{
+	EFI_ENTRY("%p, %p", guid, table);
+	return EFI_EXIT(efi_install_configuration_table(guid, table));
 }
 
 static efi_status_t EFIAPI efi_load_image(bool boot_policy,
@@ -475,7 +504,7 @@ static efi_status_t EFIAPI efi_exit(efi_handle_t image_handle,
 		  exit_data_size, exit_data);
 
 	loaded_image_info->exit_status = exit_status;
-	longjmp(&loaded_image_info->exit_jmp);
+	longjmp(&loaded_image_info->exit_jmp, 1);
 
 	panic("EFI application exited");
 }
@@ -522,6 +551,8 @@ static efi_status_t EFIAPI efi_exit_boot_services(void *image_handle,
 						  unsigned long map_key)
 {
 	EFI_ENTRY("%p, %ld", image_handle, map_key);
+
+	board_quiesce_devices();
 
 	/* Fix up caches for EFI payloads if necessary */
 	efi_exit_caches();
@@ -721,8 +752,8 @@ static efi_status_t EFIAPI efi_handle_protocol(void *handle,
 					       efi_guid_t *protocol,
 					       void **protocol_interface)
 {
-	return efi_open_protocol(handle, protocol, protocol_interface,
-				 NULL, NULL, 0);
+	return efi_open_protocol(handle, protocol, protocol_interface, NULL,
+				 NULL, EFI_OPEN_PROTOCOL_BY_HANDLE_PROTOCOL);
 }
 
 static const struct efi_boot_services efi_boot_services = {
@@ -734,8 +765,8 @@ static const struct efi_boot_services efi_boot_services = {
 	.allocate_pages = efi_allocate_pages_ext,
 	.free_pages = efi_free_pages_ext,
 	.get_memory_map = efi_get_memory_map_ext,
-	.allocate_pool = efi_allocate_pool,
-	.free_pool = efi_free_pool,
+	.allocate_pool = efi_allocate_pool_ext,
+	.free_pool = efi_free_pool_ext,
 	.create_event = efi_create_event,
 	.set_timer = efi_set_timer,
 	.wait_for_event = efi_wait_for_event,
@@ -750,7 +781,7 @@ static const struct efi_boot_services efi_boot_services = {
 	.register_protocol_notify = efi_register_protocol_notify,
 	.locate_handle = efi_locate_handle,
 	.locate_device_path = efi_locate_device_path,
-	.install_configuration_table = efi_install_configuration_table,
+	.install_configuration_table = efi_install_configuration_table_ext,
 	.load_image = efi_load_image,
 	.start_image = efi_start_image,
 	.exit = efi_exit,
@@ -775,10 +806,10 @@ static const struct efi_boot_services efi_boot_services = {
 };
 
 
-static uint16_t EFI_RUNTIME_DATA firmware_vendor[] =
+static uint16_t __efi_runtime_data firmware_vendor[] =
 	{ 'D','a','s',' ','U','-','b','o','o','t',0 };
 
-struct efi_system_table EFI_RUNTIME_DATA systab = {
+struct efi_system_table __efi_runtime_data systab = {
 	.hdr = {
 		.signature = EFI_SYSTEM_TABLE_SIGNATURE,
 		.revision = 0x20005, /* 2.5 */

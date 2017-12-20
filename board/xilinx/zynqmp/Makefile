@@ -7,7 +7,7 @@
 
 obj-y	:= zynqmp.o
 
-hw-platform-y :=$(shell echo $(CONFIG_SYS_CONFIG_NAME))
+hw-platform-y :=$(shell echo $(CONFIG_DEFAULT_DEVICE_TREE))
 
 init-objs := $(if $(wildcard $(srctree)/$(src)/$(hw-platform-y)/psu_init_gpl.c),\
 	$(hw-platform-y)/psu_init_gpl.o)
@@ -27,3 +27,6 @@ CFLAGS_REMOVE_psu_init_gpl.o := -Wstrict-prototypes
 
 # To include xil_io.h
 CFLAGS_psu_init_gpl.o := -I$(srctree)/$(src)
+
+# To suppress "warning: cast to pointer from integer of different size"
+CFLAGS_psu_init_gpl.o += -Wno-int-to-pointer-cast

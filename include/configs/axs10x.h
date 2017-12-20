@@ -11,8 +11,6 @@
 /*
  *  CPU configuration
  */
-#define CONFIG_SYS_TIMER_RATE		CONFIG_SYS_CLK_FREQ
-
 #define ARC_FPGA_PERIPHERAL_BASE	0xE0000000
 #define ARC_APB_PERIPHERAL_BASE		0xF0000000
 #define ARC_DWMMC_BASE			(ARC_FPGA_PERIPHERAL_BASE + 0x15000)
@@ -38,12 +36,10 @@
  * This board might be of different versions so handle it
  */
 #define CONFIG_BOARD_TYPES
-#define CONFIG_BOARD_EARLY_INIT_F
 
 /*
  * NAND Flash configuration
  */
-#define CONFIG_SYS_NO_FLASH
 #define CONFIG_SYS_NAND_BASE		(ARC_FPGA_PERIPHERAL_BASE + 0x16000)
 #define CONFIG_SYS_MAX_NAND_DEVICE	1
 
@@ -54,41 +50,6 @@
 #define CONFIG_SYS_NS16550_SERIAL
 #define CONFIG_SYS_NS16550_CLK		33333333
 #define CONFIG_SYS_NS16550_MEM32
-#define CONFIG_BAUDRATE			115200
-
-/*
- * I2C configuration
- */
-#define CONFIG_SYS_I2C
-#define CONFIG_I2C_ENV_EEPROM_BUS	2
-#define CONFIG_SYS_I2C_SPEED		100000
-#define CONFIG_SYS_I2C_SPEED1		100000
-#define CONFIG_SYS_I2C_SPEED2		100000
-#define CONFIG_SYS_I2C_SLAVE		0
-#define CONFIG_SYS_I2C_SLAVE1		0
-#define CONFIG_SYS_I2C_SLAVE2		0
-#define CONFIG_SYS_I2C_BASE		0xE001D000
-#define CONFIG_SYS_I2C_BASE1		0xE001E000
-#define CONFIG_SYS_I2C_BASE2		0xE001F000
-#define CONFIG_SYS_I2C_BUS_MAX		3
-#define IC_CLK				50
-
-/*
- * EEPROM configuration
- */
-#define CONFIG_SYS_I2C_EEPROM_ADDR		(0xA8 >> 1)
-#define CONFIG_SYS_I2C_EEPROM_ADDR_LEN		1
-#define CONFIG_SYS_I2C_EEPROM_ADDR_OVERFLOW	1
-#define CONFIG_SYS_EEPROM_PAGE_WRITE_BITS	3
-#define CONFIG_SYS_EEPROM_PAGE_WRITE_DELAY_MS	64
-
-/*
- * SD/MMC configuration
- */
-#define CONFIG_MMC
-#define CONFIG_GENERIC_MMC
-#define CONFIG_DWMMC
-#define CONFIG_DOS_PARTITION
 
 /*
  * Ethernet PHY configuration
@@ -109,13 +70,17 @@
 
 #define CONFIG_AUTO_COMPLETE
 #define CONFIG_SYS_MAXARGS		16
+#define CONFIG_CMDLINE_EDITING
 
 /*
  * Environment settings
  */
-#define CONFIG_ENV_IS_IN_EEPROM
-#define CONFIG_ENV_SIZE			SZ_512
-#define CONFIG_ENV_OFFSET		0
+#define CONFIG_ENV_IS_IN_FAT
+#define CONFIG_ENV_SIZE			SZ_16K
+#define FAT_ENV_INTERFACE		"mmc"
+#define FAT_ENV_DEVICE_AND_PART		"0:1"
+#define FAT_ENV_FILE			"uboot.env"
+#define CONFIG_FAT_WRITE
 
 /*
  * Environment configuration

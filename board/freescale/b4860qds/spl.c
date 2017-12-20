@@ -87,7 +87,7 @@ void board_init_r(gd_t *gd, ulong dest_addr)
 	bd->bi_memstart = CONFIG_SYS_INIT_L3_ADDR;
 	bd->bi_memsize = CONFIG_SYS_L3_SIZE;
 
-	probecpu();
+	arch_cpu_init();
 	get_clocks();
 	mem_malloc_init(CONFIG_SPL_RELOC_MALLOC_ADDR,
 			CONFIG_SPL_RELOC_MALLOC_SIZE);
@@ -108,7 +108,7 @@ void board_init_r(gd_t *gd, ulong dest_addr)
 
 	puts("\n\n");
 
-	gd->ram_size = initdram(0);
+	dram_init();
 
 #ifdef CONFIG_SPL_NAND_BOOT
 	nand_boot();

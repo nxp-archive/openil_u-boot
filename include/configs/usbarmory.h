@@ -11,13 +11,8 @@
 #ifndef __CONFIG_H
 #define __CONFIG_H
 
-#define CONFIG_MX53
-#define CONFIG_DISPLAY_CPUINFO
-#define CONFIG_DISPLAY_BOARDINFO
 #define CONFIG_SYS_FSL_CLK
-#define CONFIG_BOARD_EARLY_INIT_F
 #define CONFIG_MXC_GPIO
-#define CONFIG_SYS_NO_FLASH
 
 #include <asm/arch/imx-regs.h>
 
@@ -39,17 +34,13 @@
 #define CONFIG_MXC_UART
 #define CONFIG_MXC_UART_BASE	UART1_BASE
 #define CONFIG_CONS_INDEX	1
-#define CONFIG_BAUDRATE		115200
 
 /* SD/MMC */
 #define CONFIG_FSL_ESDHC
 #define CONFIG_SYS_FSL_ESDHC_ADDR	0
 #define CONFIG_SYS_FSL_ESDHC_NUM	1
-#define CONFIG_MMC
-#define CONFIG_GENERIC_MMC
 
 /* USB */
-#define CONFIG_USB_EHCI
 #define CONFIG_USB_EHCI_MX5
 #define CONFIG_MXC_USB_PORT	1
 #define CONFIG_MXC_USB_PORTSC	(PORT_PTS_UTMI | PORT_PTS_PTW)
@@ -62,7 +53,6 @@
 #define CONFIG_SYS_I2C_MXC_I2C2		/* enable I2C bus 2 */
 
 /* Fuse */
-#define CONFIG_CMD_FUSE
 #define CONFIG_FSL_IIM
 
 /* U-Boot memory offsets */

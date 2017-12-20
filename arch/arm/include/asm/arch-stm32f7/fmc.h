@@ -24,8 +24,7 @@ struct stm32_fmc_regs {
 /*
  * FMC registers base
  */
-#define STM32_SDRAM_FMC_BASE	0xA0000140
-#define STM32_SDRAM_FMC		((struct stm32_fmc_regs *)STM32_SDRAM_FMC_BASE)
+#define STM32_SDRAM_FMC		((struct stm32_fmc_regs *)SDRAM_FMC_BASE)
 
 /* Control register SDCR */
 #define FMC_SDCR_RPIPE_SHIFT	13	/* RPIPE bit shift */
@@ -58,12 +57,12 @@ struct stm32_fmc_regs {
 #define FMC_SDCMR_MODE_SELFREFRESH	5
 #define FMC_SDCMR_MODE_POWERDOWN	6
 
-#define FMC_SDCMR_BANK_1		(1 << 4)
-#define FMC_SDCMR_BANK_2		(1 << 3)
+#define FMC_SDCMR_BANK_1		BIT(4)
+#define FMC_SDCMR_BANK_2		BIT(3)
 
 #define FMC_SDCMR_MODE_REGISTER_SHIFT	9
 
-#define FMC_SDSR_BUSY			(1 << 5)
+#define FMC_SDSR_BUSY			BIT(5)
 
 #define FMC_BUSY_WAIT()		do { \
 		__asm__ __volatile__ ("dsb" : : : "memory"); \

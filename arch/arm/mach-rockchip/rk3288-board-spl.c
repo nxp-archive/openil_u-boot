@@ -14,6 +14,7 @@
 #include <spl.h>
 #include <asm/gpio.h>
 #include <asm/io.h>
+#include <asm/arch/bootrom.h>
 #include <asm/arch/clock.h>
 #include <asm/arch/hardware.h>
 #include <asm/arch/periph.h>
@@ -64,6 +65,10 @@ u32 spl_boot_device(void)
 	}
 
 fallback:
+#elif defined(CONFIG_TARGET_CHROMEBOOK_JERRY) || \
+		defined(CONFIG_TARGET_CHROMEBIT_MICKEY) || \
+		defined(CONFIG_TARGET_CHROMEBOOK_MINNIE)
+	return BOOT_DEVICE_SPI;
 #endif
 	return BOOT_DEVICE_MMC1;
 }
@@ -151,7 +156,7 @@ static int configure_emmc(struct udevice *pinctrl)
 	return 0;
 }
 #endif
-extern void back_to_bootrom(void);
+
 void board_init_f(ulong dummy)
 {
 	struct udevice *pinctrl;
@@ -159,7 +164,6 @@ void board_init_f(ulong dummy)
 	int ret;
 
 	/* Example code showing how to enable the debug UART on RK3288 */
-#ifdef EARLY_UART
 #include <asm/arch/grf_rk3288.h>
 	/* Enable early UART on the RK3288 */
 #define GRF_BASE	0xff770000
@@ -178,11 +182,10 @@ void board_init_f(ulong dummy)
 	 * printascii("string");
 	 */
 	debug_uart_init();
-#endif
-
-	ret = spl_init();
+	debug("\nspl:debug uart enabled in %s\n", __func__);
+	ret = spl_early_init();
 	if (ret) {
-		debug("spl_init() failed: %d\n", ret);
+		debug("spl_early_init() failed: %d\n", ret);
 		hang();
 	}
 
@@ -200,13 +203,13 @@ void board_init_f(ulong dummy)
 		debug("Pinctrl init failed: %d\n", ret);
 		return;
 	}
-
+	debug("\nspl:init dram\n");
 	ret = uclass_get_device(UCLASS_RAM, 0, &dev);
 	if (ret) {
 		debug("DRAM init failed: %d\n", ret);
 		return;
 	}
-#ifdef CONFIG_ROCKCHIP_SPL_BACK_TO_BROM
+#if defined(CONFIG_ROCKCHIP_SPL_BACK_TO_BROM) && !defined(CONFIG_SPL_BOARD_INIT)
 	back_to_bootrom();
 #endif
 }
@@ -273,14 +276,13 @@ void spl_board_init(void)
 	}
 
 	preloader_console_init();
+#ifdef CONFIG_ROCKCHIP_SPL_BACK_TO_BROM
+	back_to_bootrom();
+#endif
 	return;
 err:
 	printf("spl_board_init: Error %d\n", ret);
 
 	/* No way to report error here */
 	hang();
-}
-
-void lowlevel_init(void)
-{
 }

@@ -15,19 +15,40 @@ DECLARE_GLOBAL_DATA_PTR;
 int cpu_x86_bind(struct udevice *dev)
 {
 	struct cpu_platdata *plat = dev_get_parent_platdata(dev);
+	struct cpuid_result res;
 
-	plat->cpu_id = fdtdec_get_int(gd->fdt_blob, dev->of_offset,
+	plat->cpu_id = fdtdec_get_int(gd->fdt_blob, dev_of_offset(dev),
 				      "intel,apic-id", -1);
+	plat->family = gd->arch.x86;
+	res = cpuid(1);
+	plat->id[0] = res.eax;
+	plat->id[1] = res.edx;
+
+	return 0;
+}
+
+int cpu_x86_get_vendor(struct udevice *dev, char *buf, int size)
+{
+	const char *vendor = cpu_vendor_name(gd->arch.x86_vendor);
+
+	if (size < (strlen(vendor) + 1))
+		return -ENOSPC;
+
+	strcpy(buf, vendor);
 
 	return 0;
 }
 
 int cpu_x86_get_desc(struct udevice *dev, char *buf, int size)
 {
+	char *ptr;
+
 	if (size < CPU_MAX_NAME_LEN)
 		return -ENOSPC;
 
-	cpu_get_name(buf);
+	ptr = cpu_get_name(buf);
+	if (ptr != buf)
+		strcpy(buf, ptr);
 
 	return 0;
 }
@@ -60,6 +81,7 @@ static int cpu_x86_get_count(struct udevice *dev)
 static const struct cpu_ops cpu_x86_ops = {
 	.get_desc	= cpu_x86_get_desc,
 	.get_count	= cpu_x86_get_count,
+	.get_vendor	= cpu_x86_get_vendor,
 };
 
 static const struct udevice_id cpu_x86_ids[] = {

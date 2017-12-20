@@ -25,7 +25,6 @@
 #define CONFIG_PM9G45		1	/* It's an Ronetix PM9G45 */
 #define CONFIG_SYS_AT91_CPU_NAME	"AT91SAM9G45"
 
-#define MACH_TYPE_PM9G45	2672
 #define CONFIG_MACH_TYPE	MACH_TYPE_PM9G45
 
 /* ARM asynchronous clock */
@@ -40,7 +39,6 @@
 #define CONFIG_INITRD_TAG	1
 
 #define CONFIG_SKIP_LOWLEVEL_INIT
-#define CONFIG_BOARD_EARLY_INIT_F
 
 /*
  * Hardware drivers
@@ -71,7 +69,6 @@
  */
 #define CONFIG_CMD_NAND		1
 
-#define CONFIG_CMD_JFFS2		1
 #define CONFIG_JFFS2_CMDLINE		1
 #define CONFIG_JFFS2_NAND		1
 #define CONFIG_JFFS2_DEV		"nand0" /* NAND dev jffs2 lives on */
@@ -82,9 +79,6 @@
 #define CONFIG_NR_DRAM_BANKS		1
 #define PHYS_SDRAM			0x70000000
 #define PHYS_SDRAM_SIZE			0x08000000	/* 128 megs */
-
-/* NOR flash, not available */
-#define CONFIG_SYS_NO_FLASH		1
 
 /* NAND flash */
 #ifdef CONFIG_CMD_NAND
@@ -111,7 +105,6 @@
 #define CONFIG_USB_ATMEL
 #define CONFIG_USB_ATMEL_CLK_SEL_UPLL
 #define CONFIG_USB_OHCI_NEW		1
-#define CONFIG_DOS_PARTITION		1
 #define CONFIG_SYS_USB_OHCI_CPU_INIT	1
 #define CONFIG_SYS_USB_OHCI_REGS_BASE	0x00700000 /* _UHP_OHCI_BASE */
 #define CONFIG_SYS_USB_OHCI_SLOT_NAME	"at91sam9g45"
@@ -138,8 +131,6 @@
 				"256k(uboot)ro,1664k(env)," \
 				"2M(linux)ro,-(root) rw " \
 				"rootfstype=jffs2"
-
-#define CONFIG_BAUDRATE			115200
 
 #define CONFIG_SYS_CBSIZE		256
 #define CONFIG_SYS_MAXARGS		16

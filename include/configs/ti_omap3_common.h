@@ -21,11 +21,6 @@
 #include <asm/arch/cpu.h>
 #include <asm/arch/omap.h>
 
-/* Common ARM Erratas */
-#define CONFIG_ARM_ERRATA_454179
-#define CONFIG_ARM_ERRATA_430973
-#define CONFIG_ARM_ERRATA_621766
-
 /* The chip has SDRC controller */
 #define CONFIG_SDRC
 
@@ -63,13 +58,9 @@
 
 #define CONFIG_SYS_MONITOR_LEN		(256 << 10)
 
-/* TWL4030 */
-#define CONFIG_TWL4030_POWER
-
 /* SPL */
 #define CONFIG_SPL_TEXT_BASE		0x40200800
-#define CONFIG_SPL_LDSCRIPT		"$(CPUDIR)/omap-common/u-boot-spl.lds"
-#define CONFIG_SPL_POWER_SUPPORT
+#define CONFIG_SPL_LDSCRIPT		"arch/arm/mach-omap2/u-boot-spl.lds"
 #define CONFIG_SYS_SPL_ARGS_ADDR	(CONFIG_SYS_SDRAM_BASE + \
 					 (64 << 20))
 

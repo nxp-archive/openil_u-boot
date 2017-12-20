@@ -16,9 +16,7 @@
 /* #define CONFIG_T_SH7706LSR	1 */
 
 #define CONFIG_CMD_SDRAM
-#define CONFIG_CMD_ENV
 
-#define CONFIG_BAUDRATE		115200
 #define CONFIG_BOOTARGS		"console=ttySC0,115200"
 
 /*
@@ -26,6 +24,7 @@
  * you should set undef.
  */
 #undef  CONFIG_SHOW_BOOT_PROGRESS
+#define CONFIG_DISPLAY_BOARDINFO
 
 /* system */
 #define SHMIN_SDRAM_BASE		(0x8C000000)

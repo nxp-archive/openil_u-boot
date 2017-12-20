@@ -91,12 +91,12 @@ __weak void psci_board_init(void)
 void relocate_optee(void)
 {
 #ifdef CONFIG_SECURE_BOOT
-	memcpy((void *)CONFIG_OPTEE_ENTRY, (void *)OPTEE_IMAGE_START, OPTEE_IMAGE_SIZE);
+	memcpy((void *)SYS_OPTEE_ENTRY, (void *)OPTEE_IMAGE_START, OPTEE_IMAGE_SIZE);
 #else
 	int dev = CONFIG_SYS_MMC_ENV_DEV;
 	u32 cnt = OPTEE_IMAGE_SIZE / 512;
 	u32 blk = OPTEE_IMAGE_ADDR / 512;
-	void *addr =(void*)CONFIG_OPTEE_ENTRY;
+	void *addr =(void*)SYS_OPTEE_ENTRY;
 	struct mmc *mmc = find_mmc_device(CONFIG_SYS_MMC_ENV_DEV);
 	if (!mmc)
 		printf("\nMMC cannot find device for ucode\n");

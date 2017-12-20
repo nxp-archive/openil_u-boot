@@ -12,7 +12,6 @@
 
 /* LP0 suspend / resume */
 #define CONFIG_TEGRA_LP0
-#define CONFIG_AES
 #define CONFIG_TEGRA_PMU
 #define CONFIG_TPS6586X_POWER
 #define CONFIG_TEGRA_CLOCK_SCALING
@@ -31,11 +30,6 @@
 /* I2C */
 #define CONFIG_SYS_I2C_TEGRA
 
-/* SD/MMC */
-#define CONFIG_MMC
-#define CONFIG_GENERIC_MMC
-#define CONFIG_TEGRA_MMC
-
 /* Environment in eMMC, at the end of 2nd "boot sector" */
 #define CONFIG_ENV_IS_IN_MMC
 #define CONFIG_ENV_OFFSET (-CONFIG_ENV_SIZE)
@@ -43,25 +37,15 @@
 #define CONFIG_SYS_MMC_ENV_PART 2
 
 /* USB Host support */
-#define CONFIG_USB_EHCI
 #define CONFIG_USB_EHCI_TEGRA
 
 /* USB networking support */
 #define CONFIG_USB_HOST_ETHER
 #define CONFIG_USB_ETHER_ASIX
 
-/* General networking support */
-
 /* Enable keyboard */
 #define CONFIG_TEGRA_KEYBOARD
 #define CONFIG_KEYBOARD
-
-/* USB keyboard */
-#define CONFIG_USB_KEYBOARD
-
-/* LCD support */
-#define CONFIG_SYS_WHITE_ON_BLACK
-#define CONFIG_CONSOLE_SCROLL_LINES	10
 
 /* NAND support */
 #define CONFIG_CMD_NAND

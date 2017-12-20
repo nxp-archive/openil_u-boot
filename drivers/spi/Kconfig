@@ -32,6 +32,14 @@ config ATH79_SPI
 	  uses driver model and requires a device tree binding to operate.
 	  please refer to doc/device-tree-bindings/spi/spi-ath79.txt.
 
+config ATMEL_SPI
+	bool "Atmel SPI driver"
+	depends on ARCH_AT91
+	help
+	  This enables driver for the Atmel SPI Controller, present on
+	  many AT91 (ARM) chips. This driver can be used to access
+	  the SPI Flash, such as AT25DF321.
+
 config CADENCE_QSPI
 	bool "Cadence QSPI driver"
 	help
@@ -61,19 +69,19 @@ config FSL_DSPI
 	  this Freescale DSPI IP core. LS102xA and Colibri VF50/VF61 platforms
 	  use this driver.
 
-config FSL_QSPI
-	bool "Freescale QSPI driver"
-	help
-	  Enable the Freescale Quad-SPI (QSPI) driver. This driver can be
-	  used to access the SPI NOR flash on platforms embedding this
-	  Freescale IP core.
-
 config ICH_SPI
 	bool "Intel ICH SPI driver"
 	help
 	  Enable the Intel ICH SPI driver. This driver can be used to
 	  access the SPI NOR flash on platforms embedding this Intel
 	  ICH IP core.
+
+config MVEBU_A3700_SPI
+	bool "Marvell Armada 3700 SPI driver"
+	help
+	  Enable the Marvell Armada 3700 SPI driver. This driver can be
+	  used to access the SPI NOR flash on platforms embedding this
+	  Marvell IP core.
 
 config PIC32_SPI
 	bool "Microchip PIC32 SPI driver"
@@ -115,6 +123,14 @@ config SANDBOX_SPI
 			sandbox,filename = "spi.bin";
 		};
 	  };
+
+config STM32_QSPI
+	bool "STM32F7 QSPI driver"
+	depends on STM32F7
+	help
+	  Enable the STM32F7 Quad-SPI (QSPI) driver. This driver can be
+	  used to access the SPI NOR flash chips on platforms embedding
+	  this ST IP core.
 
 config TEGRA114_SPI
 	bool "nVidia Tegra114 SPI driver"
@@ -181,6 +197,12 @@ config OMAP3_SPI
 
 endif # if DM_SPI
 
+config SOFT_SPI
+	bool "Soft SPI driver"
+	help
+	 Enable Soft SPI driver. This driver is to use GPIO simulate
+	 the SPI protocol.
+
 config FSL_ESPI
 	bool "Freescale eSPI driver"
 	help
@@ -188,10 +210,23 @@ config FSL_ESPI
 	  access the SPI interface and SPI NOR flash on platforms embedding
 	  this Freescale eSPI IP core.
 
+config FSL_QSPI
+	bool "Freescale QSPI driver"
+	help
+	  Enable the Freescale Quad-SPI (QSPI) driver. This driver can be
+	  used to access the SPI NOR flash on platforms embedding this
+	  Freescale IP core.
+
 config TI_QSPI
 	bool "TI QSPI driver"
 	help
 	  Enable the TI Quad-SPI (QSPI) driver for DRA7xx and AM43xx evms.
 	  This driver support spi flash single, quad and memory reads.
+
+config MPC8XX_SPI
+	bool "MPC8XX SPI Driver"
+	depends on 8xx
+	help
+	  Enable support for SPI on MPC8XX
 
 endmenu # menu "SPI Support"

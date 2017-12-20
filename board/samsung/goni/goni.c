@@ -9,6 +9,7 @@
 #include <common.h>
 #include <asm/gpio.h>
 #include <asm/arch/mmc.h>
+#include <dm.h>
 #include <power/pmic.h>
 #include <usb/dwc2_udc.h>
 #include <asm/arch/cpu.h>
@@ -16,6 +17,7 @@
 #include <samsung/misc.h>
 #include <usb.h>
 #include <usb_mass_storage.h>
+#include <asm/mach-types.h>
 
 DECLARE_GLOBAL_DATA_PTR;
 
@@ -43,21 +45,6 @@ void i2c_init_board(void)
 }
 #endif
 
-int power_init_board(void)
-{
-	int ret;
-
-	/*
-	 * For PMIC the I2C bus is named as I2C5, but it is connected
-	 * to logical I2C adapter 0
-	 */
-	ret = pmic_init(I2C_0);
-	if (ret)
-		return ret;
-
-	return 0;
-}
-
 int dram_init(void)
 {
 	gd->ram_size = PHYS_SDRAM_1_SIZE + PHYS_SDRAM_2_SIZE +
@@ -66,7 +53,7 @@ int dram_init(void)
 	return 0;
 }
 
-void dram_init_banksize(void)
+int dram_init_banksize(void)
 {
 	gd->bd->bi_dram[0].start = PHYS_SDRAM_1;
 	gd->bd->bi_dram[0].size = PHYS_SDRAM_1_SIZE;
@@ -74,6 +61,8 @@ void dram_init_banksize(void)
 	gd->bd->bi_dram[1].size = PHYS_SDRAM_2_SIZE;
 	gd->bd->bi_dram[2].start = PHYS_SDRAM_3;
 	gd->bd->bi_dram[2].size = PHYS_SDRAM_3_SIZE;
+
+	return 0;
 }
 
 #ifdef CONFIG_DISPLAY_BOARDINFO
@@ -84,7 +73,7 @@ int checkboard(void)
 }
 #endif
 
-#ifdef CONFIG_GENERIC_MMC
+#ifdef CONFIG_MMC
 int board_mmc_init(bd_t *bis)
 {
 	int i, ret, ret_sd = 0;
@@ -148,38 +137,50 @@ int board_mmc_init(bd_t *bis)
 #ifdef CONFIG_USB_GADGET
 static int s5pc1xx_phy_control(int on)
 {
-	int ret;
+	struct udevice *dev;
 	static int status;
-	struct pmic *p = pmic_get("MAX8998_PMIC");
-	if (!p)
-		return -ENODEV;
+	int reg, ret;
 
-	if (pmic_probe(p))
-		return -1;
+	ret = pmic_get("max8998-pmic", &dev);
+	if (ret)
+		return ret;
 
 	if (on && !status) {
-		ret = pmic_set_output(p, MAX8998_REG_ONOFF1,
-				      MAX8998_LDO3, LDO_ON);
-		ret = pmic_set_output(p, MAX8998_REG_ONOFF2,
-				      MAX8998_LDO8, LDO_ON);
+		reg = pmic_reg_read(dev, MAX8998_REG_ONOFF1);
+		reg |= MAX8998_LDO3;
+		ret = pmic_reg_write(dev, MAX8998_REG_ONOFF1, reg);
 		if (ret) {
 			puts("MAX8998 LDO setting error!\n");
-			return -1;
+			return -EINVAL;
+		}
+
+		reg = pmic_reg_read(dev, MAX8998_REG_ONOFF2);
+		reg |= MAX8998_LDO8;
+		ret = pmic_reg_write(dev, MAX8998_REG_ONOFF2, reg);
+		if (ret) {
+			puts("MAX8998 LDO setting error!\n");
+			return -EINVAL;
 		}
 		status = 1;
 	} else if (!on && status) {
-		ret = pmic_set_output(p, MAX8998_REG_ONOFF1,
-				      MAX8998_LDO3, LDO_OFF);
-		ret = pmic_set_output(p, MAX8998_REG_ONOFF2,
-				      MAX8998_LDO8, LDO_OFF);
+		reg = pmic_reg_read(dev, MAX8998_REG_ONOFF1);
+		reg &= ~MAX8998_LDO3;
+		ret = pmic_reg_write(dev, MAX8998_REG_ONOFF1, reg);
 		if (ret) {
 			puts("MAX8998 LDO setting error!\n");
-			return -1;
+			return -EINVAL;
+		}
+
+		reg = pmic_reg_read(dev, MAX8998_REG_ONOFF2);
+		reg &= ~MAX8998_LDO8;
+		ret = pmic_reg_write(dev, MAX8998_REG_ONOFF2, reg);
+		if (ret) {
+			puts("MAX8998 LDO setting error!\n");
+			return -EINVAL;
 		}
 		status = 0;
 	}
 	udelay(10000);
-
 	return 0;
 }
 

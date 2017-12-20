@@ -13,7 +13,6 @@
 
 #define CONFIG_MCFUART
 #define CONFIG_SYS_UART_PORT		(0)
-#define CONFIG_BAUDRATE		115200
 
 #undef CONFIG_WATCHDOG		/* disable watchdog */
 
@@ -38,12 +37,9 @@
 /*
  * Command line configuration.
  */
-#define CONFIG_CMD_IDE
 
-#ifdef CONFIG_CMD_IDE
+#ifdef CONFIG_IDE
 /* ATA */
-#	define CONFIG_DOS_PARTITION
-#	define CONFIG_MAC_PARTITION
 #	define CONFIG_IDE_RESET		1
 #	define CONFIG_IDE_PREINIT	1
 #	define CONFIG_ATAPI

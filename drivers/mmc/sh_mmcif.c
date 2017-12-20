@@ -12,7 +12,7 @@
 #include <command.h>
 #include <mmc.h>
 #include <malloc.h>
-#include <asm/errno.h>
+#include <linux/errno.h>
 #include <asm/io.h>
 #include "sh_mmcif.h"
 
@@ -539,7 +539,7 @@ static int sh_mmcif_request(struct mmc *mmc, struct mmc_cmd *cmd,
 	return ret;
 }
 
-static void sh_mmcif_set_ios(struct mmc *mmc)
+static int sh_mmcif_set_ios(struct mmc *mmc)
 {
 	struct sh_mmcif_host *host = mmc->priv;
 
@@ -554,6 +554,8 @@ static void sh_mmcif_set_ios(struct mmc *mmc)
 		host->bus_width = MMC_BUS_WIDTH_1;
 
 	debug("clock = %d, buswidth = %d\n", mmc->clock, mmc->bus_width);
+
+	return 0;
 }
 
 static int sh_mmcif_init(struct mmc *mmc)

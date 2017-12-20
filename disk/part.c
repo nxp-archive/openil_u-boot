@@ -190,13 +190,13 @@ void dev_print (struct blk_desc *dev_desc)
 			printf ("            Supports 48-bit addressing\n");
 #endif
 #if defined(CONFIG_SYS_64BIT_LBA)
-		printf ("            Capacity: %ld.%ld MB = %ld.%ld GB (%Ld x %ld)\n",
+		printf ("            Capacity: %lu.%lu MB = %lu.%lu GB (%llu x %lu)\n",
 			mb_quot, mb_rem,
 			gb_quot, gb_rem,
 			lba,
 			dev_desc->blksz);
 #else
-		printf ("            Capacity: %ld.%ld MB = %ld.%ld GB (%ld x %ld)\n",
+		printf ("            Capacity: %lu.%lu MB = %lu.%lu GB (%lu x %lu)\n",
 			mb_quot, mb_rem,
 			gb_quot, gb_rem,
 			(ulong)lba,
@@ -234,11 +234,11 @@ void part_init(struct blk_desc *dev_desc)
 
 static void print_part_header(const char *type, struct blk_desc *dev_desc)
 {
-#if defined(CONFIG_MAC_PARTITION) || \
-	defined(CONFIG_DOS_PARTITION) || \
-	defined(CONFIG_ISO_PARTITION) || \
-	defined(CONFIG_AMIGA_PARTITION) || \
-	defined(CONFIG_EFI_PARTITION)
+#if CONFIG_IS_ENABLED(MAC_PARTITION) || \
+	CONFIG_IS_ENABLED(DOS_PARTITION) || \
+	CONFIG_IS_ENABLED(ISO_PARTITION) || \
+	CONFIG_IS_ENABLED(AMIGA_PARTITION) || \
+	CONFIG_IS_ENABLED(EFI_PARTITION)
 	puts ("\nPartition Map for ");
 	switch (dev_desc->if_type) {
 	case IF_TYPE_IDE:
@@ -299,7 +299,7 @@ int part_get_info(struct blk_desc *dev_desc, int part,
 #ifdef HAVE_BLOCK_DEVICE
 	struct part_driver *drv;
 
-#ifdef CONFIG_PARTITION_UUIDS
+#if CONFIG_IS_ENABLED(PARTITION_UUIDS)
 	/* The common case is no UUID support */
 	info->uuid[0] = 0;
 #endif
@@ -416,7 +416,7 @@ int blk_get_device_part_str(const char *ifname, const char *dev_part_str,
 		info->bootable = 0;
 		strcpy((char *)info->type, BOOT_PART_TYPE);
 		strcpy((char *)info->name, "Sandbox host");
-#ifdef CONFIG_PARTITION_UUIDS
+#if CONFIG_IS_ENABLED(PARTITION_UUIDS)
 		info->uuid[0] = 0;
 #endif
 #ifdef CONFIG_PARTITION_TYPE_GUID
@@ -442,7 +442,7 @@ int blk_get_device_part_str(const char *ifname, const char *dev_part_str,
 		memset(info, 0, sizeof(*info));
 		strcpy((char *)info->type, BOOT_PART_TYPE);
 		strcpy((char *)info->name, "UBI");
-#ifdef CONFIG_PARTITION_UUIDS
+#if CONFIG_IS_ENABLED(PARTITION_UUIDS)
 		info->uuid[0] = 0;
 #endif
 		return 0;
@@ -526,7 +526,7 @@ int blk_get_device_part_str(const char *ifname, const char *dev_part_str,
 		info->bootable = 0;
 		strcpy((char *)info->type, BOOT_PART_TYPE);
 		strcpy((char *)info->name, "Whole Disk");
-#ifdef CONFIG_PARTITION_UUIDS
+#if CONFIG_IS_ENABLED(PARTITION_UUIDS)
 		info->uuid[0] = 0;
 #endif
 #ifdef CONFIG_PARTITION_TYPE_GUID
@@ -614,4 +614,62 @@ int blk_get_device_part_str(const char *ifname, const char *dev_part_str,
 cleanup:
 	free(dup_str);
 	return ret;
+}
+
+int part_get_info_by_name(struct blk_desc *dev_desc, const char *name,
+	disk_partition_t *info)
+{
+	struct part_driver *first_drv =
+		ll_entry_start(struct part_driver, part_driver);
+	const int n_drvs = ll_entry_count(struct part_driver, part_driver);
+	struct part_driver *part_drv;
+
+	for (part_drv = first_drv; part_drv != first_drv + n_drvs; part_drv++) {
+		int ret;
+		int i;
+		for (i = 1; i < part_drv->max_entries; i++) {
+			ret = part_drv->get_info(dev_desc, i, info);
+			if (ret != 0) {
+				/* no more entries in table */
+				break;
+			}
+			if (strcmp(name, (const char *)info->name) == 0) {
+				/* matched */
+				return i;
+			}
+		}
+	}
+	return -1;
+}
+
+void part_set_generic_name(const struct blk_desc *dev_desc,
+	int part_num, char *name)
+{
+	char *devtype;
+
+	switch (dev_desc->if_type) {
+	case IF_TYPE_IDE:
+	case IF_TYPE_SATA:
+	case IF_TYPE_ATAPI:
+		devtype = "hd";
+		break;
+	case IF_TYPE_SCSI:
+		devtype = "sd";
+		break;
+	case IF_TYPE_USB:
+		devtype = "usbd";
+		break;
+	case IF_TYPE_DOC:
+		devtype = "docd";
+		break;
+	case IF_TYPE_MMC:
+	case IF_TYPE_SD:
+		devtype = "mmcsd";
+		break;
+	default:
+		devtype = "xx";
+		break;
+	}
+
+	sprintf(name, "%s%c%d", devtype, 'a' + dev_desc->devnum, part_num);
 }

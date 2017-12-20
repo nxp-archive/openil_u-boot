@@ -9,6 +9,7 @@
 #include <fdtdec.h>
 #include <pch.h>
 #include <pci.h>
+#include <syscon.h>
 #include <asm/cpu.h>
 #include <asm/gpio.h>
 #include <asm/io.h>
@@ -118,6 +119,12 @@ static int broadwell_gpio_probe(struct udevice *dev)
 	struct broadwell_bank_platdata *plat = dev_get_platdata(dev);
 	struct gpio_dev_priv *uc_priv = dev_get_uclass_priv(dev);
 	struct broadwell_bank_priv *priv = dev_get_priv(dev);
+	struct udevice *pinctrl;
+	int ret;
+
+	/* Set up pin control if available */
+	ret = syscon_get_by_driver_data(X86_SYSCON_PINCONF, &pinctrl);
+	debug("%s, pinctrl=%p, ret=%d\n", __func__, pinctrl, ret);
 
 	uc_priv->gpio_count = GPIO_PER_BANK;
 	uc_priv->bank_name = plat->bank_name;
@@ -142,14 +149,14 @@ static int broadwell_gpio_ofdata_to_platdata(struct udevice *dev)
 	if (ret)
 		return ret;
 
-	bank = fdtdec_get_int(gd->fdt_blob, dev->of_offset, "reg", -1);
+	bank = fdtdec_get_int(gd->fdt_blob, dev_of_offset(dev), "reg", -1);
 	if (bank == -1) {
 		debug("%s: Invalid bank number %d\n", __func__, bank);
 		return -EINVAL;
 	}
 	plat->bank = bank;
 	plat->base_addr = gpiobase;
-	plat->bank_name = fdt_getprop(gd->fdt_blob, dev->of_offset,
+	plat->bank_name = fdt_getprop(gd->fdt_blob, dev_of_offset(dev),
 				      "bank-name", NULL);
 
 	return 0;

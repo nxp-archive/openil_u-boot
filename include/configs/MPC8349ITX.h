@@ -40,8 +40,6 @@
 #ifndef __CONFIG_H
 #define __CONFIG_H
 
-#define CONFIG_DISPLAY_BOARDINFO
-
 #if (CONFIG_SYS_TEXT_BASE == 0xFE000000)
 #define CONFIG_SYS_LOWBOOT
 #endif
@@ -73,7 +71,6 @@
 #define CONFIG_SYS_USB_HOST	/* use the EHCI USB controller */
 #endif
 
-#define CONFIG_PCI
 #define CONFIG_RTC_DS1337
 #define CONFIG_SYS_I2C
 #define CONFIG_TSEC_ENET		/* TSEC Ethernet support */
@@ -151,7 +148,6 @@
 /*
  * Support USB
  */
-#define CONFIG_USB_EHCI
 #define CONFIG_USB_EHCI_FSL
 
 /* Current USB implementation supports the only USB controller,
@@ -358,8 +354,7 @@ boards, we say we have two, but don't display a message if we find only one. */
 #define CONFIG_SYS_BAUDRATE_TABLE  \
 		{300, 600, 1200, 2400, 4800, 9600, 19200, 38400, 115200}
 
-#define CONFIG_CONSOLE		ttyS0
-#define CONFIG_BAUDRATE		115200
+#define CONSOLE			ttyS0
 
 #define CONFIG_SYS_NS16550_COM1	(CONFIG_SYS_IMMR + 0x4500)
 #define CONFIG_SYS_NS16550_COM2	(CONFIG_SYS_IMMR + 0x4600)
@@ -401,8 +396,6 @@ boards, we say we have two, but don't display a message if we find only one. */
 			(CONFIG_SYS_PCI1_IO_PHYS + CONFIG_SYS_PCI1_IO_SIZE)
 #define CONFIG_SYS_PCI2_IO_SIZE		0x01000000	/* 16M */
 #endif
-
-#define CONFIG_PCI_PNP			/* do pci plug-and-play */
 
 #ifndef CONFIG_PCI_PNP
     #define PCI_ENET0_IOADDR	0x00000000
@@ -465,7 +458,6 @@ boards, we say we have two, but don't display a message if we find only one. */
   #define CONFIG_ENV_SECT_SIZE	0x10000 /* 64K (one sector) for environment */
   #define CONFIG_ENV_SIZE	0x2000
 #else
-  #define CONFIG_SYS_NO_FLASH	/* Flash is not usable now */
   #undef  CONFIG_FLASH_CFI_DRIVER
   #define CONFIG_ENV_IS_NOWHERE	/* Store ENV in memory only */
   #define CONFIG_ENV_ADDR	(CONFIG_SYS_MONITOR_BASE - 0x1000)
@@ -486,18 +478,11 @@ boards, we say we have two, but don't display a message if we find only one. */
 /*
  * Command line configuration.
  */
-#define CONFIG_CMD_DATE
-#define CONFIG_CMD_IRQ
 #define CONFIG_CMD_SDRAM
 
 #if defined(CONFIG_COMPACT_FLASH) || defined(CONFIG_SATA_SIL3114) \
 				|| defined(CONFIG_USB_STORAGE)
-	#define CONFIG_DOS_PARTITION
 	#define CONFIG_SUPPORT_VFAT
-#endif
-
-#ifdef CONFIG_COMPACT_FLASH
-	#define CONFIG_CMD_IDE
 #endif
 
 #ifdef CONFIG_SATA_SIL3114
@@ -740,10 +725,10 @@ boards, we say we have two, but don't display a message if we find only one. */
 		__stringify(CONFIG_GATEWAYIP) ":"	\
 		__stringify(CONFIG_NETMASK) ":"		\
 		CONFIG_HOSTNAME ":" CONFIG_NETDEV ":off"		\
-	" console=" __stringify(CONFIG_CONSOLE) "," __stringify(CONFIG_BAUDRATE)
+	" console=" __stringify(CONSOLE) "," __stringify(CONFIG_BAUDRATE)
 
 #define CONFIG_EXTRA_ENV_SETTINGS \
-	"console=" __stringify(CONFIG_CONSOLE) "\0"			\
+	"console=" __stringify(CONSOLE) "\0"			\
 	"netdev=" CONFIG_NETDEV "\0"					\
 	"uboot=" CONFIG_UBOOTPATH "\0"					\
 	"tftpflash=tftpboot $loadaddr $uboot; "				\

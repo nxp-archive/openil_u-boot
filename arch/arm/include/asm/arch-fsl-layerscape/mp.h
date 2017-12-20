@@ -34,12 +34,13 @@ extern size_t __secondary_boot_code_size;
 #ifdef CONFIG_MP
 int fsl_layerscape_wake_seconday_cores(void);
 #else
-static inline int fsl_layerscape_wake_seconday_cores(void) { return 1; }
+static inline int fsl_layerscape_wake_seconday_cores(void) { return 0; }
 #endif
 void *get_spin_tbl_addr(void);
 phys_addr_t determine_mp_bootpg(void);
 void secondary_boot_func(void);
 int is_core_online(u64 cpu_id);
+u32 cpu_pos_mask(void);
 #endif
 
 #define IH_ARCH_ARM		2	/* ARM */

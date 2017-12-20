@@ -27,7 +27,7 @@
 #include <asm/mach-types.h>
 #include "overo.h"
 
-#ifdef CONFIG_USB_EHCI
+#ifdef CONFIG_USB_EHCI_HCD
 #include <usb.h>
 #include <asm/ehci-omap.h>
 #endif
@@ -70,7 +70,8 @@ static struct {
 static const struct ns16550_platdata overo_serial = {
 	.base = OMAP34XX_UART3,
 	.reg_shift = 2,
-	.clock = V_NS16550_CLK
+	.clock = V_NS16550_CLK,
+	.fcr = UART_FCR_DEFVAL,
 };
 
 U_BOOT_DEVICE(overo_uart) = {
@@ -378,21 +379,21 @@ int board_eth_init(bd_t *bis)
 }
 #endif
 
-#if defined(CONFIG_GENERIC_MMC)
+#if defined(CONFIG_MMC)
 int board_mmc_init(bd_t *bis)
 {
 	return omap_mmc_init(0, 0, 0, -1, -1);
 }
 #endif
 
-#if defined(CONFIG_GENERIC_MMC)
+#if defined(CONFIG_MMC)
 void board_mmc_power_init(void)
 {
 	twl4030_power_mmc_init(0);
 }
 #endif
 
-#if defined(CONFIG_USB_EHCI)
+#if defined(CONFIG_USB_EHCI_HCD)
 static struct omap_usbhs_board_data usbhs_bdata = {
 	.port_mode[0] = OMAP_USBHS_PORT_MODE_UNUSED,
 	.port_mode[1] = OMAP_EHCI_PORT_MODE_PHY,
@@ -419,4 +420,4 @@ int ehci_hcd_stop(void)
 	return omap_ehci_hcd_stop();
 }
 
-#endif /* CONFIG_USB_EHCI */
+#endif /* CONFIG_USB_EHCI_HCD */

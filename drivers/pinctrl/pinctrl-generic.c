@@ -5,8 +5,8 @@
  */
 
 #include <common.h>
+#include <dm.h>
 #include <linux/compat.h>
-#include <dm/device.h>
 #include <dm/pinctrl.h>
 
 DECLARE_GLOBAL_DATA_PTR;
@@ -245,7 +245,7 @@ static int pinctrl_generic_set_state_one(struct udevice *dev,
 					 bool is_group, unsigned selector)
 {
 	const void *fdt = gd->fdt_blob;
-	int node_offset = config->of_offset;
+	int node_offset = dev_of_offset(config);
 	const char *propname;
 	const void *value;
 	int prop_offset, len, func_selector, param, ret;
@@ -300,18 +300,18 @@ static int pinctrl_generic_set_state_subnode(struct udevice *dev,
 					     struct udevice *config)
 {
 	const void *fdt = gd->fdt_blob;
-	int node = config->of_offset;
+	int node = dev_of_offset(config);
 	const char *subnode_target_type = "pins";
 	bool is_group = false;
 	const char *name;
 	int strings_count, selector, i, ret;
 
-	strings_count = fdt_count_strings(fdt, node, subnode_target_type);
+	strings_count = fdt_stringlist_count(fdt, node, subnode_target_type);
 	if (strings_count < 0) {
 		subnode_target_type = "groups";
 		is_group = true;
-		strings_count = fdt_count_strings(fdt, node,
-						  subnode_target_type);
+		strings_count = fdt_stringlist_count(fdt, node,
+						     subnode_target_type);
 		if (strings_count < 0) {
 			/* skip this node; may contain config child nodes */
 			return 0;
@@ -319,9 +319,9 @@ static int pinctrl_generic_set_state_subnode(struct udevice *dev,
 	}
 
 	for (i = 0; i < strings_count; i++) {
-		ret = fdt_get_string_index(fdt, node, subnode_target_type,
-					   i, &name);
-		if (ret < 0)
+		name = fdt_stringlist_get(fdt, node, subnode_target_type, i,
+					  NULL);
+		if (!name)
 			return -EINVAL;
 
 		if (is_group)

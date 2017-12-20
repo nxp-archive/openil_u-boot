@@ -421,19 +421,20 @@ __weak void mmu_setup(void)
 void invalidate_dcache_all(void)
 {
 	__asm_invalidate_dcache_all();
+	__asm_invalidate_l3_dcache();
 }
 
 /*
  * Performs a clean & invalidation of the entire data cache at all levels.
  * This function needs to be inline to avoid using stack.
- * __asm_flush_l3_cache return status of timeout
+ * __asm_flush_l3_dcache return status of timeout
  */
 inline void flush_dcache_all(void)
 {
 	int ret;
 
 	__asm_flush_dcache_all();
-	ret = __asm_flush_l3_cache();
+	ret = __asm_flush_l3_dcache();
 	if (ret)
 		debug("flushing dcache returns 0x%x\n", ret);
 	else
@@ -445,7 +446,7 @@ inline void flush_dcache_all(void)
  */
 void invalidate_dcache_range(unsigned long start, unsigned long stop)
 {
-	__asm_flush_dcache_range(start, stop);
+	__asm_invalidate_dcache_range(start, stop);
 }
 
 /*
@@ -500,7 +501,8 @@ static bool is_aligned(u64 addr, u64 size, u64 align)
 	return !(addr & (align - 1)) && !(size & (align - 1));
 }
 
-static u64 set_one_region(u64 start, u64 size, u64 attrs, int level)
+/* Use flag to indicate if attrs has more than d-cache attributes */
+static u64 set_one_region(u64 start, u64 size, u64 attrs, bool flag, int level)
 {
 	int levelshift = level2shift(level);
 	u64 levelsize = 1ULL << levelshift;
@@ -508,8 +510,13 @@ static u64 set_one_region(u64 start, u64 size, u64 attrs, int level)
 
 	/* Can we can just modify the current level block PTE? */
 	if (is_aligned(start, size, levelsize)) {
-		*pte &= ~PMD_ATTRINDX_MASK;
-		*pte |= attrs;
+		if (flag) {
+			*pte &= ~PMD_ATTRMASK;
+			*pte |= attrs & PMD_ATTRMASK;
+		} else {
+			*pte &= ~PMD_ATTRINDX_MASK;
+			*pte |= attrs & PMD_ATTRINDX_MASK;
+		}
 		debug("Set attrs=%llx pte=%p level=%d\n", attrs, pte, level);
 
 		return levelsize;
@@ -559,7 +566,8 @@ void mmu_set_region_dcache_behaviour(phys_addr_t start, size_t size,
 		u64 r;
 
 		for (level = 1; level < 4; level++) {
-			r = set_one_region(start, size, attrs, level);
+			/* Set d-cache attributes only */
+			r = set_one_region(start, size, attrs, false, level);
 			if (r) {
 				/* PTE successfully replaced */
 				size -= r;
@@ -578,6 +586,63 @@ void mmu_set_region_dcache_behaviour(phys_addr_t start, size_t size,
 	 * have caches off now
 	 */
 	flush_dcache_range(real_start, real_start + real_size);
+}
+
+/*
+ * Modify MMU table for a region with updated PXN/UXN/Memory type/valid bits.
+ * The procecess is break-before-make. The target region will be marked as
+ * invalid during the process of changing.
+ */
+void mmu_change_region_attr(phys_addr_t addr, size_t siz, u64 attrs)
+{
+	int level;
+	u64 r, size, start;
+
+	start = addr;
+	size = siz;
+	/*
+	 * Loop through the address range until we find a page granule that fits
+	 * our alignment constraints, then set it to "invalid".
+	 */
+	while (size > 0) {
+		for (level = 1; level < 4; level++) {
+			/* Set PTE to fault */
+			r = set_one_region(start, size, PTE_TYPE_FAULT, true,
+					   level);
+			if (r) {
+				/* PTE successfully invalidated */
+				size -= r;
+				start += r;
+				break;
+			}
+		}
+	}
+
+	flush_dcache_range(gd->arch.tlb_addr,
+			   gd->arch.tlb_addr + gd->arch.tlb_size);
+	__asm_invalidate_tlb_all();
+
+	/*
+	 * Loop through the address range until we find a page granule that fits
+	 * our alignment constraints, then set it to the new cache attributes
+	 */
+	start = addr;
+	size = siz;
+	while (size > 0) {
+		for (level = 1; level < 4; level++) {
+			/* Set PTE to new attributes */
+			r = set_one_region(start, size, attrs, true, level);
+			if (r) {
+				/* PTE successfully updated */
+				size -= r;
+				start += r;
+				break;
+			}
+		}
+	}
+	flush_dcache_range(gd->arch.tlb_addr,
+			   gd->arch.tlb_addr + gd->arch.tlb_size);
+	__asm_invalidate_tlb_all();
 }
 
 #else	/* CONFIG_SYS_DCACHE_OFF */
@@ -623,7 +688,7 @@ void mmu_set_region_dcache_behaviour(phys_addr_t start, size_t size,
 
 void icache_enable(void)
 {
-	__asm_invalidate_icache_all();
+	invalidate_icache_all();
 	set_sctlr(get_sctlr() | CR_I);
 }
 
@@ -640,6 +705,7 @@ int icache_status(void)
 void invalidate_icache_all(void)
 {
 	__asm_invalidate_icache_all();
+	__asm_invalidate_l3_icache();
 }
 
 #else	/* CONFIG_SYS_ICACHE_OFF */

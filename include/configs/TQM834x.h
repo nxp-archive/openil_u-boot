@@ -12,8 +12,6 @@
 #ifndef __CONFIG_H
 #define __CONFIG_H
 
-#define CONFIG_DISPLAY_BOARDINFO
-
 /*
  * High Level Configuration Options
  */
@@ -43,7 +41,6 @@
 #define CONFIG_SYS_LCRR_CLKDIV	LCRR_CLKDIV_8
 
 /* board pre init: do not call, nothing to do */
-#undef CONFIG_BOARD_EARLY_INIT_F
 
 /* detect the number of flash banks */
 #define CONFIG_BOARD_EARLY_INIT_R
@@ -187,13 +184,6 @@
 #define CONFIG_RTC_DS1337			/* use ds1337 rtc via i2c */
 #define CONFIG_SYS_I2C_RTC_ADDR		0x68	/* at address 0x68 */
 
-/* I2C SYSMON (LM75) */
-#define CONFIG_DTT_LM75			1	/* ON Semi's LM75 */
-#define CONFIG_DTT_SENSORS		{0}	/* Sensor addresses */
-#define CONFIG_SYS_DTT_MAX_TEMP		70
-#define CONFIG_SYS_DTT_LOW_TEMP		-30
-#define CONFIG_SYS_DTT_HYSTERESIS	3
-
 /*
  * TSEC
  */
@@ -227,11 +217,9 @@
  * General PCI
  * Addresses are mapped 1-1.
  */
-#define CONFIG_PCI
 
 #if defined(CONFIG_PCI)
 
-#define CONFIG_PCI_PNP			/* do pci plug-and-play */
 #define CONFIG_PCI_SCAN_SHOW		/* show pci devices on startup */
 
 /* PCI1 host bridge */
@@ -285,10 +273,6 @@
 /*
  * Command line configuration.
  */
-#define CONFIG_CMD_DATE
-#define CONFIG_CMD_DTT
-#define CONFIG_CMD_EEPROM
-#define CONFIG_CMD_JFFS2
 #define CONFIG_CMD_REGINFO
 
 #if defined(CONFIG_PCI)
@@ -482,8 +466,6 @@
 #define CONFIG_LOADADDR		400000
 
 #undef  CONFIG_BOOTARGS		/* the boot command will set bootargs */
-
-#define CONFIG_BAUDRATE		115200
 
 #define CONFIG_PREBOOT	"echo;"	\
 	"echo Type \\\"run flash_nfs\\\" to mount root filesystem over NFS;" \

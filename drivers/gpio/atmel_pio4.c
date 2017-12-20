@@ -10,7 +10,6 @@
 #include <clk.h>
 #include <dm.h>
 #include <fdtdec.h>
-#include <dm/root.h>
 #include <asm/arch/hardware.h>
 #include <asm/gpio.h>
 #include <mach/gpio.h>
@@ -276,7 +275,7 @@ static const struct dm_gpio_ops atmel_pio4_ops = {
 
 static int atmel_pio4_bind(struct udevice *dev)
 {
-	return dm_scan_fdt_node(dev, gd->fdt_blob, dev->of_offset, false);
+	return dm_scan_fdt_dev(dev);
 }
 
 static int atmel_pio4_probe(struct udevice *dev)
@@ -284,34 +283,22 @@ static int atmel_pio4_probe(struct udevice *dev)
 	struct atmel_pio4_platdata *plat = dev_get_platdata(dev);
 	struct gpio_dev_priv *uc_priv = dev_get_uclass_priv(dev);
 	struct atmel_pioctrl_data *pioctrl_data;
-	struct udevice *dev_clk;
 	struct clk clk;
 	fdt_addr_t addr_base;
 	u32 nbanks;
-	int periph;
 	int ret;
 
 	ret = clk_get_by_index(dev, 0, &clk);
 	if (ret)
 		return ret;
 
-	periph = fdtdec_get_uint(gd->fdt_blob, clk.dev->of_offset, "reg", -1);
-	if (periph < 0)
-		return -EINVAL;
-
-	dev_clk = dev_get_parent(clk.dev);
-	ret = clk_request(dev_clk, &clk);
-	if (ret)
-		return ret;
-
-	clk.id = periph;
 	ret = clk_enable(&clk);
 	if (ret)
 		return ret;
 
 	clk_free(&clk);
 
-	addr_base = dev_get_addr(dev);
+	addr_base = devfdt_get_addr(dev);
 	if (addr_base == FDT_ADDR_T_NONE)
 		return -EINVAL;
 
@@ -320,7 +307,8 @@ static int atmel_pio4_probe(struct udevice *dev)
 	pioctrl_data = (struct atmel_pioctrl_data *)dev_get_driver_data(dev);
 	nbanks = pioctrl_data->nbanks;
 
-	uc_priv->bank_name = fdt_get_name(gd->fdt_blob, dev->of_offset, NULL);
+	uc_priv->bank_name = fdt_get_name(gd->fdt_blob, dev_of_offset(dev),
+					  NULL);
 	uc_priv->gpio_count = nbanks * ATMEL_PIO_NPINS_PER_BANK;
 
 	return 0;

@@ -15,8 +15,6 @@
 
 #include "siemens-am33x-common.h"
 
-#define CONFIG_DISPLAY_CPUINFO
-#define CONFIG_SYS_MPUCLK	300
 #define DDR_PLL_FREQ	303
 #undef CONFIG_SPL_AM33XX_ENABLE_RTC32K_OSC
 
@@ -35,10 +33,6 @@
 	"led4=60,0,1\0" \
 	"led5=63,0,1\0"
 
-#undef CONFIG_DOS_PARTITION
-
-#define CONFIG_BOARD_LATE_INIT
-
  /* Physical Memory Map */
 #define CONFIG_MAX_RAM_BANK_SIZE	(1024 << 20)	/* 1GB */
 
@@ -49,20 +43,11 @@
 #define EEPROM_ADDR_DDR3 0x90
 #define EEPROM_ADDR_CHIP 0x120
 
-#define CONFIG_SYS_U_BOOT_MAX_SIZE_SECTORS	0x300
-
-#undef CONFIG_SPL_NET_SUPPORT
-#undef CONFIG_SPL_NET_VCI_STRING
-#undef CONFIG_SPL_ETH_SUPPORT
-
 #undef CONFIG_MII
 #undef CONFIG_PHY_GIGE
 #define CONFIG_PHY_SMSC
 
 #define CONFIG_FACTORYSET
-
-/* Watchdog */
-#define CONFIG_OMAP_WATCHDOG
 
 /* Define own nand partitions */
 #define CONFIG_ENV_OFFSET_REDUND	0x2E0000

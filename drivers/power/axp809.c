@@ -143,7 +143,7 @@ int axp_set_aldo(int aldo_num, unsigned int mvolt)
 	if (aldo_num == 3)
 		return pmic_bus_setbits(AXP809_OUTPUT_CTRL2,
 					AXP809_OUTPUT_CTRL2_ALDO3_EN);
-	return pmic_bus_clrbits(AXP809_OUTPUT_CTRL1,
+	return pmic_bus_setbits(AXP809_OUTPUT_CTRL1,
 				AXP809_OUTPUT_CTRL1_ALDO1_EN << (aldo_num - 1));
 }
 
@@ -217,13 +217,7 @@ int axp_set_sw(bool on)
 
 int axp_init(void)
 {
-	int ret;
-
-	ret = pmic_bus_init();
-	if (ret)
-		return ret;
-
-	return 0;
+	return pmic_bus_init();
 }
 
 int do_poweroff(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])

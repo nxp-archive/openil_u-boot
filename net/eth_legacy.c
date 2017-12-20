@@ -11,7 +11,7 @@
 #include <environment.h>
 #include <net.h>
 #include <phy.h>
-#include <asm/errno.h>
+#include <linux/errno.h>
 #include "eth_internal.h"
 
 DECLARE_GLOBAL_DATA_PTR;
@@ -118,9 +118,10 @@ static int on_ethaddr(const char *name, const char *value, enum env_op op,
 			case env_op_create:
 			case env_op_overwrite:
 				eth_parse_enetaddr(value, dev->enetaddr);
+				eth_write_hwaddr(dev, "eth", dev->index);
 				break;
 			case env_op_delete:
-				memset(dev->enetaddr, 0, 6);
+				memset(dev->enetaddr, 0, ARP_HLEN);
 			}
 		}
 		dev = dev->next;
@@ -133,14 +134,14 @@ U_BOOT_ENV_CALLBACK(ethaddr, on_ethaddr);
 int eth_write_hwaddr(struct eth_device *dev, const char *base_name,
 		   int eth_number)
 {
-	unsigned char env_enetaddr[6];
+	unsigned char env_enetaddr[ARP_HLEN];
 	int ret = 0;
 
 	eth_getenv_enetaddr_by_index(base_name, eth_number, env_enetaddr);
 
 	if (!is_zero_ethaddr(env_enetaddr)) {
 		if (!is_zero_ethaddr(dev->enetaddr) &&
-		    memcmp(dev->enetaddr, env_enetaddr, 6)) {
+		    memcmp(dev->enetaddr, env_enetaddr, ARP_HLEN)) {
 			printf("\nWarning: %s MAC addresses don't match:\n",
 			       dev->name);
 			printf("Address in SROM is         %pM\n",
@@ -149,7 +150,7 @@ int eth_write_hwaddr(struct eth_device *dev, const char *base_name,
 			       env_enetaddr);
 		}
 
-		memcpy(dev->enetaddr, env_enetaddr, 6);
+		memcpy(dev->enetaddr, env_enetaddr, ARP_HLEN);
 	} else if (is_valid_ethaddr(dev->enetaddr)) {
 		eth_setenv_enetaddr_by_index(base_name, eth_number,
 					     dev->enetaddr);
@@ -298,7 +299,7 @@ int eth_initialize(void)
  */
 int eth_mcast_join(struct in_addr mcast_ip, int join)
 {
-	u8 mcast_mac[6];
+	u8 mcast_mac[ARP_HLEN];
 	if (!eth_current || !eth_current->mcast)
 		return -1;
 	mcast_mac[5] = htonl(mcast_ip.s_addr) & 0xff;

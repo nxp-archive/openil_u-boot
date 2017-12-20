@@ -33,6 +33,7 @@ int checkcpu(void)
 	u32 pvr = get_pvr();
 	u32 spridr;
 	char buf[32];
+	int ret;
 	int i;
 
 	const struct cpu_type {
@@ -60,6 +61,10 @@ int checkcpu(void)
 	};
 
 	immr = (immap_t *)CONFIG_SYS_IMMR;
+
+	ret = prt_83xx_rsr();
+	if (ret)
+		return ret;
 
 	puts("CPU:   ");
 
@@ -173,11 +178,7 @@ do_reset (cmd_tbl_t * cmdtp, int flag, int argc, char * const argv[])
 
 unsigned long get_tbclk(void)
 {
-	ulong tbclk;
-
-	tbclk = (gd->bus_clk + 3L) / 4L;
-
-	return tbclk;
+	return (gd->bus_clk + 3L) / 4L;
 }
 
 

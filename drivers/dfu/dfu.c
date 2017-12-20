@@ -35,7 +35,11 @@ static struct hash_algo *dfu_hash_algo;
  */
 __weak bool dfu_usb_get_reset(void)
 {
+#ifdef CONFIG_SPL_DFU_NO_RESET
+	return false;
+#else
 	return true;
+#endif
 }
 
 static int dfu_find_alt_num(const char *s)
@@ -482,7 +486,7 @@ int dfu_config_entities(char *env, char *interface, char *devstr)
 
 const char *dfu_get_dev_type(enum dfu_device_type t)
 {
-	const char *dev_t[] = {NULL, "eMMC", "OneNAND", "NAND", "RAM" };
+	const char *dev_t[] = {NULL, "eMMC", "OneNAND", "NAND", "RAM", "SF" };
 	return dev_t[t];
 }
 

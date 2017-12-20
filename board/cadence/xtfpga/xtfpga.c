@@ -7,7 +7,7 @@
 
 #include <common.h>
 #include <command.h>
-#include <dm/platdata.h>
+#include <dm.h>
 #include <dm/platform_data/net_ethoc.h>
 #include <linux/ctype.h>
 #include <linux/string.h>
@@ -48,10 +48,12 @@ int checkboard(void)
 	return 0;
 }
 
-void dram_init_banksize(void)
+int dram_init_banksize(void)
 {
 	gd->bd->bi_memstart = PHYSADDR(CONFIG_SYS_SDRAM_BASE);
 	gd->bd->bi_memsize = CONFIG_SYS_SDRAM_SIZE;
+
+	return 0;
 }
 
 int board_postclk_init(void)

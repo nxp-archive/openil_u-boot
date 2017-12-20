@@ -110,10 +110,18 @@ DECLARE_GLOBAL_DATA_PTR;
 
 /* default values for mtdids and mtdparts variables */
 #if !defined(MTDIDS_DEFAULT)
+#ifdef CONFIG_MTDIDS_DEFAULT
+#define MTDIDS_DEFAULT CONFIG_MTDIDS_DEFAULT
+#else
 #define MTDIDS_DEFAULT NULL
 #endif
+#endif
 #if !defined(MTDPARTS_DEFAULT)
+#ifdef CONFIG_MTDPARTS_DEFAULT
+#define MTDPARTS_DEFAULT CONFIG_MTDPARTS_DEFAULT
+#else
 #define MTDPARTS_DEFAULT NULL
+#endif
 #endif
 #if defined(CONFIG_SYS_MTDPARTS_RUNTIME)
 extern void board_mtdparts_default(const char **mtdids, const char **mtdparts);
@@ -1548,7 +1556,7 @@ static int parse_mtdparts(const char *const mtdparts)
 	int err = 1;
 	char tmp_parts[MTDPARTS_MAXLEN];
 
-	debug("\n---parse_mtdparts---\nmtdparts = %s\n\n", p);
+	debug("\n---parse_mtdparts---\nmtdparts = %s\n\n", mtdparts);
 
 	/* delete all devices and partitions */
 	if (mtd_devices_init() != 0) {

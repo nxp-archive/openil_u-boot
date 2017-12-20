@@ -11,11 +11,9 @@
 
 #include <common.h>
 #include <fuse.h>
-#include <asm/errno.h>
+#include <linux/errno.h>
 #include <asm/io.h>
-#ifndef CONFIG_MPC512X
 #include <asm/arch/imx-regs.h>
-#endif
 #if defined(CONFIG_MX51) || defined(CONFIG_MX53)
 #include <asm/arch/clock.h>
 #endif

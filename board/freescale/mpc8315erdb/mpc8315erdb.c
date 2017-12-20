@@ -194,7 +194,7 @@ int ft_board_setup(void *blob, bd_t *bd)
 #ifdef CONFIG_PCI
 	ft_pci_setup(blob, bd);
 #endif
-	fdt_fixup_dr_usb(blob, bd);
+	fsl_fdt_fixup_dr_usb(blob, bd);
 	fdt_tsec1_fixup(blob, bd);
 
 	return 0;
@@ -221,8 +221,8 @@ void board_init_f(ulong bootflag)
 	NS16550_init((NS16550_t)(CONFIG_SYS_IMMR + 0x4500),
 		     CONFIG_SYS_NS16550_CLK / 16 / CONFIG_BAUDRATE);
 	puts("NAND boot... ");
-	init_timebase();
-	initdram(0);
+	timer_init();
+	dram_init();
 	relocate_code(CONFIG_SYS_NAND_U_BOOT_RELOC + 0x10000, (gd_t *)gd,
 		      CONFIG_SYS_NAND_U_BOOT_RELOC);
 }

@@ -84,12 +84,14 @@ static void memac_set_interface_mode(struct fsl_enet_mac *mac,
 		if_mode |= IF_MODE_GMII;
 		break;
 	case PHY_INTERFACE_MODE_RGMII:
+	case PHY_INTERFACE_MODE_RGMII_TXID:
 		if_mode |= (IF_MODE_GMII | IF_MODE_RG);
 		break;
 	case PHY_INTERFACE_MODE_RMII:
 		if_mode |= (IF_MODE_GMII | IF_MODE_RM);
 		break;
 	case PHY_INTERFACE_MODE_SGMII:
+	case PHY_INTERFACE_MODE_SGMII_2500:
 	case PHY_INTERFACE_MODE_QSGMII:
 		if_mode &= ~IF_MODE_MASK;
 		if_mode |= (IF_MODE_GMII);
@@ -105,7 +107,8 @@ static void memac_set_interface_mode(struct fsl_enet_mac *mac,
 	if (type != PHY_INTERFACE_MODE_XGMII)
 		if_mode |= IF_MODE_EN_AUTO;
 
-	if (type == PHY_INTERFACE_MODE_RGMII) {
+	if (type == PHY_INTERFACE_MODE_RGMII ||
+	    type == PHY_INTERFACE_MODE_RGMII_TXID) {
 		if_mode &= ~IF_MODE_EN_AUTO;
 		if_mode &= ~IF_MODE_SETSP_MASK;
 		switch (speed) {

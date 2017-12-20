@@ -82,22 +82,24 @@ if __name__ != "__main__":
 # Run our meagre tests
 elif options.test:
     import doctest
+    import func_test
 
     sys.argv = [sys.argv[0]]
-    suite = unittest.TestLoader().loadTestsFromTestCase(test.TestPatch)
     result = unittest.TestResult()
-    suite.run(result)
+    for module in (test.TestPatch, func_test.TestFunctional):
+        suite = unittest.TestLoader().loadTestsFromTestCase(module)
+        suite.run(result)
 
     for module in ['gitutil', 'settings']:
         suite = doctest.DocTestSuite(module)
         suite.run(result)
 
     # TODO: Surely we can just 'print' result?
-    print result
+    print(result)
     for test, err in result.errors:
-        print err
+        print(err)
     for test, err in result.failures:
-        print err
+        print(err)
 
 # Called from git with a patch filename as argument
 # Printout a list of additional CC recipients for this patch
@@ -110,7 +112,7 @@ elif options.cc_cmd:
             for cc in match.group(2).split(', '):
                 cc = cc.strip()
                 if cc:
-                    print cc
+                    print(cc)
     fd.close()
 
 elif options.full_help:
@@ -141,8 +143,8 @@ else:
                 series)
 
     # Fix up the patch files to our liking, and insert the cover letter
-    series = patchstream.FixPatches(series, args)
-    if series and cover_fname and series.get('cover'):
+    patchstream.FixPatches(series, args)
+    if cover_fname and series.get('cover'):
         patchstream.InsertCoverLetter(cover_fname, series, options.count)
 
     # Do a few checks on the series
@@ -166,12 +168,12 @@ else:
                 options.dry_run, not options.ignore_bad_tags, cc_file,
                 in_reply_to=options.in_reply_to, thread=options.thread)
     else:
-        print col.Color(col.RED, "Not sending emails due to errors/warnings")
+        print(col.Color(col.RED, "Not sending emails due to errors/warnings"))
 
     # For a dry run, just show our actions as a sanity check
     if options.dry_run:
         series.ShowActions(args, cmd, options.process_tags)
         if not its_a_go:
-            print col.Color(col.RED, "Email would not be sent")
+            print(col.Color(col.RED, "Email would not be sent"))
 
     os.remove(cc_file)

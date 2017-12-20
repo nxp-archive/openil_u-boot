@@ -10,9 +10,6 @@
 #include <config_distro_defaults.h>
 
 #define CONFIG_SYS_DCACHE_OFF
-#define CONFIG_SYS_THUMB_BUILD
-
-#define CONFIG_SYS_NO_FLASH
 
 #define CONFIG_SYS_BOOTMAPSZ		(16 << 20)
 
@@ -29,8 +26,6 @@
 #define CONFIG_PL011_CLOCK		150000000
 #define CONFIG_PL01x_PORTS		{ (void *)(0xFFF36000) }
 #define CONFIG_CONS_INDEX		0
-
-#define CONFIG_BAUDRATE			115200
 
 #define CONFIG_BOOTCOUNT_LIMIT
 #define CONFIG_SYS_BOOTCOUNT_SINGLEWORD

@@ -19,9 +19,6 @@
 /* High Level Configuration Options */
 #define CONFIG_MX31			/* This is a mx31 */
 
-#define CONFIG_DISPLAY_CPUINFO
-#define CONFIG_DISPLAY_BOARDINFO
-
 #define CONFIG_CMDLINE_TAG			/* enable passing of ATAGs */
 #define CONFIG_SETUP_MEMORY_TAGS
 #define CONFIG_INITRD_TAG
@@ -31,9 +28,6 @@
 #define CONFIG_SPL_TARGET	"u-boot-with-spl.bin"
 #define CONFIG_SPL_LDSCRIPT	"arch/$(ARCH)/cpu/u-boot-spl.lds"
 #define CONFIG_SPL_MAX_SIZE	2048
-#define CONFIG_SPL_NAND_SUPPORT
-#define CONFIG_SPL_LIBGENERIC_SUPPORT
-#define CONFIG_SPL_SERIAL_SUPPORT
 
 #define CONFIG_SPL_TEXT_BASE	0x87dc0000
 #define CONFIG_SYS_TEXT_BASE	0x87e00000
@@ -74,15 +68,11 @@
 /* allow to overwrite serial and ethaddr */
 #define CONFIG_ENV_OVERWRITE
 #define CONFIG_CONS_INDEX		1
-#define CONFIG_BAUDRATE			115200
 
 /***********************************************************
  * Command definition
  ***********************************************************/
-#define CONFIG_CMD_DATE
 #define CONFIG_CMD_NAND
-
-#define CONFIG_BOARD_LATE_INIT
 
 
 #define	CONFIG_EXTRA_ENV_SETTINGS					\
@@ -125,7 +115,6 @@
 #define CONFIG_NR_DRAM_BANKS	1
 #define PHYS_SDRAM_1		CSD0_BASE
 #define PHYS_SDRAM_1_SIZE	(128 * 1024 * 1024)
-#define CONFIG_BOARD_EARLY_INIT_F
 
 #define CONFIG_SYS_SDRAM_BASE		PHYS_SDRAM_1
 #define CONFIG_SYS_INIT_RAM_ADDR	IRAM_BASE_ADDR
@@ -135,12 +124,9 @@
 #define CONFIG_SYS_INIT_SP_ADDR	(CONFIG_SYS_INIT_RAM_ADDR + \
 						CONFIG_SYS_INIT_RAM_SIZE)
 
-/*-----------------------------------------------------------------------
- * FLASH and environment organization
+/*
+ * environment organization
  */
-/* No NOR flash present */
-#define CONFIG_SYS_NO_FLASH
-
 #define CONFIG_ENV_IS_IN_NAND
 #define CONFIG_ENV_OFFSET		0x40000
 #define CONFIG_ENV_OFFSET_REDUND	0x60000

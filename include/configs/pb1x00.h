@@ -15,8 +15,6 @@
 #define CONFIG_PB1X00		1
 #define CONFIG_SOC_AU1X00	1  /* alchemy series cpu */
 
-#define CONFIG_DISPLAY_BOARDINFO
-
 #ifdef CONFIG_PB1000
 #define CONFIG_SOC_AU1000	1
 #else
@@ -30,9 +28,6 @@
 #endif
 #endif
 #endif
-
-
-#define CONFIG_BAUDRATE		115200
 
 #define	CONFIG_TIMESTAMP		/* Print image info with timestamp */
 #undef	CONFIG_BOOTARGS
@@ -106,7 +101,6 @@
 /*---USB -------------------------------------------*/
 #if 0
 #define CONFIG_USB_OHCI
-#define CONFIG_DOS_PARTITION
 #endif
 
 /*---ATA PCMCIA ------------------------------------*/
@@ -116,7 +110,6 @@
 #define CONFIG_PCMCIA_SLOT_A
 
 #define CONFIG_ATAPI 1
-#define CONFIG_MAC_PARTITION 1
 
 /* We run CF in "true ide" mode or a harddrive via pcmcia */
 #define CONFIG_IDE_PCMCIA 1
@@ -154,8 +147,5 @@
 /*
  * Command line configuration.
  */
-
-#undef CONFIG_CMD_IDE
-#undef CONFIG_CMD_BEDBUG
 
 #endif	/* __CONFIG_H */

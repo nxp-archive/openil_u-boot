@@ -18,8 +18,6 @@
 #ifndef __CONFIG_H
 #define __CONFIG_H
 
-#define CONFIG_DISPLAY_BOARDINFO
-
 /*
  * Top level Makefile configuration choices
  */
@@ -39,7 +37,6 @@
 
 #define CONFIG_MISC_INIT_R
 
-#define CONFIG_PCI
 /* Don't enable PCI2 on vme834x - it doesn't exist physically. */
 #undef CONFIG_MPC83XX_PCI2		/* support for 2nd PCI controller */
 
@@ -269,7 +266,6 @@
 
 #ifndef VME_CADDY2
 #endif
-#define CONFIG_PCI_PNP		/* do pci plug-and-play */
 
 #undef CONFIG_EEPRO100
 #undef CONFIG_TULIP
@@ -327,7 +323,6 @@
 #define CONFIG_ENV_SIZE_REDUND	(CONFIG_ENV_SIZE)
 
 #else
-	#define CONFIG_SYS_NO_FLASH		/* Flash is not usable now */
 	#define CONFIG_ENV_IS_NOWHERE		/* Store ENV in memory only */
 	#define CONFIG_ENV_ADDR		(CONFIG_SYS_MONITOR_BASE - 0x1000)
 	#define CONFIG_ENV_SIZE		0x2000
@@ -347,7 +342,6 @@
 /*
  * Command line configuration.
  */
-#define CONFIG_CMD_DATE
 #define CONFIG_SYS_RTC_BUS_NUM  0x01
 #define CONFIG_SYS_I2C_RTC_ADDR	0x32
 #define CONFIG_RTC_RX8025
@@ -355,10 +349,6 @@
 
 #if defined(CONFIG_PCI)
     #define CONFIG_CMD_PCI
-#endif
-
-#if defined(CONFIG_SYS_RAMBOOT)
-    #undef CONFIG_CMD_ENV
 #endif
 
 /* Pass Ethernet MAC to VxWorks */
@@ -543,8 +533,6 @@
 #define CONFIG_LOADADDR		800000	/* def location for tftp and bootm */
 
 #undef  CONFIG_BOOTARGS			/* boot command will set bootargs */
-
-#define CONFIG_BAUDRATE	 9600
 
 #define	CONFIG_EXTRA_ENV_SETTINGS					\
 	"netdev=eth0\0"							\

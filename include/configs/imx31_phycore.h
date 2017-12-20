@@ -18,9 +18,6 @@
 #define CONFIG_MX31			/* This is a mx31 */
 #define CONFIG_MX31_CLK32	32000
 
-#define CONFIG_DISPLAY_CPUINFO
-#define CONFIG_DISPLAY_BOARDINFO
-
 #define CONFIG_CMDLINE_TAG		/* enable passing of ATAGs */
 #define CONFIG_SETUP_MEMORY_TAGS
 #define CONFIG_INITRD_TAG
@@ -47,12 +44,10 @@
 /* allow to overwrite serial and ethaddr */
 #define CONFIG_ENV_OVERWRITE
 #define CONFIG_CONS_INDEX	1
-#define CONFIG_BAUDRATE		115200
 
 /***********************************************************
  * Command definition
  ***********************************************************/
-#define CONFIG_CMD_EEPROM
 
 
 #define MTDPARTS_DEFAULT	"mtdparts=physmap-flash.0:128k(uboot)ro," \
@@ -121,7 +116,6 @@
 #define CONFIG_NR_DRAM_BANKS		1
 #define PHYS_SDRAM_1			0x80000000
 #define PHYS_SDRAM_1_SIZE		(128 * 1024 * 1024)
-#define CONFIG_BOARD_EARLY_INIT_F
 #define CONFIG_SYS_TEXT_BASE		0xA0000000
 
 #define CONFIG_SYS_SDRAM_BASE		PHYS_SDRAM_1
@@ -171,9 +165,7 @@
 #define CONFIG_JFFS2_DEV	"nor0"
 
 /* EET platform additions */
-#ifdef CONFIG_IMX31_PHYCORE_EET
-#define CONFIG_BOARD_LATE_INIT
-
+#ifdef CONFIG_TARGET_IMX31_PHYCORE_EET
 #define CONFIG_MXC_GPIO
 
 #define CONFIG_HARD_SPI
@@ -181,15 +173,9 @@
 
 #define CONFIG_S6E63D6
 
-#define CONFIG_VIDEO
-#define CONFIG_CFB_CONSOLE
 #define CONFIG_VIDEO_MX3
 #define CONFIG_VIDEO_LOGO
-#define CONFIG_VIDEO_SW_CURSOR
-#define CONFIG_VGA_AS_SINGLE_DEVICE
-#define CONFIG_SYS_CONSOLE_IS_IN_ENV
 #define CONFIG_SPLASH_SCREEN
-#define CONFIG_CMD_BMP
 #define CONFIG_BMP_16BPP
 #endif
 

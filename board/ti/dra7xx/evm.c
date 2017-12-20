@@ -36,10 +36,11 @@
 
 #define board_is_dra74x_evm()		board_ti_is("5777xCPU")
 #define board_is_dra72x_evm()		board_ti_is("DRA72x-T")
-#define board_is_dra74x_revh_or_later() board_is_dra74x_evm() &&	\
-				(strncmp("H", board_ti_get_rev(), 1) <= 0)
-#define board_is_dra72x_revc_or_later() board_is_dra72x_evm() &&	\
-				(strncmp("C", board_ti_get_rev(), 1) <= 0)
+#define board_is_dra71x_evm()		board_ti_is("DRA79x,D")
+#define board_is_dra74x_revh_or_later() (board_is_dra74x_evm() &&	\
+				(strncmp("H", board_ti_get_rev(), 1) <= 0))
+#define board_is_dra72x_revc_or_later() (board_is_dra72x_evm() &&	\
+				(strncmp("C", board_ti_get_rev(), 1) <= 0))
 #define board_ti_get_emif_size()	board_ti_get_emif1_size() +	\
 					board_ti_get_emif2_size()
 
@@ -308,35 +309,47 @@ void emif_get_dmm_regs(const struct dmm_lisa_map_regs **dmm_lisa_regs)
 }
 
 struct vcores_data dra752_volts = {
-	.mpu.value	= VDD_MPU_DRA7,
-	.mpu.efuse.reg	= STD_FUSE_OPP_VMIN_MPU,
+	.mpu.value[OPP_NOM]	= VDD_MPU_DRA7_NOM,
+	.mpu.efuse.reg[OPP_NOM]	= STD_FUSE_OPP_VMIN_MPU_NOM,
 	.mpu.efuse.reg_bits	= DRA752_EFUSE_REGBITS,
 	.mpu.addr	= TPS659038_REG_ADDR_SMPS12,
 	.mpu.pmic	= &tps659038,
 	.mpu.abb_tx_done_mask = OMAP_ABB_MPU_TXDONE_MASK,
 
-	.eve.value	= VDD_EVE_DRA7,
-	.eve.efuse.reg	= STD_FUSE_OPP_VMIN_DSPEVE,
+	.eve.value[OPP_NOM]	= VDD_EVE_DRA7_NOM,
+	.eve.value[OPP_OD]	= VDD_EVE_DRA7_OD,
+	.eve.value[OPP_HIGH]	= VDD_EVE_DRA7_HIGH,
+	.eve.efuse.reg[OPP_NOM]	= STD_FUSE_OPP_VMIN_DSPEVE_NOM,
+	.eve.efuse.reg[OPP_OD]	= STD_FUSE_OPP_VMIN_DSPEVE_OD,
+	.eve.efuse.reg[OPP_HIGH]	= STD_FUSE_OPP_VMIN_DSPEVE_HIGH,
 	.eve.efuse.reg_bits	= DRA752_EFUSE_REGBITS,
 	.eve.addr	= TPS659038_REG_ADDR_SMPS45,
 	.eve.pmic	= &tps659038,
 	.eve.abb_tx_done_mask = OMAP_ABB_EVE_TXDONE_MASK,
 
-	.gpu.value	= VDD_GPU_DRA7,
-	.gpu.efuse.reg	= STD_FUSE_OPP_VMIN_GPU,
+	.gpu.value[OPP_NOM]	= VDD_GPU_DRA7_NOM,
+	.gpu.value[OPP_OD]	= VDD_GPU_DRA7_OD,
+	.gpu.value[OPP_HIGH]	= VDD_GPU_DRA7_HIGH,
+	.gpu.efuse.reg[OPP_NOM]	= STD_FUSE_OPP_VMIN_GPU_NOM,
+	.gpu.efuse.reg[OPP_OD]	= STD_FUSE_OPP_VMIN_GPU_OD,
+	.gpu.efuse.reg[OPP_HIGH]	= STD_FUSE_OPP_VMIN_GPU_HIGH,
 	.gpu.efuse.reg_bits	= DRA752_EFUSE_REGBITS,
 	.gpu.addr	= TPS659038_REG_ADDR_SMPS6,
 	.gpu.pmic	= &tps659038,
 	.gpu.abb_tx_done_mask = OMAP_ABB_GPU_TXDONE_MASK,
 
-	.core.value	= VDD_CORE_DRA7,
-	.core.efuse.reg	= STD_FUSE_OPP_VMIN_CORE,
+	.core.value[OPP_NOM]	= VDD_CORE_DRA7_NOM,
+	.core.efuse.reg[OPP_NOM]	= STD_FUSE_OPP_VMIN_CORE_NOM,
 	.core.efuse.reg_bits = DRA752_EFUSE_REGBITS,
 	.core.addr	= TPS659038_REG_ADDR_SMPS7,
 	.core.pmic	= &tps659038,
 
-	.iva.value	= VDD_IVA_DRA7,
-	.iva.efuse.reg	= STD_FUSE_OPP_VMIN_IVA,
+	.iva.value[OPP_NOM]	= VDD_IVA_DRA7_NOM,
+	.iva.value[OPP_OD]	= VDD_IVA_DRA7_OD,
+	.iva.value[OPP_HIGH]	= VDD_IVA_DRA7_HIGH,
+	.iva.efuse.reg[OPP_NOM]	= STD_FUSE_OPP_VMIN_IVA_NOM,
+	.iva.efuse.reg[OPP_OD]	= STD_FUSE_OPP_VMIN_IVA_OD,
+	.iva.efuse.reg[OPP_HIGH]	= STD_FUSE_OPP_VMIN_IVA_HIGH,
 	.iva.efuse.reg_bits	= DRA752_EFUSE_REGBITS,
 	.iva.addr	= TPS659038_REG_ADDR_SMPS8,
 	.iva.pmic	= &tps659038,
@@ -344,15 +357,15 @@ struct vcores_data dra752_volts = {
 };
 
 struct vcores_data dra722_volts = {
-	.mpu.value	= VDD_MPU_DRA7,
-	.mpu.efuse.reg	= STD_FUSE_OPP_VMIN_MPU,
+	.mpu.value[OPP_NOM]	= VDD_MPU_DRA7_NOM,
+	.mpu.efuse.reg[OPP_NOM]	= STD_FUSE_OPP_VMIN_MPU_NOM,
 	.mpu.efuse.reg_bits = DRA752_EFUSE_REGBITS,
 	.mpu.addr	= TPS65917_REG_ADDR_SMPS1,
 	.mpu.pmic	= &tps659038,
 	.mpu.abb_tx_done_mask = OMAP_ABB_MPU_TXDONE_MASK,
 
-	.core.value	= VDD_CORE_DRA7,
-	.core.efuse.reg	= STD_FUSE_OPP_VMIN_CORE,
+	.core.value[OPP_NOM]	= VDD_CORE_DRA7_NOM,
+	.core.efuse.reg[OPP_NOM]	= STD_FUSE_OPP_VMIN_CORE_NOM,
 	.core.efuse.reg_bits = DRA752_EFUSE_REGBITS,
 	.core.addr	= TPS65917_REG_ADDR_SMPS2,
 	.core.pmic	= &tps659038,
@@ -361,27 +374,137 @@ struct vcores_data dra722_volts = {
 	 * The DSPEVE, GPU and IVA rails are usually grouped on DRA72x
 	 * designs and powered by TPS65917 SMPS3, as on the J6Eco EVM.
 	 */
-	.gpu.value	= VDD_GPU_DRA7,
-	.gpu.efuse.reg	= STD_FUSE_OPP_VMIN_GPU,
+	.gpu.value[OPP_NOM]	= VDD_GPU_DRA7_NOM,
+	.gpu.value[OPP_OD]	= VDD_GPU_DRA7_OD,
+	.gpu.value[OPP_HIGH]	= VDD_GPU_DRA7_HIGH,
+	.gpu.efuse.reg[OPP_NOM]	= STD_FUSE_OPP_VMIN_GPU_NOM,
+	.gpu.efuse.reg[OPP_OD]	= STD_FUSE_OPP_VMIN_GPU_OD,
+	.gpu.efuse.reg[OPP_HIGH]	= STD_FUSE_OPP_VMIN_GPU_HIGH,
 	.gpu.efuse.reg_bits = DRA752_EFUSE_REGBITS,
 	.gpu.addr	= TPS65917_REG_ADDR_SMPS3,
 	.gpu.pmic	= &tps659038,
 	.gpu.abb_tx_done_mask = OMAP_ABB_GPU_TXDONE_MASK,
 
-	.eve.value	= VDD_EVE_DRA7,
-	.eve.efuse.reg	= STD_FUSE_OPP_VMIN_DSPEVE,
+	.eve.value[OPP_NOM]	= VDD_EVE_DRA7_NOM,
+	.eve.value[OPP_OD]	= VDD_EVE_DRA7_OD,
+	.eve.value[OPP_HIGH]	= VDD_EVE_DRA7_HIGH,
+	.eve.efuse.reg[OPP_NOM]	= STD_FUSE_OPP_VMIN_DSPEVE_NOM,
+	.eve.efuse.reg[OPP_OD]	= STD_FUSE_OPP_VMIN_DSPEVE_OD,
+	.eve.efuse.reg[OPP_HIGH]	= STD_FUSE_OPP_VMIN_DSPEVE_HIGH,
 	.eve.efuse.reg_bits = DRA752_EFUSE_REGBITS,
 	.eve.addr	= TPS65917_REG_ADDR_SMPS3,
 	.eve.pmic	= &tps659038,
 	.eve.abb_tx_done_mask = OMAP_ABB_EVE_TXDONE_MASK,
 
-	.iva.value	= VDD_IVA_DRA7,
-	.iva.efuse.reg	= STD_FUSE_OPP_VMIN_IVA,
+	.iva.value[OPP_NOM]	= VDD_IVA_DRA7_NOM,
+	.iva.value[OPP_OD]	= VDD_IVA_DRA7_OD,
+	.iva.value[OPP_HIGH]	= VDD_IVA_DRA7_HIGH,
+	.iva.efuse.reg[OPP_NOM]	= STD_FUSE_OPP_VMIN_IVA_NOM,
+	.iva.efuse.reg[OPP_OD]	= STD_FUSE_OPP_VMIN_IVA_OD,
+	.iva.efuse.reg[OPP_HIGH]	= STD_FUSE_OPP_VMIN_IVA_HIGH,
 	.iva.efuse.reg_bits = DRA752_EFUSE_REGBITS,
 	.iva.addr	= TPS65917_REG_ADDR_SMPS3,
 	.iva.pmic	= &tps659038,
 	.iva.abb_tx_done_mask = OMAP_ABB_IVA_TXDONE_MASK,
 };
+
+struct vcores_data dra718_volts = {
+	/*
+	 * In the case of dra71x GPU MPU and CORE
+	 * are all powered up by BUCK0 of LP873X PMIC
+	 */
+	.mpu.value[OPP_NOM]	= VDD_MPU_DRA7_NOM,
+	.mpu.efuse.reg[OPP_NOM]	= STD_FUSE_OPP_VMIN_MPU_NOM,
+	.mpu.efuse.reg_bits	= DRA752_EFUSE_REGBITS,
+	.mpu.addr	= LP873X_REG_ADDR_BUCK0,
+	.mpu.pmic	= &lp8733,
+	.mpu.abb_tx_done_mask = OMAP_ABB_MPU_TXDONE_MASK,
+
+	.core.value[OPP_NOM]		= VDD_CORE_DRA7_NOM,
+	.core.efuse.reg[OPP_NOM]	= STD_FUSE_OPP_VMIN_CORE_NOM,
+	.core.efuse.reg_bits = DRA752_EFUSE_REGBITS,
+	.core.addr	= LP873X_REG_ADDR_BUCK0,
+	.core.pmic	= &lp8733,
+
+	.gpu.value[OPP_NOM]	= VDD_GPU_DRA7_NOM,
+	.gpu.efuse.reg[OPP_NOM]	= STD_FUSE_OPP_VMIN_GPU_NOM,
+	.gpu.efuse.reg_bits = DRA752_EFUSE_REGBITS,
+	.gpu.addr	= LP873X_REG_ADDR_BUCK0,
+	.gpu.pmic	= &lp8733,
+	.gpu.abb_tx_done_mask = OMAP_ABB_GPU_TXDONE_MASK,
+
+	/*
+	 * The DSPEVE and IVA rails are grouped on DRA71x-evm
+	 * and are powered by BUCK1 of LP873X PMIC
+	 */
+	.eve.value[OPP_NOM]	= VDD_EVE_DRA7_NOM,
+	.eve.value[OPP_HIGH]	= VDD_EVE_DRA7_HIGH,
+	.eve.efuse.reg[OPP_NOM]	= STD_FUSE_OPP_VMIN_DSPEVE_NOM,
+	.eve.efuse.reg[OPP_HIGH] = STD_FUSE_OPP_VMIN_DSPEVE_HIGH,
+	.eve.efuse.reg_bits = DRA752_EFUSE_REGBITS,
+	.eve.addr	= LP873X_REG_ADDR_BUCK1,
+	.eve.pmic	= &lp8733,
+	.eve.abb_tx_done_mask = OMAP_ABB_EVE_TXDONE_MASK,
+
+	.iva.value[OPP_NOM]	= VDD_IVA_DRA7_NOM,
+	.iva.value[OPP_HIGH]	= VDD_IVA_DRA7_HIGH,
+	.iva.efuse.reg[OPP_NOM]	= STD_FUSE_OPP_VMIN_IVA_NOM,
+	.iva.efuse.reg[OPP_HIGH] = STD_FUSE_OPP_VMIN_IVA_HIGH,
+	.iva.efuse.reg_bits = DRA752_EFUSE_REGBITS,
+	.iva.addr	= LP873X_REG_ADDR_BUCK1,
+	.iva.pmic	= &lp8733,
+	.iva.abb_tx_done_mask = OMAP_ABB_IVA_TXDONE_MASK,
+};
+
+int get_voltrail_opp(int rail_offset)
+{
+	int opp;
+
+	switch (rail_offset) {
+	case VOLT_MPU:
+		opp = DRA7_MPU_OPP;
+		/* DRA71x supports only OPP_NOM for MPU */
+		if (board_is_dra71x_evm())
+			opp = OPP_NOM;
+		break;
+	case VOLT_CORE:
+		opp = DRA7_CORE_OPP;
+		/* DRA71x supports only OPP_NOM for CORE */
+		if (board_is_dra71x_evm())
+			opp = OPP_NOM;
+		break;
+	case VOLT_GPU:
+		opp = DRA7_GPU_OPP;
+		/* DRA71x supports only OPP_NOM for GPU */
+		if (board_is_dra71x_evm())
+			opp = OPP_NOM;
+		break;
+	case VOLT_EVE:
+		opp = DRA7_DSPEVE_OPP;
+		/*
+		 * DRA71x does not support OPP_OD for EVE.
+		 * If OPP_OD is selected by menuconfig, fallback
+		 * to OPP_NOM.
+		 */
+		if (board_is_dra71x_evm() && opp == OPP_OD)
+			opp = OPP_NOM;
+		break;
+	case VOLT_IVA:
+		opp = DRA7_IVA_OPP;
+		/*
+		 * DRA71x does not support OPP_OD for IVA.
+		 * If OPP_OD is selected by menuconfig, fallback
+		 * to OPP_NOM.
+		 */
+		if (board_is_dra71x_evm() && opp == OPP_OD)
+			opp = OPP_NOM;
+		break;
+	default:
+		opp = OPP_NOM;
+	}
+
+	return opp;
+}
 
 /**
  * @brief board_init
@@ -396,7 +519,7 @@ int board_init(void)
 	return 0;
 }
 
-void dram_init_banksize(void)
+int dram_init_banksize(void)
 {
 	u64 ram_size;
 
@@ -408,6 +531,8 @@ void dram_init_banksize(void)
 		gd->bd->bi_dram[1].start = 0x200000000;
 		gd->bd->bi_dram[1].size = ram_size - CONFIG_MAX_MEM_MAPPED;
 	}
+
+	return 0;
 }
 
 int board_late_init(void)
@@ -418,6 +543,8 @@ int board_late_init(void)
 	if (is_dra72x()) {
 		if (board_is_dra72x_revc_or_later())
 			name = "dra72x-revc";
+		else if (board_is_dra71x_evm())
+			name = "dra71x";
 		else
 			name = "dra72x";
 	} else {
@@ -426,7 +553,15 @@ int board_late_init(void)
 
 	set_board_info_env(name);
 
+	/*
+	 * Default FIT boot on HS devices. Non FIT images are not allowed
+	 * on HS devices.
+	 */
+	if (get_device_type() == HS_DEVICE)
+		setenv("boot_fit", "1");
+
 	omap_die_id_serial();
+	omap_set_fastboot_vars();
 #endif
 	return 0;
 }
@@ -458,6 +593,8 @@ void do_board_detect(void)
 		bname = "DRA74x EVM";
 	} else if (board_is_dra72x_evm()) {
 		bname = "DRA72x EVM";
+	} else if (board_is_dra71x_evm()) {
+		bname = "DRA71x EVM";
 	} else {
 		/* If EEPROM is not populated */
 		if (is_dra72x())
@@ -478,6 +615,8 @@ void vcores_init(void)
 		*omap_vcores = &dra752_volts;
 	} else if (board_is_dra72x_evm()) {
 		*omap_vcores = &dra722_volts;
+	} else if (board_is_dra71x_evm()) {
+		*omap_vcores = &dra718_volts;
 	} else {
 		/* If EEPROM is not populated */
 		if (is_dra72x())
@@ -506,7 +645,12 @@ void recalibrate_iodelay(void)
 	case DRA722_ES2_0:
 		pads = dra72x_core_padconf_array_common;
 		npads = ARRAY_SIZE(dra72x_core_padconf_array_common);
-		if (board_is_dra72x_revc_or_later()) {
+		if (board_is_dra71x_evm()) {
+			pads = dra71x_core_padconf_array;
+			npads = ARRAY_SIZE(dra71x_core_padconf_array);
+			iodelay = dra71_iodelay_cfg_array;
+			niodelays = ARRAY_SIZE(dra71_iodelay_cfg_array);
+		} else if (board_is_dra72x_revc_or_later()) {
 			delta_pads = dra72x_rgmii_padconf_array_revc;
 			delta_npads =
 				ARRAY_SIZE(dra72x_rgmii_padconf_array_revc);
@@ -559,7 +703,7 @@ err:
 }
 #endif
 
-#if !defined(CONFIG_SPL_BUILD) && defined(CONFIG_GENERIC_MMC)
+#if defined(CONFIG_MMC)
 int board_mmc_init(bd_t *bis)
 {
 	omap_mmc_init(0, 0, 0, -1, -1);
@@ -607,7 +751,7 @@ static struct ti_usb_phy_device usb_phy2_device = {
 	.index = 1,
 };
 
-int board_usb_init(int index, enum usb_init_type init)
+int omap_xhci_board_usb_init(int index, enum usb_init_type init)
 {
 	enable_usb_clocks(index);
 	switch (index) {
@@ -644,7 +788,7 @@ int board_usb_init(int index, enum usb_init_type init)
 	return 0;
 }
 
-int board_usb_cleanup(int index, enum usb_init_type init)
+int omap_xhci_board_usb_cleanup(int index, enum usb_init_type init)
 {
 	switch (index) {
 	case 0:
@@ -828,12 +972,21 @@ int ft_board_setup(void *blob, bd_t *bd)
 #ifdef CONFIG_SPL_LOAD_FIT
 int board_fit_config_name_match(const char *name)
 {
-	if (is_dra72x() && !strcmp(name, "dra72-evm"))
+	if (is_dra72x()) {
+		if (board_is_dra71x_evm()) {
+			if (!strcmp(name, "dra71-evm"))
+				return 0;
+		}else if(board_is_dra72x_revc_or_later()) {
+			if (!strcmp(name, "dra72-evm-revc"))
+				return 0;
+		} else if (!strcmp(name, "dra72-evm")) {
+			return 0;
+		}
+	} else if (!is_dra72x() && !strcmp(name, "dra7-evm")) {
 		return 0;
-	else if (!is_dra72x() && !strcmp(name, "dra7-evm"))
-		return 0;
-	else
-		return -1;
+	}
+
+	return -1;
 }
 #endif
 
@@ -842,4 +995,11 @@ void board_fit_image_post_process(void **p_image, size_t *p_size)
 {
 	secure_boot_verify_image(p_image, p_size);
 }
+
+void board_tee_image_process(ulong tee_image, size_t tee_size)
+{
+	secure_tee_install((u32)tee_image);
+}
+
+U_BOOT_FIT_LOADABLE_HANDLER(IH_TYPE_TEE, board_tee_image_process);
 #endif

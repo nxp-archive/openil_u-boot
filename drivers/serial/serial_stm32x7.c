@@ -6,6 +6,7 @@
  */
 
 #include <common.h>
+#include <clk.h>
 #include <dm.h>
 #include <asm/io.h>
 #include <serial.h>
@@ -19,7 +20,7 @@ static int stm32_serial_setbrg(struct udevice *dev, int baudrate)
 {
 	struct stm32x7_serial_platdata *plat = dev->platdata;
 	struct stm32_usart *const usart = plat->base;
-	u32  clock, int_div, frac_div, tmp;
+	u32  clock, int_div, mantissa, fraction, oversampling;
 
 	if (((u32)usart & STM32_BUS_MASK) == APB1_PERIPH_BASE)
 		clock = clock_get(CLOCK_APB1);
@@ -28,11 +29,20 @@ static int stm32_serial_setbrg(struct udevice *dev, int baudrate)
 	else
 		return -EINVAL;
 
-	int_div = (25 * clock) / (4 * baudrate);
-	tmp = ((int_div / 100) << USART_BRR_M_SHIFT) & USART_BRR_M_MASK;
-	frac_div = int_div - (100 * (tmp >> USART_BRR_M_SHIFT));
-	tmp |= (((frac_div * 16) + 50) / 100) & USART_BRR_F_MASK;
-	writel(tmp, &usart->brr);
+	int_div = DIV_ROUND_CLOSEST(clock, baudrate);
+
+	if (int_div < 16) {
+		oversampling = 8;
+		setbits_le32(&usart->cr1, USART_CR1_OVER8);
+	} else {
+		oversampling = 16;
+		clrbits_le32(&usart->cr1, USART_CR1_OVER8);
+	}
+
+	mantissa = (int_div / oversampling) << USART_BRR_M_SHIFT;
+	fraction = int_div % oversampling;
+
+	writel(mantissa | fraction, &usart->brr);
 
 	return 0;
 }
@@ -76,10 +86,51 @@ static int stm32_serial_probe(struct udevice *dev)
 {
 	struct stm32x7_serial_platdata *plat = dev->platdata;
 	struct stm32_usart *const usart = plat->base;
+
+#ifdef CONFIG_CLK
+	int ret;
+	struct clk clk;
+
+	ret = clk_get_by_index(dev, 0, &clk);
+	if (ret < 0)
+		return ret;
+
+	ret = clk_enable(&clk);
+	if (ret) {
+		dev_err(dev, "failed to enable clock\n");
+		return ret;
+	}
+#endif
+
+	/* Disable usart-> disable overrun-> enable usart */
+	clrbits_le32(&usart->cr1, USART_CR1_RE | USART_CR1_TE | USART_CR1_UE);
+	setbits_le32(&usart->cr3, USART_CR3_OVRDIS);
 	setbits_le32(&usart->cr1, USART_CR1_RE | USART_CR1_TE | USART_CR1_UE);
 
 	return 0;
 }
+
+#if CONFIG_IS_ENABLED(OF_CONTROL)
+static const struct udevice_id stm32_serial_id[] = {
+	{.compatible = "st,stm32f7-usart"},
+	{.compatible = "st,stm32f7-uart"},
+	{}
+};
+
+static int stm32_serial_ofdata_to_platdata(struct udevice *dev)
+{
+	struct stm32x7_serial_platdata *plat = dev_get_platdata(dev);
+	fdt_addr_t addr;
+
+	addr = devfdt_get_addr(dev);
+	if (addr == FDT_ADDR_T_NONE)
+		return -EINVAL;
+
+	plat->base = (struct stm32_usart *)addr;
+
+	return 0;
+}
+#endif
 
 static const struct dm_serial_ops stm32_serial_ops = {
 	.putc = stm32_serial_putc,
@@ -91,6 +142,9 @@ static const struct dm_serial_ops stm32_serial_ops = {
 U_BOOT_DRIVER(serial_stm32) = {
 	.name = "serial_stm32x7",
 	.id = UCLASS_SERIAL,
+	.of_match = of_match_ptr(stm32_serial_id),
+	.ofdata_to_platdata = of_match_ptr(stm32_serial_ofdata_to_platdata),
+	.platdata_auto_alloc_size = sizeof(struct stm32x7_serial_platdata),
 	.ops = &stm32_serial_ops,
 	.probe = stm32_serial_probe,
 	.flags = DM_FLAG_PRE_RELOC,

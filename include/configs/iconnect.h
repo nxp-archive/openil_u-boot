@@ -10,11 +10,6 @@
 #define _CONFIG_ICONNECT_H
 
 /*
- * Version number information
- */
-#define CONFIG_IDENT_STRING	" Iomega iConnect"
-
-/*
  * High level configuration options
  */
 #define CONFIG_FEROCEON_88FR131		/* CPU Core subversion */
@@ -30,15 +25,12 @@
  * Compression configuration
  */
 #define CONFIG_BZIP2
-#define CONFIG_LZMA
 #define CONFIG_LZO
 
 /*
  * Commands configuration
  */
-#define CONFIG_SYS_NO_FLASH		/* declare no flash (NOR/SPI) */
 #define CONFIG_SYS_MVFS
-#define CONFIG_CMD_ENV
 #define CONFIG_CMD_NAND
 
 /*
@@ -94,8 +86,6 @@
 /*
  * File system
  */
-#define CONFIG_CMD_JFFS2
-#define CONFIG_CMD_UBI
 #define CONFIG_CMD_UBIFS
 #define CONFIG_RBTREE
 #define CONFIG_MTD_DEVICE

@@ -1,10 +1,9 @@
 comment "FASTBOOT"
 
-config FASTBOOT
-	bool ""
+menuconfig FASTBOOT
+	bool "Fastboot support"
 
-menu "Fastboot support"
-	depends on FASTBOOT
+if FASTBOOT
 
 config USB_FUNCTION_FASTBOOT
 	bool "Enable USB fastboot gadget"
@@ -41,6 +40,14 @@ config FASTBOOT_BUF_SIZE
 	  downloads. This buffer should be as large as possible for a
 	  platform. Define this to the size available RAM for fastboot.
 
+config FASTBOOT_USB_DEV
+	int "USB controller number"
+	default 0
+	help
+	  Some boards have USB OTG controller other than 0. Define this
+	  option so it can be used in compiled environment (e.g. in
+	  CONFIG_BOOTCOMMAND).
+
 config FASTBOOT_FLASH
 	bool "Enable FASTBOOT FLASH command"
 	help
@@ -50,11 +57,35 @@ config FASTBOOT_FLASH
 
 config FASTBOOT_FLASH_MMC_DEV
 	int "Define FASTBOOT MMC FLASH default device"
+	depends on FASTBOOT_FLASH
 	help
 	  The fastboot "flash" command requires additional information
 	  regarding the non-volatile storage device. Define this to
 	  the eMMC device that fastboot should use to store the image.
 
+config FASTBOOT_GPT_NAME
+	string "Target name for updating GPT"
+	depends on FASTBOOT_FLASH
+	default "gpt"
+	help
+	  The fastboot "flash" command supports writing the downloaded
+	  image to the Protective MBR and the Primary GUID Partition
+	  Table. (Additionally, this downloaded image is post-processed
+	  to generate and write the Backup GUID Partition Table.)
+	  This occurs when the specified "partition name" on the
+	  "fastboot flash" command line matches the value defined here.
+	  The default target name for updating GPT is "gpt".
+
+config FASTBOOT_MBR_NAME
+	string "Target name for updating MBR"
+	depends on FASTBOOT_FLASH
+	default "mbr"
+	help
+	  The fastboot "flash" command allows to write the downloaded image
+	  to the Master Boot Record. This occurs when the "partition name"
+	  specified on the "fastboot flash" command line matches the value
+	  defined here. The default target name for updating MBR is "mbr".
+
 endif # USB_FUNCTION_FASTBOOT
 
-endmenu
+endif # FASTBOOT

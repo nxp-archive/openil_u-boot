@@ -8,6 +8,7 @@
  */
 
 #include <common.h>
+#include <dm.h>
 #include <errno.h>
 #include <malloc.h>
 #include <dm/device.h>
@@ -116,7 +117,7 @@ int uclass_destroy(struct uclass *uc)
 	while (!list_empty(&uc->dev_head)) {
 		dev = list_first_entry(&uc->dev_head, struct udevice,
 				       uclass_node);
-		ret = device_remove(dev);
+		ret = device_remove(dev, DM_REMOVE_NORMAL);
 		if (ret)
 			return ret;
 		ret = device_unbind(dev);
@@ -146,6 +147,15 @@ int uclass_get(enum uclass_id id, struct uclass **ucp)
 	*ucp = uc;
 
 	return 0;
+}
+
+const char *uclass_get_name(enum uclass_id id)
+{
+	struct uclass *uc;
+
+	if (uclass_get(id, &uc))
+		return NULL;
+	return uc->uc_drv->name;
 }
 
 int uclass_find_device(enum uclass_id id, int index, struct udevice **devp)
@@ -241,7 +251,7 @@ int uclass_find_device_by_seq(enum uclass_id id, int seq_or_req_seq,
 		return ret;
 
 	list_for_each_entry(dev, &uc->dev_head, uclass_node) {
-		debug("   - %d %d\n", dev->req_seq, dev->seq);
+		debug("   - %d %d '%s'\n", dev->req_seq, dev->seq, dev->name);
 		if ((find_req_seq ? dev->req_seq : dev->seq) ==
 				seq_or_req_seq) {
 			*devp = dev;
@@ -269,7 +279,31 @@ int uclass_find_device_by_of_offset(enum uclass_id id, int node,
 		return ret;
 
 	list_for_each_entry(dev, &uc->dev_head, uclass_node) {
-		if (dev->of_offset == node) {
+		if (dev_of_offset(dev) == node) {
+			*devp = dev;
+			return 0;
+		}
+	}
+
+	return -ENODEV;
+}
+
+int uclass_find_device_by_ofnode(enum uclass_id id, ofnode node,
+				 struct udevice **devp)
+{
+	struct uclass *uc;
+	struct udevice *dev;
+	int ret;
+
+	*devp = NULL;
+	if (!ofnode_valid(node))
+		return -ENODEV;
+	ret = uclass_get(id, &uc);
+	if (ret)
+		return ret;
+
+	list_for_each_entry(dev, &uc->dev_head, uclass_node) {
+		if (ofnode_equal(dev_ofnode(dev), node)) {
 			*devp = dev;
 			return 0;
 		}
@@ -290,8 +324,7 @@ static int uclass_find_device_by_phandle(enum uclass_id id,
 	int ret;
 
 	*devp = NULL;
-	find_phandle = fdtdec_get_int(gd->fdt_blob, parent->of_offset, name,
-				      -1);
+	find_phandle = dev_read_u32_default(parent, name, -1);
 	if (find_phandle <= 0)
 		return -ENOENT;
 	ret = uclass_get(id, &uc);
@@ -299,7 +332,9 @@ static int uclass_find_device_by_phandle(enum uclass_id id,
 		return ret;
 
 	list_for_each_entry(dev, &uc->dev_head, uclass_node) {
-		uint phandle = fdt_get_phandle(gd->fdt_blob, dev->of_offset);
+		uint phandle;
+
+		phandle = dev_read_phandle(dev);
 
 		if (phandle == find_phandle) {
 			*devp = dev;
@@ -393,6 +428,18 @@ int uclass_get_device_by_of_offset(enum uclass_id id, int node,
 
 	*devp = NULL;
 	ret = uclass_find_device_by_of_offset(id, node, &dev);
+	return uclass_get_device_tail(dev, ret, devp);
+}
+
+int uclass_get_device_by_ofnode(enum uclass_id id, ofnode node,
+				struct udevice **devp)
+{
+	struct udevice *dev;
+	int ret;
+
+	*devp = NULL;
+	ret = uclass_find_device_by_ofnode(id, node, &dev);
+
 	return uclass_get_device_tail(dev, ret, devp);
 }
 

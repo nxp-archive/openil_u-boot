@@ -258,7 +258,7 @@ static int rk_i2c_write(struct rk_i2c *i2c, uchar chip, uint reg, uint r_len,
 
 	while (bytes_remain_len) {
 		if (bytes_remain_len > RK_I2C_FIFO_SIZE)
-			bytes_xferred = 32;
+			bytes_xferred = RK_I2C_FIFO_SIZE;
 		else
 			bytes_xferred = bytes_remain_len;
 		words_xferred = DIV_ROUND_UP(bytes_xferred, 4);
@@ -269,17 +269,17 @@ static int rk_i2c_write(struct rk_i2c *i2c, uchar chip, uint reg, uint r_len,
 				if ((i * 4 + j) == bytes_xferred)
 					break;
 
-				if (i == 0 && j == 0) {
+				if (i == 0 && j == 0 && pbuf == buf) {
 					txdata |= (chip << 1);
-				} else if (i == 0 && j <= r_len) {
+				} else if (i == 0 && j <= r_len && pbuf == buf) {
 					txdata |= (reg &
 						(0xff << ((j - 1) * 8))) << 8;
 				} else {
 					txdata |= (*pbuf++)<<(j * 8);
 				}
-				writel(txdata, &regs->txdata[i]);
 			}
-			debug("I2c Write TXDATA[%d] = 0x%x\n", i, txdata);
+			writel(txdata, &regs->txdata[i]);
+			debug("I2c Write TXDATA[%d] = 0x%08x\n", i, txdata);
 		}
 
 		writel(I2C_CON_EN | I2C_CON_MOD(I2C_MODE_TX), &regs->con);
@@ -369,7 +369,7 @@ static int rockchip_i2c_probe(struct udevice *bus)
 {
 	struct rk_i2c *priv = dev_get_priv(bus);
 
-	priv->regs = (void *)dev_get_addr(bus);
+	priv->regs = (void *)devfdt_get_addr(bus);
 
 	return 0;
 }
@@ -380,7 +380,10 @@ static const struct dm_i2c_ops rockchip_i2c_ops = {
 };
 
 static const struct udevice_id rockchip_i2c_ids[] = {
+	{ .compatible = "rockchip,rk3066-i2c" },
+	{ .compatible = "rockchip,rk3188-i2c" },
 	{ .compatible = "rockchip,rk3288-i2c" },
+	{ .compatible = "rockchip,rk3399-i2c" },
 	{ }
 };
 

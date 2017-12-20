@@ -13,11 +13,13 @@
 #include <asm/unaligned.h>
 #include <common.h>
 #include <command.h>
+#include <fdtdec.h>
 #include <ide.h>
 #include <inttypes.h>
 #include <malloc.h>
 #include <memalign.h>
 #include <part_efi.h>
+#include <linux/compiler.h>
 #include <linux/ctype.h>
 
 DECLARE_GLOBAL_DATA_PTR;
@@ -171,7 +173,7 @@ static void prepare_backup_gpt_header(gpt_header *gpt_h)
 	gpt_h->header_crc32 = cpu_to_le32(calc_crc32);
 }
 
-#ifdef CONFIG_EFI_PARTITION
+#if CONFIG_IS_ENABLED(EFI_PARTITION)
 /*
  * Public Functions (include/part.h)
  */
@@ -279,7 +281,7 @@ int part_get_info_efi(struct blk_desc *dev_desc, int part,
 			print_efiname(&gpt_pte[part - 1]));
 	strcpy((char *)info->type, "U-Boot");
 	info->bootable = is_bootable(&gpt_pte[part - 1]);
-#ifdef CONFIG_PARTITION_UUIDS
+#if CONFIG_IS_ENABLED(PARTITION_UUIDS)
 	uuid_bin_to_str(gpt_pte[part - 1].unique_partition_guid.b, info->uuid,
 			UUID_STR_FORMAT_GUID);
 #endif
@@ -294,25 +296,6 @@ int part_get_info_efi(struct blk_desc *dev_desc, int part,
 	/* Remember to free pte */
 	free(gpt_pte);
 	return 0;
-}
-
-int part_get_info_efi_by_name(struct blk_desc *dev_desc,
-	const char *name, disk_partition_t *info)
-{
-	int ret;
-	int i;
-	for (i = 1; i < GPT_ENTRY_NUMBERS; i++) {
-		ret = part_get_info_efi(dev_desc, i, info);
-		if (ret != 0) {
-			/* no more entries in table */
-			return -1;
-		}
-		if (strcmp(name, (const char *)info->name) == 0) {
-			/* matched */
-			return 0;
-		}
-	}
-	return -2;
 }
 
 static int part_test_efi(struct blk_desc *dev_desc)
@@ -343,6 +326,13 @@ static int set_protective_mbr(struct blk_desc *dev_desc)
 		printf("%s: calloc failed!\n", __func__);
 		return -1;
 	}
+
+	/* Read MBR to backup boot code if it exists */
+	if (blk_dread(dev_desc, 0, 1, p_mbr) != 1) {
+		error("** Can't read from device %d **\n", dev_desc->devnum);
+		return -1;
+	}
+
 	/* Append signature */
 	p_mbr->signature = MSDOS_MBR_SIGNATURE;
 	p_mbr->partition_record[0].sys_ind = EFI_PMBR_OSTYPE_EFI_GPT;
@@ -385,8 +375,8 @@ int write_gpt_table(struct blk_desc *dev_desc,
 	if (blk_dwrite(dev_desc, 1, 1, gpt_h) != 1)
 		goto err;
 
-	if (blk_dwrite(dev_desc, 2, pte_blk_cnt, gpt_e)
-	    != pte_blk_cnt)
+	if (blk_dwrite(dev_desc, le64_to_cpu(gpt_h->partition_entry_lba),
+		       pte_blk_cnt, gpt_e) != pte_blk_cnt)
 		goto err;
 
 	prepare_backup_gpt_header(gpt_h);
@@ -416,7 +406,7 @@ int gpt_fill_pte(gpt_header *gpt_h, gpt_entry *gpt_e,
 			le64_to_cpu(gpt_h->last_usable_lba);
 	int i, k;
 	size_t efiname_len, dosname_len;
-#ifdef CONFIG_PARTITION_UUIDS
+#if CONFIG_IS_ENABLED(PARTITION_UUIDS)
 	char *str_uuid;
 	unsigned char *bin_uuid;
 #endif
@@ -471,11 +461,11 @@ int gpt_fill_pte(gpt_header *gpt_h, gpt_entry *gpt_e,
 			&PARTITION_BASIC_DATA_GUID, 16);
 #endif
 
-#ifdef CONFIG_PARTITION_UUIDS
+#if CONFIG_IS_ENABLED(PARTITION_UUIDS)
 		str_uuid = partitions[i].uuid;
 		bin_uuid = gpt_e[i].unique_partition_guid.b;
 
-		if (uuid_str_to_bin(str_uuid, bin_uuid, UUID_STR_FORMAT_STD)) {
+		if (uuid_str_to_bin(str_uuid, bin_uuid, UUID_STR_FORMAT_GUID)) {
 			printf("Partition no. %d: invalid guid: %s\n",
 				i, str_uuid);
 			return -1;
@@ -510,6 +500,49 @@ int gpt_fill_pte(gpt_header *gpt_h, gpt_entry *gpt_e,
 	return 0;
 }
 
+static uint32_t partition_entries_offset(struct blk_desc *dev_desc)
+{
+	uint32_t offset_blks = 2;
+	int __maybe_unused config_offset;
+
+#if defined(CONFIG_EFI_PARTITION_ENTRIES_OFF)
+	/*
+	 * Some architectures require their SPL loader at a fixed
+	 * address within the first 16KB of the disk.  To avoid an
+	 * overlap with the partition entries of the EFI partition
+	 * table, the first safe offset (in bytes, from the start of
+	 * the disk) for the entries can be set in
+	 * CONFIG_EFI_PARTITION_ENTRIES_OFF.
+	 */
+	offset_blks =
+		PAD_TO_BLOCKSIZE(CONFIG_EFI_PARTITION_ENTRIES_OFF, dev_desc);
+#endif
+
+#if defined(CONFIG_OF_CONTROL)
+	/*
+	 * Allow the offset of the first partition entires (in bytes
+	 * from the start of the device) to be specified as a property
+	 * of the device tree '/config' node.
+	 */
+	config_offset = fdtdec_get_config_int(gd->fdt_blob,
+					      "u-boot,efi-partition-entries-offset",
+					      -EINVAL);
+	if (config_offset != -EINVAL)
+		offset_blks = PAD_TO_BLOCKSIZE(config_offset, dev_desc);
+#endif
+
+	debug("efi: partition entries offset (in blocks): %d\n", offset_blks);
+
+	/*
+	 * The earliest LBA this can be at is LBA#2 (i.e. right behind
+	 * the (protective) MBR and the GPT header.
+	 */
+	if (offset_blks < 2)
+		offset_blks = 2;
+
+	return offset_blks;
+}
+
 int gpt_fill_header(struct blk_desc *dev_desc, gpt_header *gpt_h,
 		char *str_guid, int parts_count)
 {
@@ -518,9 +551,11 @@ int gpt_fill_header(struct blk_desc *dev_desc, gpt_header *gpt_h,
 	gpt_h->header_size = cpu_to_le32(sizeof(gpt_header));
 	gpt_h->my_lba = cpu_to_le64(1);
 	gpt_h->alternate_lba = cpu_to_le64(dev_desc->lba - 1);
-	gpt_h->first_usable_lba = cpu_to_le64(34);
 	gpt_h->last_usable_lba = cpu_to_le64(dev_desc->lba - 34);
-	gpt_h->partition_entry_lba = cpu_to_le64(2);
+	gpt_h->partition_entry_lba =
+		cpu_to_le64(partition_entries_offset(dev_desc));
+	gpt_h->first_usable_lba =
+		cpu_to_le64(le64_to_cpu(gpt_h->partition_entry_lba) + 32);
 	gpt_h->num_partition_entries = cpu_to_le32(GPT_ENTRY_NUMBERS);
 	gpt_h->sizeof_partition_entry = cpu_to_le32(sizeof(gpt_entry));
 	gpt_h->header_crc32 = 0;
@@ -958,6 +993,7 @@ static int is_pte_valid(gpt_entry * pte)
 U_BOOT_PART_TYPE(a_efi) = {
 	.name		= "EFI",
 	.part_type	= PART_TYPE_EFI,
+	.max_entries	= GPT_ENTRY_NUMBERS,
 	.get_info	= part_get_info_ptr(part_get_info_efi),
 	.print		= part_print_ptr(part_print_efi),
 	.test		= part_test_efi,

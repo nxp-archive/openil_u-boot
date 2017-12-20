@@ -21,7 +21,7 @@
 #include <asm/arch/mmc_host_def.h>
 #include <asm/arch/musb.h>
 #include <asm/mach-types.h>
-#include <asm/errno.h>
+#include <linux/errno.h>
 #include <asm/gpio.h>
 #include <linux/usb/ch9.h>
 #include <linux/usb/gadget.h>
@@ -152,7 +152,7 @@ void set_muxconf_regs(void)
 	MUX_AM3517EVM();
 }
 
-#if defined(CONFIG_GENERIC_MMC) && !defined(CONFIG_SPL_BUILD)
+#if defined(CONFIG_MMC)
 int board_mmc_init(bd_t *bis)
 {
 	return omap_mmc_init(0, 0, 0, -1, -1);

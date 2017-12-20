@@ -11,15 +11,11 @@
  * System configuration
  */
 #define CONFIG_MALTA
-#define CONFIG_BOARD_EARLY_INIT_F
-#define CONFIG_DISPLAY_BOARDINFO
 
 #define CONFIG_MEMSIZE_IN_BYTES
 
-#define CONFIG_PCI
 #define CONFIG_PCI_GT64120
 #define CONFIG_PCI_MSC01
-#define CONFIG_PCI_PNP
 #define CONFIG_PCNET
 #define CONFIG_PCNET_79C973
 #define PCNET_HAS_PROM
@@ -67,7 +63,6 @@
 /*
  * Serial driver
  */
-#define CONFIG_BAUDRATE			115200
 #define CONFIG_SYS_NS16550_PORT_MAPPED
 
 /*
@@ -106,8 +101,6 @@
 /*
  * Commands
  */
-#define CONFIG_CMD_DATE
-#define CONFIG_CMD_IDE
 #define CONFIG_CMD_PCI
 
 #define CONFIG_SYS_LONGHELP		/* verbose help, undef to save memory */

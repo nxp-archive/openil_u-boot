@@ -12,8 +12,6 @@
 #include <linux/sizes.h>
 #include <asm/arch/sysmap-apq8016.h>
 
-#define CONFIG_IDENT_STRING		"\nQualcomm-DragonBoard 410C"
-
 #define CONFIG_MISC_INIT_R /* To stop autoboot */
 
 /* Physical Memory Map */
@@ -28,15 +26,9 @@
 #define CONFIG_SYS_BOOTM_LEN		0x1000000 /* 16MB max kernel size */
 
 /* UART */
-#define CONFIG_BAUDRATE			115200
 
 /* Generic Timer Definitions */
 #define COUNTER_FREQUENCY		19000000
-
-/* This are needed to have proper mmc support */
-#define CONFIG_MMC
-#define CONFIG_GENERIC_MMC
-#define CONFIG_SDHCI
 
 #define CONFIG_SYS_LDSCRIPT "board/qualcomm/dragonboard410c/u-boot.lds"
 
@@ -53,24 +45,15 @@
 #define CONFIG_USB_ETHER_MCS7830
 #define CONFIG_USB_ETHER_SMSC95XX
 
-/* Libraries  */
-#define CONFIG_MD5
-
 /* Extra Commands */
-#define CONFIG_CMD_ENV
-#define CONFIG_CMD_GPT
-#define CONFIG_CMD_MD5SUM
 /* Enable that for switching of boot partitions */
 /* Disabled by default as some sub-commands can brick eMMC */
 /*#define CONFIG_SUPPORT_EMMC_BOOT */
-#define CONFIG_CMD_PART
 #define CONFIG_CMD_REGINFO	/* Register dump		*/
 #define CONFIG_CMD_TFTP
-#define CONFIG_CMD_UNZIP
 
 /* Partition table support */
 #define HAVE_BLOCK_DEVICE /* Needed for partition commands */
-#define CONFIG_PARTITION_UUIDS
 
 #include <config_distro_defaults.h>
 
@@ -131,7 +114,6 @@ REFLASH(dragonboard/u-boot.img, 8)\
 #define CONFIG_ENV_IS_NOWHERE
 #define CONFIG_ENV_SIZE			0x2000
 #define CONFIG_ENV_VARS_UBOOT_CONFIG
-#define CONFIG_SYS_NO_FLASH
 
 /* Size of malloc() pool */
 #define CONFIG_SYS_MALLOC_LEN		(CONFIG_ENV_SIZE + SZ_8M)

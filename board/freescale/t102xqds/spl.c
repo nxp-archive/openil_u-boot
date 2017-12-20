@@ -14,6 +14,7 @@
 #include <spi_flash.h>
 #include "../common/qixis.h"
 #include "t102xqds_qixis.h"
+#include "../common/spl.h"
 
 DECLARE_GLOBAL_DATA_PTR;
 
@@ -65,7 +66,7 @@ void board_init_f(ulong bootflag)
 	u32 plat_ratio, sys_clk, ccb_clk;
 	ccsr_gur_t *gur = (void *)CONFIG_SYS_MPC85xx_GUTS_ADDR;
 
-#if defined(CONFIG_PPC_T1040) && defined(CONFIG_SPL_NAND_BOOT)
+#if defined(CONFIG_ARCH_T1040) && defined(CONFIG_SPL_NAND_BOOT)
 	/*
 	 * There is T1040 SoC issue where NOR, FPGA are inaccessible during
 	 * NAND boot because IFC signals > IFC_AD7 are not enabled.
@@ -116,7 +117,7 @@ void board_init_r(gd_t *gd, ulong dest_addr)
 	bd->bi_memstart = CONFIG_SYS_INIT_L3_ADDR;
 	bd->bi_memsize = CONFIG_SYS_L3_SIZE;
 
-	probecpu();
+	arch_cpu_init();
 	get_clocks();
 	mem_malloc_init(CONFIG_SPL_RELOC_MALLOC_ADDR,
 			CONFIG_SPL_RELOC_MALLOC_SIZE);
@@ -132,8 +133,8 @@ void board_init_r(gd_t *gd, ulong dest_addr)
 			   (uchar *)CONFIG_ENV_ADDR);
 #endif
 #ifdef CONFIG_SPL_SPI_BOOT
-	spi_spl_load_image(CONFIG_ENV_OFFSET, CONFIG_ENV_SIZE,
-			   (uchar *)CONFIG_ENV_ADDR);
+	fsl_spi_spl_load_image(CONFIG_ENV_OFFSET, CONFIG_ENV_SIZE,
+			       (uchar *)CONFIG_ENV_ADDR);
 #endif
 
 	gd->env_addr  = (ulong)(CONFIG_ENV_ADDR);
@@ -141,12 +142,12 @@ void board_init_r(gd_t *gd, ulong dest_addr)
 
 	i2c_init_all();
 
-	gd->ram_size = initdram(0);
+	dram_init();
 
 #ifdef CONFIG_SPL_MMC_BOOT
 	mmc_boot();
 #elif defined(CONFIG_SPL_SPI_BOOT)
-	spi_boot();
+	fsl_spi_boot();
 #elif defined(CONFIG_SPL_NAND_BOOT)
 	nand_boot();
 #endif

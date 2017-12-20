@@ -23,32 +23,17 @@
 #include <linux/mtd/nand.h>
 #include <linux/mtd/onenand.h>
 #include <jffs2/load_kernel.h>
+#include <mtd_node.h>
+#include <fdt_support.h>
 #include "igep00x0.h"
 
 DECLARE_GLOBAL_DATA_PTR;
 
-const omap3_sysinfo sysinfo = {
-	DDR_STACKED,
-#if (CONFIG_MACH_TYPE == MACH_TYPE_IGEP0020)
-	"IGEPv2",
-#endif
-#if (CONFIG_MACH_TYPE == MACH_TYPE_IGEP0030)
-	"IGEP COM MODULE/ELECTRON",
-#endif
-#if (CONFIG_MACH_TYPE == MACH_TYPE_IGEP0032)
-	"IGEP COM PROTON",
-#endif
-#if defined(CONFIG_ENV_IS_IN_ONENAND)
-	"ONENAND",
-#else
-	"NAND",
-#endif
-};
-
 static const struct ns16550_platdata igep_serial = {
 	.base = OMAP34XX_UART3,
 	.reg_shift = 2,
-	.clock = V_NS16550_CLK
+	.clock = V_NS16550_CLK,
+	.fcr = UART_FCR_DEFVAL,
 };
 
 U_BOOT_DEVICE(igep_uart) = {
@@ -84,8 +69,8 @@ int board_init(void)
 	/* boot param addr */
 	gd->bd->bi_boot_params = (OMAP34XX_SDRC_CS0 + 0x100);
 
-#if defined(CONFIG_STATUS_LED) && defined(STATUS_LED_BOOT)
-	status_led_set(STATUS_LED_BOOT, STATUS_LED_ON);
+#if defined(CONFIG_LED_STATUS) && defined(CONFIG_LED_STATUS_BOOT_ENABLE)
+	status_led_set(CONFIG_LED_STATUS_BOOT, CONFIG_LED_STATUS_ON);
 #endif
 
 	return 0;
@@ -102,10 +87,22 @@ void get_board_mem_timings(struct board_sdrc_timings *timings)
 	int mfr, id, err = identify_nand_chip(&mfr, &id);
 
 	timings->mr = MICRON_V_MR_165;
-	if (!err && mfr == NAND_MFR_MICRON) {
-		timings->mcfg = MICRON_V_MCFG_200(256 << 20);
-		timings->ctrla = MICRON_V_ACTIMA_200;
-		timings->ctrlb = MICRON_V_ACTIMB_200;
+	if (!err) {
+		switch (mfr) {
+		case NAND_MFR_HYNIX:
+			timings->mcfg = HYNIX_V_MCFG_200(256 << 20);
+			timings->ctrla = HYNIX_V_ACTIMA_200;
+			timings->ctrlb = HYNIX_V_ACTIMB_200;
+			break;
+		case NAND_MFR_MICRON:
+			timings->mcfg = MICRON_V_MCFG_200(256 << 20);
+			timings->ctrla = MICRON_V_ACTIMA_200;
+			timings->ctrlb = MICRON_V_ACTIMB_200;
+			break;
+		default:
+			/* Should not happen... */
+			break;
+		}
 		timings->rfr_ctrl = SDP_3430_SDRC_RFR_CTRL_200MHz;
 		gpmc_cs0_flash = MTD_DEV_TYPE_NAND;
 	} else {
@@ -202,17 +199,51 @@ int board_eth_init(bd_t *bis)
 static inline void setup_net_chip(void) {}
 #endif
 
-#if defined(CONFIG_GENERIC_MMC) && !defined(CONFIG_SPL_BUILD)
+#if defined(CONFIG_MMC)
 int board_mmc_init(bd_t *bis)
 {
 	return omap_mmc_init(0, 0, 0, -1, -1);
 }
 #endif
 
-#if defined(CONFIG_GENERIC_MMC)
+#if defined(CONFIG_MMC)
 void board_mmc_power_init(void)
 {
 	twl4030_power_mmc_init(0);
+}
+#endif
+
+#ifdef CONFIG_OF_BOARD_SETUP
+static int ft_enable_by_compatible(void *blob, char *compat, int enable)
+{
+	int off = fdt_node_offset_by_compatible(blob, -1, compat);
+	if (off < 0)
+		return off;
+
+	if (enable)
+		fdt_status_okay(blob, off);
+	else
+		fdt_status_disabled(blob, off);
+
+	return 0;
+}
+
+int ft_board_setup(void *blob, bd_t *bd)
+{
+#ifdef CONFIG_FDT_FIXUP_PARTITIONS
+	static struct node_info nodes[] = {
+		{ "ti,omap2-nand", MTD_DEV_TYPE_NAND, },
+		{ "ti,omap2-onenand", MTD_DEV_TYPE_ONENAND, },
+	};
+
+	fdt_fixup_mtdparts(blob, nodes, ARRAY_SIZE(nodes));
+#endif
+	ft_enable_by_compatible(blob, "ti,omap2-nand",
+				gpmc_cs0_flash == MTD_DEV_TYPE_NAND);
+	ft_enable_by_compatible(blob, "ti,omap2-onenand",
+				gpmc_cs0_flash == MTD_DEV_TYPE_ONENAND);
+
+	return 0;
 }
 #endif
 

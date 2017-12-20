@@ -2,14 +2,14 @@ Overview
 --------
 The LS2080A Development System (QDS) is a high-performance computing,
 evaluation, and development platform that supports the QorIQ LS2080A
-Layerscape Architecture processor. The LS2080AQDS provides validation and
-SW development platform for the Freescale LS2080A processor series, with
-a complete debugging environment.
+and LS2088A Layerscape Architecture processor. The LS2080AQDS provides
+validation and SW development platform for the Freescale LS2080A, LS2088A
+processor series, with a complete debugging environment.
 
-LS2080A SoC Overview
+LS2080A, LS2088A SoC Overview
 --------------------
-Please refer arch/arm/cpu/armv8/fsl-layerscape/doc/README.soc for LS2080A
-SoC overview.
+Please refer arch/arm/cpu/armv8/fsl-layerscape/doc/README.soc for LS2080A,
+LS2088A SoC overview.
 
  LS2080AQDS board Overview
  -----------------------
@@ -88,6 +88,32 @@ b) NOR boot
 c) NAND boot
 d) SD boot
 e) QSPI boot
+
+Memory map for NOR boot
+-------------------------
+Image				Flash Offset
+RCW+PBI				0x00000000
+Boot firmware (U-Boot)		0x00100000
+Boot firmware Environment	0x00300000
+PPA firmware			0x00400000
+Secure Headers			0x00600000
+DPAA2 MC			0x00A00000
+DPAA2 DPL			0x00D00000
+DPAA2 DPC			0x00E00000
+Kernel.itb			0x01000000
+
+Memory map for SD boot
+-------------------------
+Image				Flash Offset	SD Card
+						Start Block No.
+RCW+PBI				0x00000000	0x00008
+Boot firmware (U-Boot)		0x00100000	0x00800
+Boot firmware Environment	0x00300000	0x01800
+PPA firmware			0x00400000	0x02000
+DPAA2 MC			0x00A00000	0x05000
+DPAA2 DPL			0x00D00000	0x06800
+DPAA2 DPC			0x00E00000	0x07000
+Kernel.itb			0x01000000	0x08000
 
 Environment Variables
 ---------------------
@@ -188,38 +214,3 @@ DPMAC14 -> PHY4-P1
 DPMAC15 -> PHY4-P2
 DPMAC16 -> PHY4-P3
 
-
-Booting from QSPI
--------------------
-Booting from QSPI requires two images, RCW and u-boot-dtb.bin.
-The difference between QSPI boot RCW image and NOR boot image is the PBI
-command sequence. Below is the setting for PBI commands for QDS which boot
-on QSPI flash device.
-
-1) CCSR 4-byte write to 0x00e00404, data=0x00000000
-2) CCSR 4-byte write to 0x00e00400, data=0x20010000
-The above two commands set bootloc register to 0x00000000_20010000 where
-the u-boot code will be running in QSPI flash.
-
-RCW image should be written to the beginning of QSPI flash device.
-Example of using u-boot command
-
-=> sf probe 0:0
-SF: Detected S25FL256S_64K with page size 256 Bytes, erase size 64 KiB, total 32 MiB
-=> sf erase 0 +<size of rcw image>
-SF: 65536 bytes @ 0x0 Erased: OK
-=> sf write <rcw image in memory> 0 <size of rcw image>
-SF: 164 bytes @ 0x0 Written: OK
-
-To get the QSPI image, build u-boot with QSPI config, for example,
-ls2080aqds_qspi_defconfig. The image needed is u-boot-dtb.bin.
-The u-boot image should be written to 0x10000.
-
-=> sf probe 0:0
-SF: Detected S25FL256S_64K with page size 256 Bytes, erase size 64 KiB, total 32 MiB
-=> sf erase 10000 +<size of u-boot image>
-SF: 589824 bytes @ 0x10000 Erased: OK
-=> sf write <u-boot image in memory> 10000 <size of u-boot image>
-SF: 580966 bytes @ 0x10000 Written: OK
-
-With these two images in QSPI flash device, the board can boot from QSPI.

@@ -568,7 +568,8 @@ struct spi_slave *spi_setup_slave(unsigned int bus, unsigned int cs,
 	priv->freq = max_hz;
 	priv->mode = mode;
 	priv->wordlen = priv->slave.wordlen;
-#ifdef CONFIG_OMAP3_SPI_D0_D1_SWAPPED
+#if 0
+	/* Please migrate to DM_SPI support for this feature. */
 	priv->pin_dir = MCSPI_PINDIR_D0_OUT_D1_IN;
 #endif
 
@@ -627,12 +628,12 @@ static int omap3_spi_probe(struct udevice *dev)
 {
 	struct omap3_spi_priv *priv = dev_get_priv(dev);
 	const void *blob = gd->fdt_blob;
-	int node = dev->of_offset;
+	int node = dev_of_offset(dev);
 
 	struct omap2_mcspi_platform_config* data =
 		(struct omap2_mcspi_platform_config*)dev_get_driver_data(dev);
 
-	priv->regs = (struct mcspi *)(dev_get_addr(dev) + data->regs_offset);
+	priv->regs = (struct mcspi *)(devfdt_get_addr(dev) + data->regs_offset);
 	priv->pin_dir = fdtdec_get_uint(blob, node, "ti,pindir-d0-out-d1-in",
 					    MCSPI_PINDIR_D0_IN_D1_OUT);
 	priv->wordlen = SPI_DEFAULT_WORDLEN;
@@ -692,6 +693,5 @@ U_BOOT_DRIVER(omap3_spi) = {
 	.probe = omap3_spi_probe,
 	.ops    = &omap3_spi_ops,
 	.priv_auto_alloc_size = sizeof(struct omap3_spi_priv),
-	.probe = omap3_spi_probe,
 };
 #endif

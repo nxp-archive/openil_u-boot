@@ -53,7 +53,7 @@ void board_init_r(gd_t *gd, ulong dest_addr)
 	bd->bi_memstart = CONFIG_SYS_INIT_L2_ADDR;
 	bd->bi_memsize = CONFIG_SYS_L2_SIZE;
 
-	probecpu();
+	arch_cpu_init();
 	get_clocks();
 	mem_malloc_init(CONFIG_SPL_RELOC_MALLOC_ADDR,
 			CONFIG_SPL_RELOC_MALLOC_SIZE);
@@ -67,7 +67,7 @@ void board_init_r(gd_t *gd, ulong dest_addr)
 
 	i2c_init_all();
 
-	gd->ram_size = initdram(0);
+	dram_init();
 
 #ifdef CONFIG_SPL_NAND_BOOT
 	puts("TPL\n");

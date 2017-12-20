@@ -8,12 +8,11 @@
 #include <common.h>
 #include <dm.h>
 #include <errno.h>
-#include <fdtdec.h>
 #include <inttypes.h>
 #include <pci.h>
 #include <asm/io.h>
-#include <dm/lists.h>
 #include <dm/device-internal.h>
+#include <dm/lists.h>
 #if defined(CONFIG_X86) && defined(CONFIG_HAVE_FSP)
 #include <asm/fsp/fsp_support.h>
 #endif
@@ -551,9 +550,10 @@ int dm_pci_hose_probe_bus(struct udevice *bus)
  * pci_match_one_device - Tell if a PCI device structure has a matching
  *                        PCI device id structure
  * @id: single PCI device id structure to match
- * @dev: the PCI device structure to match against
+ * @find: the PCI device id structure to match against
  *
- * Returns the matching pci_device_id structure or %NULL if there is no match.
+ * Returns true if the finding pci_device_id structure matched or false if
+ * there is no match.
  */
 static bool pci_match_one_id(const struct pci_device_id *id,
 			     const struct pci_device_id *find)
@@ -659,6 +659,7 @@ static int pci_find_and_bind_driver(struct udevice *parent,
 	ret = device_bind_driver(parent, drv, str, devp);
 	if (ret) {
 		debug("%s: Failed to bind generic driver: %d\n", __func__, ret);
+		free(str);
 		return ret;
 	}
 	debug("%s: No match found: bound generic driver instead\n", __func__);
@@ -752,8 +753,8 @@ error:
 	return ret;
 }
 
-static int decode_regions(struct pci_controller *hose, const void *blob,
-			  int parent_node, int node)
+static int decode_regions(struct pci_controller *hose, ofnode parent_node,
+			  ofnode node)
 {
 	int pci_addr_cells, addr_cells, size_cells;
 	phys_addr_t base = 0, size;
@@ -762,12 +763,12 @@ static int decode_regions(struct pci_controller *hose, const void *blob,
 	int len;
 	int i;
 
-	prop = fdt_getprop(blob, node, "ranges", &len);
+	prop = ofnode_read_prop(node, "ranges", &len);
 	if (!prop)
 		return -EINVAL;
-	pci_addr_cells = fdt_address_cells(blob, node);
-	addr_cells = fdt_address_cells(blob, parent_node);
-	size_cells = fdt_size_cells(blob, node);
+	pci_addr_cells = ofnode_read_addr_cells(node);
+	addr_cells = ofnode_read_addr_cells(parent_node);
+	size_cells = ofnode_read_size_cells(node);
 
 	/* PCI addresses are always 3-cells */
 	len /= sizeof(u32);
@@ -839,8 +840,8 @@ static int pci_uclass_pre_probe(struct udevice *bus)
 	/* For bridges, use the top-level PCI controller */
 	if (!device_is_on_pci_bus(bus)) {
 		hose->ctlr = bus;
-		ret = decode_regions(hose, gd->fdt_blob, bus->parent->of_offset,
-				bus->of_offset);
+		ret = decode_regions(hose, dev_ofnode(bus->parent),
+				     dev_ofnode(bus));
 		if (ret) {
 			debug("%s: Cannot decode regions\n", __func__);
 			return ret;
@@ -903,7 +904,7 @@ static int pci_uclass_child_post_bind(struct udevice *dev)
 	struct fdt_pci_addr addr;
 	int ret;
 
-	if (dev->of_offset == -1)
+	if (!dev_of_valid(dev))
 		return 0;
 
 	/*
@@ -911,8 +912,8 @@ static int pci_uclass_child_post_bind(struct udevice *dev)
 	 * just check the address.
 	 */
 	pplat = dev_get_parent_platdata(dev);
-	ret = fdtdec_get_pci_addr(gd->fdt_blob, dev->of_offset,
-				  FDT_PCI_SPACE_CONFIG, "reg", &addr);
+	ret = ofnode_read_pci_addr(dev_ofnode(dev), FDT_PCI_SPACE_CONFIG, "reg",
+				   &addr);
 
 	if (ret) {
 		if (ret != -ENOENT)

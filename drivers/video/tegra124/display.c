@@ -326,13 +326,7 @@ static int display_update_config_from_edid(struct udevice *dp_dev,
 					   int *panel_bppp,
 					   struct display_timing *timing)
 {
-	int ret;
-
-	ret = display_read_timing(dp_dev, timing);
-	if (ret)
-		return ret;
-
-	return 0;
+	return display_read_timing(dp_dev, timing);
 }
 
 static int display_init(struct udevice *dev, void *lcdbase,
@@ -349,7 +343,7 @@ static int display_init(struct udevice *dev, void *lcdbase,
 
 	/*
 	 * Before we probe the display device (eDP), tell it that this device
-	 * is are the source of the display data.
+	 * is the source of the display data.
 	 */
 	ret = uclass_find_first_device(UCLASS_DISPLAY, &dp_dev);
 	if (ret) {
@@ -369,9 +363,9 @@ static int display_init(struct udevice *dev, void *lcdbase,
 		return ret;
 	}
 
-	dc_ctlr = (struct dc_ctlr *)fdtdec_get_addr(blob, dev->of_offset,
+	dc_ctlr = (struct dc_ctlr *)fdtdec_get_addr(blob, dev_of_offset(dev),
 						    "reg");
-	if (fdtdec_decode_display_timing(blob, dev->of_offset, 0, timing)) {
+	if (fdtdec_decode_display_timing(blob, dev_of_offset(dev), 0, timing)) {
 		debug("%s: Failed to decode display timing\n", __func__);
 		return -EINVAL;
 	}

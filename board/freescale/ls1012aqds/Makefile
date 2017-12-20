@@ -5,4 +5,3 @@
 #
 
 obj-y += ls1012aqds.o
-obj-y += eth.o

@@ -28,6 +28,11 @@ struct block_drvr {
 #define PART_TYPE_AMIGA		0x04
 #define PART_TYPE_EFI		0x05
 
+/* maximum number of partition entries supported by search */
+#define DOS_ENTRY_NUMBERS	8
+#define ISO_ENTRY_NUMBERS	64
+#define MAC_ENTRY_NUMBERS	64
+#define AMIGA_ENTRY_NUMBERS	8
 /*
  * Type string for U-Boot bootable partitions
  */
@@ -48,11 +53,14 @@ typedef struct disk_partition {
 	uchar	name[32];	/* partition name			*/
 	uchar	type[32];	/* string type description		*/
 	int	bootable;	/* Active/Bootable flag is set		*/
-#ifdef CONFIG_PARTITION_UUIDS
+#if CONFIG_IS_ENABLED(PARTITION_UUIDS)
 	char	uuid[37];	/* filesystem UUID as string, if exists	*/
 #endif
 #ifdef CONFIG_PARTITION_TYPE_GUID
 	char	type_guid[37];	/* type GUID as string, if exists	*/
+#endif
+#ifdef CONFIG_DOS_PARTITION
+	uchar	sys_ind;	/* partition type 			*/
 #endif
 } disk_partition_t;
 
@@ -146,6 +154,35 @@ int blk_get_device_by_str(const char *ifname, const char *dev_str,
 int blk_get_device_part_str(const char *ifname, const char *dev_part_str,
 			    struct blk_desc **dev_desc,
 			    disk_partition_t *info, int allow_whole_dev);
+
+/**
+ * part_get_info_by_name() - Search for a partition by name
+ *                           among all available registered partitions
+ *
+ * @param dev_desc - block device descriptor
+ * @param gpt_name - the specified table entry name
+ * @param info - returns the disk partition info
+ *
+ * @return - the partition number on match (starting on 1), -1 on no match,
+ * otherwise error
+ */
+int part_get_info_by_name(struct blk_desc *dev_desc,
+			      const char *name, disk_partition_t *info);
+
+/**
+ * part_set_generic_name() - create generic partition like hda1 or sdb2
+ *
+ * Helper function for partition tables, which don't hold partition names
+ * (DOS, ISO). Generates partition name out of the device type and partition
+ * number.
+ *
+ * @dev_desc:	pointer to the block device
+ * @part_num:	partition number for which the name is generated
+ * @name:	buffer where the name is written
+ */
+void part_set_generic_name(const struct blk_desc *dev_desc,
+	int part_num, char *name);
+
 extern const struct block_drvr block_drvr[];
 #else
 static inline struct blk_desc *blk_get_dev(const char *ifname, int dev)
@@ -189,6 +226,7 @@ static inline int blk_get_device_part_str(const char *ifname,
 struct part_driver {
 	const char *name;
 	int part_type;
+	const int max_entries;	/* maximum number of entries to search */
 
 	/**
 	 * get_info() - Get information about a partition
@@ -221,21 +259,9 @@ struct part_driver {
 #define U_BOOT_PART_TYPE(__name)					\
 	ll_entry_declare(struct part_driver, __name, part_driver)
 
-#ifdef CONFIG_EFI_PARTITION
+#if CONFIG_IS_ENABLED(EFI_PARTITION)
 #include <part_efi.h>
 /* disk/part_efi.c */
-/**
- * part_get_info_efi_by_name() - Find the specified GPT partition table entry
- *
- * @param dev_desc - block device descriptor
- * @param gpt_name - the specified table entry name
- * @param info - returns the disk partition info
- *
- * @return - '0' on match, '-1' on no match, otherwise error
- */
-int part_get_info_efi_by_name(struct blk_desc *dev_desc,
-			      const char *name, disk_partition_t *info);
-
 /**
  * write_gpt_table() - Write the GUID Partition Table to disk
  *
@@ -342,5 +368,28 @@ int gpt_verify_partitions(struct blk_desc *dev_desc,
 			  disk_partition_t *partitions, int parts,
 			  gpt_header *gpt_head, gpt_entry **gpt_pte);
 #endif
+
+#if CONFIG_IS_ENABLED(DOS_PARTITION)
+/**
+ * is_valid_dos_buf() - Ensure that a DOS MBR image is valid
+ *
+ * @param buf - buffer which contains the MBR
+ *
+ * @return - '0' on success, otherwise error
+ */
+int is_valid_dos_buf(void *buf);
+
+/**
+ * write_mbr_partition() - write DOS MBR
+ *
+ * @param dev_desc - block device descriptor
+ * @param buf - buffer which contains the MBR
+ *
+ * @return - '0' on success, otherwise error
+ */
+int write_mbr_partition(struct blk_desc *dev_desc, void *buf);
+
+#endif
+
 
 #endif /* _PART_H */

@@ -10,6 +10,9 @@ config TARGET_OPENRD
 config TARGET_DREAMPLUG
 	bool "DreamPlug Board"
 
+config TARGET_DS109
+	bool "Synology DS109"
+
 config TARGET_GURUPLUG
 	bool "GuruPlug Board"
 
@@ -30,6 +33,10 @@ config TARGET_ICONNECT
 
 config TARGET_KM_KIRKWOOD
 	bool "KM_KIRKWOOD Board"
+	select BOARD_LATE_INIT
+	imply CMD_CRAMFS
+	imply CMD_DIAG
+	imply FS_CRAMFS
 
 config TARGET_NET2BIG_V2
 	bool "LaCie 2Big Network v2 NAS Board"
@@ -59,6 +66,7 @@ config SYS_SOC
 
 source "board/Marvell/openrd/Kconfig"
 source "board/Marvell/dreamplug/Kconfig"
+source "board/Synology/ds109/Kconfig"
 source "board/Marvell/guruplug/Kconfig"
 source "board/Marvell/sheevaplug/Kconfig"
 source "board/buffalo/lsxl/Kconfig"

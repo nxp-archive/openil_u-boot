@@ -96,7 +96,12 @@ static struct usb_hub_descriptor hub_desc = {
 								1 << 7),
 	.bPwrOn2PwrGood		= 2,
 	.bHubContrCurrent	= 5,
-	.DeviceRemovable	= {0, 0xff}, /* all ports removeable */
+	{
+		{
+			/* all ports removeable */
+			.DeviceRemovable	= {0, 0xff}
+		}
+	}
 #if SANDBOX_NUM_PORTS > 8
 #error "This code sets up an incorrect mask"
 #endif
@@ -156,7 +161,7 @@ static int clrset_post_state(struct udevice *hub, int port, int clear, int set)
 			} else if (clear & USB_PORT_STAT_POWER) {
 				debug("%s: %s: power off, removed, ret=%d\n",
 				      __func__, dev->name, ret);
-				ret = device_remove(dev);
+				ret = device_remove(dev, DM_REMOVE_NORMAL);
 				clear |= USB_PORT_STAT_CONNECTION;
 			}
 		}
@@ -277,7 +282,7 @@ static int sandbox_child_post_bind(struct udevice *dev)
 {
 	struct sandbox_hub_platdata *plat = dev_get_parent_platdata(dev);
 
-	plat->port = fdtdec_get_int(gd->fdt_blob, dev->of_offset, "reg", -1);
+	plat->port = dev_read_u32_default(dev, "reg", -1);
 
 	return 0;
 }

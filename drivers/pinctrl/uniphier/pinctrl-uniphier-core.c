@@ -5,13 +5,19 @@
  * SPDX-License-Identifier:	GPL-2.0+
  */
 
+#include <common.h>
+#include <dm.h>
 #include <linux/io.h>
 #include <linux/err.h>
 #include <linux/sizes.h>
-#include <dm/device.h>
 #include <dm/pinctrl.h>
 
 #include "pinctrl-uniphier.h"
+
+#define UNIPHIER_PINCTRL_PINMUX_BASE	0x1000
+#define UNIPHIER_PINCTRL_LOAD_PINMUX	0x1700
+#define UNIPHIER_PINCTRL_PUPDCTRL_BASE	0x1a00
+#define UNIPHIER_PINCTRL_IECTRL		0x1d00
 
 static const char *uniphier_pinctrl_dummy_name = "_dummy";
 
@@ -51,8 +57,8 @@ static const char *uniphier_pinmux_get_function_name(struct udevice *dev,
 	return priv->socdata->functions[selector];
 }
 
-static void uniphier_pinconf_input_enable_perpin(struct udevice *dev,
-						 unsigned pin)
+static int uniphier_pinconf_input_enable_perpin(struct udevice *dev,
+						unsigned int pin, int enable)
 {
 	struct uniphier_pinctrl_priv *priv = dev_get_priv(dev);
 	unsigned reg;
@@ -62,17 +68,29 @@ static void uniphier_pinconf_input_enable_perpin(struct udevice *dev,
 	mask = BIT(pin % 32);
 
 	tmp = readl(priv->base + reg);
-	tmp |= mask;
+	if (enable)
+		tmp |= mask;
+	else
+		tmp &= ~mask;
 	writel(tmp, priv->base + reg);
+
+	return 0;
 }
 
-static void uniphier_pinconf_input_enable_legacy(struct udevice *dev,
-						 unsigned pin)
+static int uniphier_pinconf_input_enable_legacy(struct udevice *dev,
+						unsigned int pin, int enable)
 {
 	struct uniphier_pinctrl_priv *priv = dev_get_priv(dev);
 	int pins_count = priv->socdata->pins_count;
 	const struct uniphier_pinctrl_pin *pins = priv->socdata->pins;
 	int i;
+
+	/*
+	 * Multiple pins share one input enable, per-pin disabling is
+	 * impossible.
+	 */
+	if (!enable)
+		return -EINVAL;
 
 	for (i = 0; i < pins_count; i++) {
 		if (pins[i].number == pin) {
@@ -85,31 +103,133 @@ static void uniphier_pinconf_input_enable_legacy(struct udevice *dev,
 			writel(tmp, priv->base + UNIPHIER_PINCTRL_IECTRL);
 		}
 	}
+
+	return 0;
 }
 
-static void uniphier_pinconf_input_enable(struct udevice *dev, unsigned pin)
+static int uniphier_pinconf_input_enable(struct udevice *dev,
+					 unsigned int pin, int enable)
 {
 	struct uniphier_pinctrl_priv *priv = dev_get_priv(dev);
 
 	if (priv->socdata->caps & UNIPHIER_PINCTRL_CAPS_PERPIN_IECTRL)
-		uniphier_pinconf_input_enable_perpin(dev, pin);
+		return uniphier_pinconf_input_enable_perpin(dev, pin, enable);
 	else
-		uniphier_pinconf_input_enable_legacy(dev, pin);
+		return uniphier_pinconf_input_enable_legacy(dev, pin, enable);
 }
+
+#if CONFIG_IS_ENABLED(PINCONF)
+
+static const struct pinconf_param uniphier_pinconf_params[] = {
+	{ "bias-disable", PIN_CONFIG_BIAS_DISABLE, 0 },
+	{ "bias-pull-up", PIN_CONFIG_BIAS_PULL_UP, 1 },
+	{ "bias-pull-down", PIN_CONFIG_BIAS_PULL_DOWN, 1 },
+	{ "bias-pull-pin-default", PIN_CONFIG_BIAS_PULL_PIN_DEFAULT, 1 },
+	{ "input-enable", PIN_CONFIG_INPUT_ENABLE, 1 },
+	{ "input-disable", PIN_CONFIG_INPUT_ENABLE, 0 },
+};
+
+static int uniphier_pinconf_bias_set(struct udevice *dev, unsigned int pin,
+				     unsigned int param, unsigned int arg)
+{
+	struct uniphier_pinctrl_priv *priv = dev_get_priv(dev);
+	unsigned int enable = 1;
+	unsigned int reg;
+	u32 mask, tmp;
+
+	if (!(priv->socdata->caps & UNIPHIER_PINCTRL_CAPS_PUPD_SIMPLE))
+		return -ENOTSUPP;
+
+	switch (param) {
+	case PIN_CONFIG_BIAS_DISABLE:
+		enable = 0;
+		break;
+	case PIN_CONFIG_BIAS_PULL_UP:
+	case PIN_CONFIG_BIAS_PULL_DOWN:
+		if (arg == 0)	/* total bias is not supported */
+			return -EINVAL;
+		break;
+	case PIN_CONFIG_BIAS_PULL_PIN_DEFAULT:
+		if (arg == 0)	/* configuration ignored */
+			return 0;
+	default:
+		BUG();
+	}
+
+	reg = UNIPHIER_PINCTRL_PUPDCTRL_BASE + pin / 32 * 4;
+	mask = BIT(pin % 32);
+
+	tmp = readl(priv->base + reg);
+	if (enable)
+		tmp |= mask;
+	else
+		tmp &= ~mask;
+	writel(tmp, priv->base + reg);
+
+	return 0;
+}
+
+static int uniphier_pinconf_set_one(struct udevice *dev, unsigned int pin,
+				    unsigned int param, unsigned int arg)
+{
+	int ret;
+
+	switch (param) {
+	case PIN_CONFIG_BIAS_DISABLE:
+	case PIN_CONFIG_BIAS_PULL_UP:
+	case PIN_CONFIG_BIAS_PULL_DOWN:
+	case PIN_CONFIG_BIAS_PULL_PIN_DEFAULT:
+		ret = uniphier_pinconf_bias_set(dev, pin, param, arg);
+		break;
+	case PIN_CONFIG_INPUT_ENABLE:
+		ret = uniphier_pinconf_input_enable(dev, pin, arg);
+		break;
+	default:
+		printf("unsupported configuration parameter %u\n", param);
+		return -EINVAL;
+	}
+
+	return ret;
+}
+
+static int uniphier_pinconf_group_set(struct udevice *dev,
+				      unsigned int group_selector,
+				      unsigned int param, unsigned int arg)
+{
+	struct uniphier_pinctrl_priv *priv = dev_get_priv(dev);
+	const struct uniphier_pinctrl_group *grp =
+					&priv->socdata->groups[group_selector];
+	int i, ret;
+
+	for (i = 0; i < grp->num_pins; i++) {
+		ret = uniphier_pinconf_set_one(dev, grp->pins[i], param, arg);
+		if (ret)
+			return ret;
+	}
+
+	return 0;
+}
+
+#endif /* CONFIG_IS_ENABLED(PINCONF) */
 
 static void uniphier_pinmux_set_one(struct udevice *dev, unsigned pin,
 				    int muxval)
 {
 	struct uniphier_pinctrl_priv *priv = dev_get_priv(dev);
-	unsigned mux_bits, reg_stride, reg, reg_end, shift, mask;
-	bool load_pinctrl;
+	unsigned reg, reg_end, shift, mask;
+	unsigned mux_bits = 8;
+	unsigned reg_stride = 4;
+	bool load_pinctrl = false;
 	u32 tmp;
 
 	/* some pins need input-enabling */
-	uniphier_pinconf_input_enable(dev, pin);
+	uniphier_pinconf_input_enable(dev, pin, 1);
 
 	if (muxval < 0)
 		return;		/* dedicated pin; nothing to do for pin-mux */
+
+	if (priv->socdata->caps & UNIPHIER_PINCTRL_CAPS_MUX_4BIT)
+		mux_bits = 4;
 
 	if (priv->socdata->caps & UNIPHIER_PINCTRL_CAPS_DBGMUX_SEPARATE) {
 		/*
@@ -117,18 +237,9 @@ static void uniphier_pinmux_set_one(struct udevice *dev, unsigned pin,
 		 *  Normal     4 * n     shift+3:shift
 		 *  Debug      4 * n     shift+7:shift+4
 		 */
-		mux_bits = 4;
+		mux_bits /= 2;
 		reg_stride = 8;
 		load_pinctrl = true;
-	} else {
-		/*
-		 *  Mode       offset           bit
-		 *  Normal     8 * n        shift+3:shift
-		 *  Debug      8 * n + 4    shift+3:shift
-		 */
-		mux_bits = 8;
-		reg_stride = 4;
-		load_pinctrl = false;
 	}
 
 	reg = UNIPHIER_PINCTRL_PINMUX_BASE + pin * mux_bits / 32 * reg_stride;
@@ -174,6 +285,11 @@ const struct pinctrl_ops uniphier_pinctrl_ops = {
 	.get_functions_count = uniphier_pinmux_get_functions_count,
 	.get_function_name = uniphier_pinmux_get_function_name,
 	.pinmux_group_set = uniphier_pinmux_group_set,
+#if CONFIG_IS_ENABLED(PINCONF)
+	.pinconf_num_params = ARRAY_SIZE(uniphier_pinconf_params),
+	.pinconf_params = uniphier_pinconf_params,
+	.pinconf_group_set = uniphier_pinconf_group_set,
+#endif
 	.set_state = pinctrl_generic_set_state,
 };
 
@@ -183,7 +299,7 @@ int uniphier_pinctrl_probe(struct udevice *dev,
 	struct uniphier_pinctrl_priv *priv = dev_get_priv(dev);
 	fdt_addr_t addr;
 
-	addr = dev_get_addr(dev->parent);
+	addr = devfdt_get_addr(dev->parent);
 	if (addr == FDT_ADDR_T_NONE)
 		return -EINVAL;
 

@@ -38,6 +38,11 @@ static void set_clocks_in_mhz (bd_t *kbd);
 #define CONFIG_SYS_LINUX_LOWMEM_MAX_SIZE	(768*1024*1024)
 #endif
 
+int arch_fixup_fdt(void *blob)
+{
+	return 0;
+}
+
 static void boot_jump_linux(bootm_headers_t *images)
 {
 	void	(*kernel)(bd_t *, ulong r4, ulong r5, ulong r6,
@@ -278,10 +283,6 @@ static void set_clocks_in_mhz (bd_t *kbd)
 		kbd->bi_sccfreq /= 1000000L;
 		kbd->bi_vco	/= 1000000L;
 #endif
-#if defined(CONFIG_MPC5xxx)
-		kbd->bi_ipbfreq /= 1000000L;
-		kbd->bi_pcifreq /= 1000000L;
-#endif /* CONFIG_MPC5xxx */
 	}
 }
 

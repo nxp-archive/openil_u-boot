@@ -18,7 +18,4 @@ config SYS_CONFIG_NAME
 	default "sandbox_spl" if SANDBOX_SPL
 	default "sandbox" if !SANDBOX_SPL
 
-config DM_KEYBOARD
-	default y
-
 endmenu

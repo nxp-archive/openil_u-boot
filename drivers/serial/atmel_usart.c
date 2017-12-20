@@ -7,10 +7,12 @@
  * SPDX-License-Identifier:	GPL-2.0+
  */
 #include <common.h>
+#include <clk.h>
 #include <dm.h>
 #include <errno.h>
 #include <watchdog.h>
 #include <serial.h>
+#include <debug_uart.h>
 #include <linux/compiler.h>
 
 #include <asm/io.h>
@@ -24,6 +26,7 @@
 
 DECLARE_GLOBAL_DATA_PTR;
 
+#ifndef CONFIG_DM_SERIAL
 static void atmel_serial_setbrg_internal(atmel_usart3_t *usart, int id,
 					 int baudrate)
 {
@@ -65,7 +68,6 @@ static void atmel_serial_activate(atmel_usart3_t *usart)
 	__udelay(100);
 }
 
-#ifndef CONFIG_DM_SERIAL
 static void atmel_serial_setbrg(void)
 {
 	atmel_serial_setbrg_internal((atmel_usart3_t *)CONFIG_USART_BASE,
@@ -132,17 +134,47 @@ __weak struct serial_device *default_serial_console(void)
 #endif
 
 #ifdef CONFIG_DM_SERIAL
+enum serial_clk_type {
+	CLK_TYPE_NORMAL = 0,
+	CLK_TYPE_DBGU,
+};
 
 struct atmel_serial_priv {
 	atmel_usart3_t *usart;
+	ulong usart_clk_rate;
 };
+
+static void _atmel_serial_set_brg(atmel_usart3_t *usart,
+				  ulong usart_clk_rate, int baudrate)
+{
+	unsigned long divisor;
+
+	divisor = (usart_clk_rate / 16 + baudrate / 2) / baudrate;
+	writel(USART3_BF(CD, divisor), &usart->brgr);
+}
+
+void _atmel_serial_init(atmel_usart3_t *usart,
+			ulong usart_clk_rate, int baudrate)
+{
+	writel(USART3_BIT(RXDIS) | USART3_BIT(TXDIS), &usart->cr);
+
+	writel((USART3_BF(USART_MODE, USART3_USART_MODE_NORMAL) |
+		USART3_BF(USCLKS, USART3_USCLKS_MCK) |
+		USART3_BF(CHRL, USART3_CHRL_8) |
+		USART3_BF(PAR, USART3_PAR_NONE) |
+		USART3_BF(NBSTOP, USART3_NBSTOP_1)), &usart->mr);
+
+	_atmel_serial_set_brg(usart, usart_clk_rate, baudrate);
+
+	writel(USART3_BIT(RSTRX) | USART3_BIT(RSTTX), &usart->cr);
+	writel(USART3_BIT(RXEN) | USART3_BIT(TXEN), &usart->cr);
+}
 
 int atmel_serial_setbrg(struct udevice *dev, int baudrate)
 {
 	struct atmel_serial_priv *priv = dev_get_priv(dev);
 
-	atmel_serial_setbrg_internal(priv->usart, 0 /* ignored */, baudrate);
-	atmel_serial_activate(priv->usart);
+	_atmel_serial_set_brg(priv->usart, priv->usart_clk_rate, baudrate);
 
 	return 0;
 }
@@ -187,28 +219,69 @@ static const struct dm_serial_ops atmel_serial_ops = {
 	.setbrg = atmel_serial_setbrg,
 };
 
+static int atmel_serial_enable_clk(struct udevice *dev)
+{
+	struct atmel_serial_priv *priv = dev_get_priv(dev);
+	struct clk clk;
+	ulong clk_rate;
+	int ret;
+
+	ret = clk_get_by_index(dev, 0, &clk);
+	if (ret)
+		return -EINVAL;
+
+	if (dev_get_driver_data(dev) == CLK_TYPE_NORMAL) {
+		ret = clk_enable(&clk);
+		if (ret)
+			return ret;
+	}
+
+	clk_rate = clk_get_rate(&clk);
+	if (!clk_rate)
+		return -EINVAL;
+
+	priv->usart_clk_rate = clk_rate;
+
+	clk_free(&clk);
+
+	return 0;
+}
+
 static int atmel_serial_probe(struct udevice *dev)
 {
 	struct atmel_serial_platdata *plat = dev->platdata;
 	struct atmel_serial_priv *priv = dev_get_priv(dev);
+	int ret;
 #if CONFIG_IS_ENABLED(OF_CONTROL)
 	fdt_addr_t addr_base;
 
-	addr_base = dev_get_addr(dev);
+	addr_base = devfdt_get_addr(dev);
 	if (addr_base == FDT_ADDR_T_NONE)
 		return -ENODEV;
 
 	plat->base_addr = (uint32_t)addr_base;
 #endif
 	priv->usart = (atmel_usart3_t *)plat->base_addr;
-	atmel_serial_init_internal(priv->usart);
+
+	ret = atmel_serial_enable_clk(dev);
+	if (ret)
+		return ret;
+
+	_atmel_serial_init(priv->usart, priv->usart_clk_rate, gd->baudrate);
 
 	return 0;
 }
 
 #if CONFIG_IS_ENABLED(OF_CONTROL)
 static const struct udevice_id atmel_serial_ids[] = {
-	{ .compatible = "atmel,at91sam9260-usart" },
+	{
+		.compatible = "atmel,at91sam9260-dbgu",
+		.data = CLK_TYPE_DBGU,
+	},
+	{
+		.compatible = "atmel,at91sam9260-usart",
+		.data = CLK_TYPE_NORMAL,
+	},
 	{ }
 };
 #endif
@@ -225,4 +298,25 @@ U_BOOT_DRIVER(serial_atmel) = {
 	.flags = DM_FLAG_PRE_RELOC,
 	.priv_auto_alloc_size	= sizeof(struct atmel_serial_priv),
 };
+#endif
+
+#ifdef CONFIG_DEBUG_UART_ATMEL
+static inline void _debug_uart_init(void)
+{
+	atmel_usart3_t *usart = (atmel_usart3_t *)CONFIG_DEBUG_UART_BASE;
+
+	_atmel_serial_init(usart, CONFIG_DEBUG_UART_CLOCK, CONFIG_BAUDRATE);
+}
+
+static inline void _debug_uart_putc(int ch)
+{
+	atmel_usart3_t *usart = (atmel_usart3_t *)CONFIG_DEBUG_UART_BASE;
+
+	while (!(readl(&usart->csr) & USART3_BIT(TXRDY)))
+		;
+
+	writel(ch, &usart->thr);
+}
+
+DEBUG_UART_FUNCS
 #endif

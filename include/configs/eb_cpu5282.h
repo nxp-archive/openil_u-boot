@@ -19,7 +19,6 @@
 
 #define CONFIG_MCFUART
 #define CONFIG_SYS_UART_PORT		(0)
-#define CONFIG_BAUDRATE			115200
 
 #undef	CONFIG_MONITOR_IS_IN_RAM		/* starts uboot direct */
 
@@ -35,13 +34,7 @@
 
 #define CONFIG_HW_WATCHDOG
 
-#define CONFIG_STATUS_LED
-#define CONFIG_BOARD_SPECIFIC_LED
 #define STATUS_LED_ACTIVE		0
-#define STATUS_LED_BIT			0x0008	/* Timer7 GPIO */
-#define STATUS_LED_BOOT			0
-#define STATUS_LED_PERIOD		(CONFIG_SYS_HZ / 2)
-#define STATUS_LED_STATE		STATUS_LED_OFF
 
 /*----------------------------------------------------------------------*
  * Configuration for environment					*
@@ -64,8 +57,6 @@
  * Command line configuration.
  */
 #define CONFIG_CMDLINE_EDITING
-#define CONFIG_CMD_DATE
-#define CONFIG_CMD_LED
 
 #define CONFIG_MCFTMR
 
@@ -250,8 +241,6 @@
 /*-----------------------------------------------------------------------
  * VIDEO configuration
  */
-
-#define CONFIG_VIDEO
 
 #ifdef CONFIG_VIDEO
 #define CONFIG_VIDEO_VCXK			1

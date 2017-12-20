@@ -6,6 +6,7 @@
 
 #ifndef __ASM_ARCH_LS102XA_IMMAP_H_
 #define __ASM_ARCH_LS102XA_IMMAP_H_
+#include <fsl_immap.h>
 
 #define SVR_MAJ(svr)		(((svr) >>  4) & 0xf)
 #define SVR_MIN(svr)		(((svr) >>  0) & 0xf)
@@ -161,25 +162,36 @@ struct ccsr_gur {
 #define SCFG_SNPCNFGCR_DBG_RD_WR	0x000c0000
 #define SCFG_SNPCNFGCR_EDMA_SNP		0x00020000
 #define SCFG_ENDIANCR_LE		0x80000000
+#define SCFG_DPSLPCR_WDRR_EN		0x00000001
+#define SCFG_PMCINTECR_LPUART		0x40000000
+#define SCFG_PMCINTECR_FTM		0x20000000
+#define SCFG_PMCINTECR_GPIO		0x10000000
+#define SCFG_PMCINTECR_IRQ0		0x08000000
+#define SCFG_PMCINTECR_IRQ1		0x04000000
+#define SCFG_PMCINTECR_ETSECRXG0	0x00800000
+#define SCFG_PMCINTECR_ETSECRXG1	0x00400000
+#define SCFG_PMCINTECR_ETSECERRG0	0x00080000
+#define SCFG_PMCINTECR_ETSECERRG1	0x00040000
+#define SCFG_CLUSTERPMCR_WFIL2EN	0x80000000
+#define SCFG_BASE                       0x01570000
+#define SCFG_USB3PRM1CR                 0x070
+#define USB_TXVREFTUNE                  0x9
+#define USB_SQRXTUNE                    0xFC7FFFFF
+#define USB_PHY_BASE                    0x08510000
+#define USB_PHY_TX_OVRD_DRV_LO          0x2004
+#define USB_PHY_MPLL_OVRD_IN_HI         0x0024
+#define USB_PHY_LEVEL_OVRD_IN           0x002a
+#define USB_PHY_TX_OVRD_IN_HI           0x2002
+#define USB_PHY_RX_OVRD_IN_HI           0x200c
+#define USB_PHY_TX_OVRD_DRV_LO_VAL      0x784C
+#define USB_PHY_MPLL_OVRD_IN_HI_VAL     0x0080
+#define USB_PHY_LEVEL_OVRD_IN_VAL       0xA9A5
+#define USB_PHY_TX_OVRD_IN_HI_VAL       0x0003
+#define USB_PHY_RX_EQ_VAL_1             0x0000
+#define USB_PHY_RX_EQ_VAL_2             0x8000
+#define USB_PHY_RX_EQ_VAL_3             0x8004
+#define USB_PHY_RX_EQ_VAL_4             0x800C
 
-#define SCFG_BASE			0x01570000
-#define SCFG_USB3PRM1CR			0x070
-#define USB_TXVREFTUNE			0x9
-#define USB_SQRXTUNE			0xFC7FFFFF
-#define USB_PHY_BASE			0x08510000
-#define USB_PHY_TX_OVRD_DRV_LO		0x2004
-#define USB_PHY_MPLL_OVRD_IN_HI		0x0024
-#define USB_PHY_LEVEL_OVRD_IN		0x002a
-#define USB_PHY_TX_OVRD_IN_HI		0x2002
-#define USB_PHY_RX_OVRD_IN_HI		0x200c
-#define USB_PHY_TX_OVRD_DRV_LO_VAL	0x784C
-#define USB_PHY_MPLL_OVRD_IN_HI_VAL	0x0080
-#define USB_PHY_LEVEL_OVRD_IN_VAL	0xA9A5
-#define USB_PHY_TX_OVRD_IN_HI_VAL	0x0003
-#define USB_PHY_RX_EQ_VAL_1		0x0000
-#define USB_PHY_RX_EQ_VAL_2		0x8000
-#define USB_PHY_RX_EQ_VAL_3		0x8004
-#define USB_PHY_RX_EQ_VAL_4		0x800C
 
 /* Supplemental Configuration Unit */
 struct ccsr_scfg {
@@ -245,7 +257,7 @@ struct ccsr_scfg {
 	u32 debug_streamid;
 	u32 resv10[5];
 	u32 snpcnfgcr;
-	u32 resv11[1];
+	u32 hrstcr;
 	u32 intpcr;
 	u32 resv12[20];
 	u32 scfgrevcr;
@@ -262,6 +274,9 @@ struct ccsr_scfg {
 	u32 sdhciovserlcr;
 	u32 resv14[61];
 	u32 sparecr[8];
+	u32 resv15[248];
+	u32 core0sftrstsr;
+	u32 clusterpmcr;
 };
 
 /* Clocking */
@@ -379,53 +394,7 @@ struct ccsr_serdes {
 	u8	res_a00[0x1000-0xa00];	/* from 0xa00 to 0xfff */
 };
 
-#define CCI400_CTRLORD_TERM_BARRIER	0x00000008
-#define CCI400_CTRLORD_EN_BARRIER	0
-#define CCI400_SHAORD_NON_SHAREABLE	0x00000002
-#define CCI400_DVM_MESSAGE_REQ_EN	0x00000002
-#define CCI400_SNOOP_REQ_EN		0x00000001
 
-/* CCI-400 registers */
-struct ccsr_cci400 {
-	u32 ctrl_ord;			/* Control Override */
-	u32 spec_ctrl;			/* Speculation Control */
-	u32 secure_access;		/* Secure Access */
-	u32 status;			/* Status */
-	u32 impr_err;			/* Imprecise Error */
-	u8 res_14[0x100 - 0x14];
-	u32 pmcr;			/* Performance Monitor Control */
-	u8 res_104[0xfd0 - 0x104];
-	u32 pid[8];			/* Peripheral ID */
-	u32 cid[4];			/* Component ID */
-	struct {
-		u32 snoop_ctrl;		/* Snoop Control */
-		u32 sha_ord;		/* Shareable Override */
-		u8 res_1008[0x1100 - 0x1008];
-		u32 rc_qos_ord;		/* read channel QoS Value Override */
-		u32 wc_qos_ord;		/* read channel QoS Value Override */
-		u8 res_1108[0x110c - 0x1108];
-		u32 qos_ctrl;		/* QoS Control */
-		u32 max_ot;		/* Max OT */
-		u8 res_1114[0x1130 - 0x1114];
-		u32 target_lat;		/* Target Latency */
-		u32 latency_regu;	/* Latency Regulation */
-		u32 qos_range;		/* QoS Range */
-		u8 res_113c[0x2000 - 0x113c];
-	} slave[5];			/* Slave Interface */
-	u8 res_6000[0x9004 - 0x6000];
-	u32 cycle_counter;		/* Cycle counter */
-	u32 count_ctrl;			/* Count Control */
-	u32 overflow_status;		/* Overflow Flag Status */
-	u8 res_9010[0xa000 - 0x9010];
-	struct {
-		u32 event_select;	/* Event Select */
-		u32 event_count;	/* Event Count */
-		u32 counter_ctrl;	/* Counter Control */
-		u32 overflow_status;	/* Overflow Flag Status */
-		u8 res_a010[0xb000 - 0xa010];
-	} pcounter[4];			/* Performance Counter */
-	u8 res_e004[0x10000 - 0xe004];
-};
 
 /* AHCI (sata) register map */
 struct ccsr_ahci {
@@ -450,6 +419,42 @@ struct ccsr_ahci {
 	u32 ppcs;	/* port phy control status */
 	u32 pberr;	/* port 0/1 BIST error */
 	u32 cmds;	/* port 0/1 CMD status error */
+};
+
+#define RCPM_POWMGTCSR			0x130
+#define RCPM_POWMGTCSR_SERDES_PW	0x80000000
+#define RCPM_POWMGTCSR_LPM20_REQ	0x00100000
+#define RCPM_POWMGTCSR_LPM20_ST		0x00000200
+#define RCPM_POWMGTCSR_P_LPM20_ST	0x00000100
+#define RCPM_IPPDEXPCR0			0x140
+#define RCPM_IPPDEXPCR0_ETSEC		0x80000000
+#define RCPM_IPPDEXPCR0_GPIO		0x00000040
+#define RCPM_IPPDEXPCR1			0x144
+#define RCPM_IPPDEXPCR1_LPUART		0x40000000
+#define RCPM_IPPDEXPCR1_FLEXTIMER	0x20000000
+#define RCPM_IPPDEXPCR1_OCRAM1		0x10000000
+#define RCPM_NFIQOUTR			0x15c
+#define RCPM_NIRQOUTR			0x16c
+#define RCPM_DSIMSKR			0x18c
+#define RCPM_CLPCL10SETR		0x1c4
+#define RCPM_CLPCL10SETR_C0		0x00000001
+
+struct ccsr_rcpm {
+	u8 rev1[0x4c];
+	u32 twaitsr;
+	u8 rev2[0xe0];
+	u32 powmgtcsr;
+	u8 rev3[0xc];
+	u32 ippdexpcr0;
+	u32 ippdexpcr1;
+	u8 rev4[0x14];
+	u32 nfiqoutr;
+	u8 rev5[0xc];
+	u32 nirqoutr;
+	u8 rev6[0x1c];
+	u32 dsimskr;
+	u8 rev7[0x34];
+	u32 clpcl10setr;
 };
 
 uint get_svr(void);

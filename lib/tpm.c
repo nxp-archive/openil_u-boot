@@ -230,10 +230,9 @@ static uint32_t tpm_sendrecv_command(const void *command,
 		void *response, size_t *size_ptr)
 {
 	struct udevice *dev;
-	int ret;
+	int err, ret;
 	uint8_t response_buffer[COMMAND_BUFFER_SIZE];
 	size_t response_length;
-	uint32_t err;
 
 	if (response) {
 		response_length = *size_ptr;
@@ -645,6 +644,35 @@ uint32_t tpm_get_permissions(uint32_t index, uint32_t *perm)
 	return 0;
 }
 
+#ifdef CONFIG_TPM_FLUSH_RESOURCES
+uint32_t tpm_flush_specific(uint32_t key_handle, uint32_t resource_type)
+{
+	const uint8_t command[18] = {
+		0x00, 0xc1,             /* TPM_TAG */
+		0x00, 0x00, 0x00, 0x12, /* parameter size */
+		0x00, 0x00, 0x00, 0xba, /* TPM_COMMAND_CODE */
+		0x00, 0x00, 0x00, 0x00, /* key handle */
+		0x00, 0x00, 0x00, 0x00, /* resource type */
+	};
+	const size_t key_handle_offset = 10;
+	const size_t resource_type_offset = 14;
+	uint8_t buf[COMMAND_BUFFER_SIZE], response[COMMAND_BUFFER_SIZE];
+	size_t response_length = sizeof(response);
+	uint32_t err;
+
+	if (pack_byte_string(buf, sizeof(buf), "sdd",
+			     0, command, sizeof(command),
+			     key_handle_offset, key_handle,
+			     resource_type_offset, resource_type))
+		return TPM_LIB_ERROR;
+
+	err = tpm_sendrecv_command(buf, response, &response_length);
+	if (err)
+		return err;
+	return 0;
+}
+#endif /* CONFIG_TPM_FLUSH_RESOURCES */
+
 #ifdef CONFIG_TPM_AUTH_SESSIONS
 
 /**
@@ -966,5 +994,45 @@ uint32_t tpm_get_pub_key_oiap(uint32_t key_handle, const void *usage_auth,
 
 	return 0;
 }
+
+#ifdef CONFIG_TPM_LOAD_KEY_BY_SHA1
+uint32_t tpm_find_key_sha1(const uint8_t auth[20], const uint8_t
+			   pubkey_digest[20], uint32_t *handle)
+{
+	uint16_t key_count;
+	uint32_t key_handles[10];
+	uint8_t buf[288];
+	uint8_t *ptr;
+	uint32_t err;
+	uint8_t digest[20];
+	size_t buf_len;
+	unsigned int i;
+
+	/* fetch list of already loaded keys in the TPM */
+	err = tpm_get_capability(TPM_CAP_HANDLE, TPM_RT_KEY, buf, sizeof(buf));
+	if (err)
+		return -1;
+	key_count = get_unaligned_be16(buf);
+	ptr = buf + 2;
+	for (i = 0; i < key_count; ++i, ptr += 4)
+		key_handles[i] = get_unaligned_be32(ptr);
+
+	/* now search a(/ the) key which we can access with the given auth */
+	for (i = 0; i < key_count; ++i) {
+		buf_len = sizeof(buf);
+		err = tpm_get_pub_key_oiap(key_handles[i], auth, buf, &buf_len);
+		if (err && err != TPM_AUTHFAIL)
+			return -1;
+		if (err)
+			continue;
+		sha1_csum(buf, buf_len, digest);
+		if (!memcmp(digest, pubkey_digest, 20)) {
+			*handle = key_handles[i];
+			return 0;
+		}
+	}
+	return 1;
+}
+#endif /* CONFIG_TPM_LOAD_KEY_BY_SHA1 */
 
 #endif /* CONFIG_TPM_AUTH_SESSIONS */

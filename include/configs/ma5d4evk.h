@@ -1,5 +1,5 @@
 /*
- * DENX MA5D4 configuration
+ * Aries MA5D4 configuration
  * Copyright (C) 2015 Marek Vasut <marex@denx.de>
  *
  * SPDX-License-Identifier:	GPL-2.0+
@@ -8,20 +8,12 @@
 #ifndef __MA5D4EVK_CONFIG_H__
 #define __MA5D4EVK_CONFIG_H__
 
-#define CONFIG_SYS_NO_FLASH
-
 #define CONFIG_TIMESTAMP		/* Print image info with timestamp */
 
 #include "at91-sama5_common.h"
 #undef CONFIG_BOOTARGS
 #define CONFIG_SYS_USE_SERIALFLASH	1
-
-/*
- * U-Boot Commands
- */
-#define CONFIG_DOS_PARTITION
-#define CONFIG_FAT_WRITE
-/*#define CONFIG_LCD*/
+#define CONFIG_BOARD_LATE_INIT
 
 /*
  * Memory configurations
@@ -40,13 +32,12 @@
 /*
  * Environment
  */
-#define CONFIG_ENV_IS_IN_SPI_FLASH
-#define CONFIG_SYS_REDUNDAND_ENVIRONMENT
-#define CONFIG_ENV_OFFSET		0x8000
+#define CONFIG_ENV_IS_IN_MMC
+#define CONFIG_SYS_CONSOLE_OVERWRITE_ROUTINE
+#define CONFIG_SYS_CONSOLE_ENV_OVERWRITE
 #define CONFIG_ENV_SIZE			0x4000
-#define CONFIG_ENV_OFFSET_REDUND	(CONFIG_ENV_OFFSET + CONFIG_ENV_SIZE)
-#define CONFIG_ENV_SIZE_REDUND		CONFIG_ENV_SIZE
-#define CONFIG_ENV_SECT_SIZE		0x1000
+#define CONFIG_SYS_MMC_ENV_DEV		0	/* eMMC */
+#define CONFIG_ENV_OFFSET		512	/* just after the MBR */
 
 /*
  * U-Boot general configurations
@@ -75,22 +66,18 @@
  * LCD
  */
 #ifdef CONFIG_LCD
-#define CONFIG_CMD_BMP
 #define CONFIG_BMP_16BPP
 #define CONFIG_BMP_24BPP
 #define CONFIG_BMP_32BPP
 #define LCD_BPP				LCD_COLOR16
 #define LCD_OUTPUT_BPP                  24
 #define CONFIG_ATMEL_HLCD
-#define CONFIG_SYS_CONSOLE_IS_IN_ENV
 #endif
 
 /*
  * SD/MMC
  */
 #ifdef CONFIG_CMD_MMC
-#define CONFIG_MMC
-#define CONFIG_GENERIC_MMC
 #define CONFIG_GENERIC_ATMEL_MCI
 #endif
 
@@ -110,14 +97,14 @@
  * USB
  */
 #ifdef CONFIG_CMD_USB
-#define CONFIG_USB_EHCI
-#define CONFIG_USB_EHCI_ATMEL
-#define CONFIG_SYS_USB_EHCI_MAX_ROOT_PORTS	3
 
 /* USB device */
 #define CONFIG_USB_ETHER
 #define CONFIG_USB_ETH_RNDIS
-#define CONFIG_USBNET_MANUFACTURER      "DENX"
+#define CONFIG_USBNET_MANUFACTURER      "AriesEmbedded"
+#define CONFIG_USB_FUNCTION_MASS_STORAGE
+#define CONFIG_SYS_DFU_DATA_BUF_SIZE	(1 * 1024 * 1024)
+#define DFU_DEFAULT_POLL_TIMEOUT	300
 #endif
 
 /*
@@ -142,10 +129,11 @@
 	"consdev=ttyS3\0"						\
 	"baudrate=115200\0"						\
 	"bootscript=boot.scr\0"						\
-	"bootdev=/dev/mmcblk1p1\0"					\
-	"bootpart=1:1\0"						\
-	"rootdev=/dev/mmcblk1p2\0"					\
+	"bootdev=/dev/mmcblk0p1\0"					\
+	"bootpart=0:1\0"						\
+	"rootdev=/dev/mmcblk0p2\0"					\
 	"netdev=eth0\0"							\
+	"dfu_alt_info=mmc raw 0 3867148288\0"				\
 	"kernel_addr_r=0x22000000\0"					\
 	"update_spi_firmware_spl_addr=0x21000000\0"			\
 	"update_spi_firmware_spl_filename=boot.bin\0"			\
@@ -186,22 +174,27 @@
 	"nfsargs="							\
 		"setenv bootargs root=/dev/nfs rw "			\
 			"nfsroot=${serverip}:${rootpath},v3,tcp\0"	\
+	"fdtimg=if test ${bootmode} = \"sf\" ; then "			\
+			"setenv kernel_fdt 1 ; "			\
+		"else ; "						\
+			"setenv kernel_fdt 2 ; "			\
+		"fi\0"							\
 	"mmc_mmc="							\
-		"run mmcload mmcargs addargs ; "			\
-		"bootm ${kernel_addr_r}\0"				\
+		"run fdtimg mmcload mmcargs addargs ; "			\
+		"bootm ${kernel_addr_r}:kernel@1 - ${kernel_addr_r}:fdt@${kernel_fdt}\0" \
 	"mmc_nfs="							\
-		"run mmcload nfsargs addip addargs ; "			\
-		"bootm ${kernel_addr_r}\0"				\
+		"run fdtimg mmcload nfsargs addip addargs ; "			\
+		"bootm ${kernel_addr_r}:kernel@1 - ${kernel_addr_r}:fdt@${kernel_fdt}\0" \
 	"net_mmc="							\
-		"run netload mmcargs addargs ; "			\
-		"bootm ${kernel_addr_r}\0"				\
+		"run fdtimg netload mmcargs addargs ; "			\
+		"bootm ${kernel_addr_r}:kernel@1 - ${kernel_addr_r}:fdt@${kernel_fdt}\0" \
 	"net_nfs="							\
-		"run netload nfsargs addip addargs ; "			\
-		"bootm ${kernel_addr_r}\0"				\
+		"run fdtimg netload nfsargs addip addargs ; "			\
+		"bootm ${kernel_addr_r}:kernel@1 - ${kernel_addr_r}:fdt@${kernel_fdt}\0" \
 	"try_bootscript="						\
 		"mmc rescan;"						\
-		"if test -e mmc ${bootpart} ${bootscript} ; then "	\
-		"if load mmc ${bootpart} ${kernel_addr_r} ${bootscript};"\
+		"if test -e mmc 1:1 ${bootscript} ; then "		\
+		"if load mmc 1:1 ${kernel_addr_r} ${bootscript};"	\
 		"then ; "						\
 			"echo Running bootscript... ; "			\
 			"source ${kernel_addr_r} ; "			\
@@ -216,17 +209,18 @@
 #define CONFIG_SYS_SPL_MALLOC_START	0x20080000
 #define CONFIG_SYS_SPL_MALLOC_SIZE	0x80000
 
-#define CONFIG_SPL_LIBCOMMON_SUPPORT
-#define CONFIG_SPL_LIBGENERIC_SUPPORT
-#define CONFIG_SPL_GPIO_SUPPORT
-#define CONFIG_SPL_SERIAL_SUPPORT
-
-#define CONFIG_SPL_BOARD_INIT
 #define CONFIG_SYS_MONITOR_LEN		(512 << 10)
 
-#define CONFIG_SPL_SPI_SUPPORT
-#define CONFIG_SPL_SPI_FLASH_SUPPORT
 #define CONFIG_SPL_SPI_LOAD
 #define CONFIG_SYS_SPI_U_BOOT_OFFS	0x10000
+
+#define CONFIG_SYS_USE_MMC
+#define CONFIG_SPL_LDSCRIPT		arch/arm/mach-at91/armv7/u-boot-spl.lds
+#define CONFIG_SPL_MMC_SUPPORT
+#define CONFIG_SYS_MMCSD_RAW_MODE_U_BOOT_SECTOR 0x200
+#define CONFIG_SYS_MMCSD_FS_BOOT_PARTITION	1
+#define CONFIG_SPL_FS_LOAD_PAYLOAD_NAME		"u-boot.img"
+#define CONFIG_SPL_FAT_SUPPORT
+#define CONFIG_SPL_LIBDISK_SUPPORT
 
 #endif	/* __MA5D4EVK_CONFIG_H__ */

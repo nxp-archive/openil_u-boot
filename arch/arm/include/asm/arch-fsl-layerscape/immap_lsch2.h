@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2015 Freescale Semiconductor, Inc.
+ * Copyright 2013-2017 Freescale Semiconductor, Inc.
  *
  * SPDX-License-Identifier:	GPL-2.0+
  */
@@ -15,10 +15,9 @@
 #define CONFIG_SYS_DCSR_COP_CCP_ADDR	(CONFIG_SYS_DCSRBAR + 0x02008040)
 
 #define CONFIG_SYS_FSL_DDR_ADDR			(CONFIG_SYS_IMMR + 0x00080000)
-#define CONFIG_SYS_CCI400_ADDR			(CONFIG_SYS_IMMR + 0x00180000)
 #define CONFIG_SYS_GIC400_ADDR			(CONFIG_SYS_IMMR + 0x00400000)
 #define CONFIG_SYS_IFC_ADDR			(CONFIG_SYS_IMMR + 0x00530000)
-#define CONFIG_SYS_QSPI_ADDR			(CONFIG_SYS_IMMR + 0x00550000)
+#define SYS_FSL_QSPI_ADDR			(CONFIG_SYS_IMMR + 0x00550000)
 #define CONFIG_SYS_FSL_ESDHC_ADDR		(CONFIG_SYS_IMMR + 0x00560000)
 #define CONFIG_SYS_FSL_CSU_ADDR			(CONFIG_SYS_IMMR + 0x00510000)
 #define CONFIG_SYS_FSL_GUTS_ADDR		(CONFIG_SYS_IMMR + 0x00ee0000)
@@ -41,7 +40,6 @@
 #define CONFIG_SYS_PCIE1_ADDR			(CONFIG_SYS_IMMR + 0x2400000)
 #define CONFIG_SYS_PCIE2_ADDR			(CONFIG_SYS_IMMR + 0x2500000)
 #define CONFIG_SYS_PCIE3_ADDR			(CONFIG_SYS_IMMR + 0x2600000)
-#define CONFIG_SYS_PPFE_ADDR			(CONFIG_SYS_IMMR + 0x3000000)
 #define CONFIG_SYS_SEC_MON_ADDR			(CONFIG_SYS_IMMR + 0xe90000)
 #define CONFIG_SYS_SFP_ADDR			(CONFIG_SYS_IMMR + 0xe80200)
 
@@ -84,11 +82,6 @@
 #define QSPI0_BASE_ADDR				(CONFIG_SYS_IMMR + 0x00550000)
 #define DSPI1_BASE_ADDR				(CONFIG_SYS_IMMR + 0x01100000)
 
-#define GPIO1_BASE_ADDR				(CONFIG_SYS_IMMR + 0x1300000)
-#define GPIO2_BASE_ADDR				(CONFIG_SYS_IMMR + 0x1310000)
-#define GPIO3_BASE_ADDR				(CONFIG_SYS_IMMR + 0x1320000)
-#define GPIO4_BASE_ADDR				(CONFIG_SYS_IMMR + 0x1330000)
-
 #define LPUART_BASE				(CONFIG_SYS_IMMR + 0x01950000)
 
 #define AHCI_BASE_ADDR				(CONFIG_SYS_IMMR + 0x02200000)
@@ -97,7 +90,7 @@
 #define CONFIG_SYS_PCIE2_PHYS_ADDR		0x4800000000ULL
 #define CONFIG_SYS_PCIE3_PHYS_ADDR		0x5000000000ULL
 /* LUT registers */
-#ifdef CONFIG_LS1012A
+#ifdef CONFIG_ARCH_LS1012A
 #define PCIE_LUT_BASE				0xC0000
 #else
 #define PCIE_LUT_BASE				0x10000
@@ -157,7 +150,7 @@ CONFIG_SYS_CCSRBAR_PHYS_LOW and/or CONFIG_SYS_CCSRBAR_PHYS_HIGH instead."
 #endif
 
 #ifndef CONFIG_SYS_CCSRBAR
-#define CONFIG_SYS_CCSRBAR		CONFIG_SYS_CCSRBAR_DEFAULT
+#define CONFIG_SYS_CCSRBAR		0x01000000
 #endif
 
 #ifndef CONFIG_SYS_CCSRBAR_PHYS_HIGH
@@ -165,7 +158,7 @@ CONFIG_SYS_CCSRBAR_PHYS_LOW and/or CONFIG_SYS_CCSRBAR_PHYS_HIGH instead."
 #endif
 
 #ifndef CONFIG_SYS_CCSRBAR_PHYS_LOW
-#define CONFIG_SYS_CCSRBAR_PHYS_LOW	CONFIG_SYS_CCSRBAR_DEFAULT
+#define CONFIG_SYS_CCSRBAR_PHYS_LOW	0x01000000
 #endif
 
 #define CONFIG_SYS_CCSRBAR_PHYS ((CONFIG_SYS_CCSRBAR_PHYS_HIGH * 1ull) << 32 | \
@@ -234,6 +227,28 @@ struct ccsr_gur {
 #define FSL_CHASSIS2_DEVDISR2_10GEC1_2	0x00400000
 #define FSL_CHASSIS2_DEVDISR2_10GEC1_3	0x80000000
 #define FSL_CHASSIS2_DEVDISR2_10GEC1_4	0x40000000
+#define SCFG_BASE                      0x01570000
+#define SCFG_USB3PRM1CR_USB1           0x070
+#define SCFG_USB3PRM2CR_USB1           0x074
+#define SCFG_USB3PRM1CR_USB2           0x07C
+#define SCFG_USB3PRM2CR_USB2           0x080
+#define SCFG_USB3PRM1CR_USB3           0x088
+#define SCFG_USB3PRM2CR_USB3           0x08c
+#define USB_TXVREFTUNE                 0x9
+#define USB_SQRXTUNE                   0xFC7FFFFF
+#define USB_PCSTXSWINGFULL             0x47
+#define USB_PHY1                       0x084F0000
+#define USB_PHY2                       0x08500000
+#define USB_PHY3                       0x08510000
+#define USB_PHY_RX_OVRD_IN_HI          0x200c
+/* TODO : make it generic */
+#define USB_PHY_RX_EQ_VAL_1            0x0000
+#define USB_PHY_RX_EQ_VAL_2            0x8000
+#define USB_PHY_RX_EQ_VAL_3            0x8003
+
+#define USB_PHY_RX_EQ_VAL_4            0x800b
+
+
 	u32     devdisr2;       /* Device disable control 2 */
 	u32     devdisr3;       /* Device disable control 3 */
 	u32     devdisr4;       /* Device disable control 4 */
@@ -373,54 +388,10 @@ struct ccsr_gur {
 #define SCFG_USBPWRFAULT_USB2_SHIFT	2
 #define SCFG_USBPWRFAULT_USB1_SHIFT	0
 
-#define SCFG_BASE			0x01570000
-#define SCFG_USB3PRM1CR_USB1		0x070
-#define SCFG_USB3PRM2CR_USB1		0x074
-#define SCFG_USB3PRM1CR_USB2		0x07C
-#define SCFG_USB3PRM2CR_USB2		0x080
-#define SCFG_USB3PRM1CR_USB3		0x088
-#define SCFG_USB3PRM2CR_USB3		0x08c
-#define USB_TXVREFTUNE			0x9
-#define USB_SQRXTUNE			0xFC7FFFFF
-#define USB_PCSTXSWINGFULL		0x47
-#define USB_PHY1			0x084F0000
-#define USB_PHY2			0x08500000
-#define USB_PHY3			0x08510000
-#define USB_PHY_RX_OVRD_IN_HI		0x200c
-/* TODO : make it generic */
-#define USB_PHY_RX_EQ_VAL_1		0x0000
-#define USB_PHY_RX_EQ_VAL_2		0x8000
-#define USB_PHY_RX_EQ_VAL_3		0x8003
-#define USB_PHY_RX_EQ_VAL_4		0x800b
-
 #define SCFG_SNPCNFGCR_SECRDSNP		0x80000000
 #define SCFG_SNPCNFGCR_SECWRSNP		0x40000000
 #define SCFG_SNPCNFGCR_SATARDSNP	0x00800000
 #define SCFG_SNPCNFGCR_SATAWRSNP	0x00400000
-#define SCFG_SNPCNFGCR_USB1RDSNP	0x00200000
-#define SCFG_SNPCNFGCR_USB1WRSNP	0x00100000
-#define SCFG_SNPCNFGCR_USB2RDSNP	0x00008000
-#define SCFG_SNPCNFGCR_USB2WRSNP	0x00010000
-#define SCFG_SNPCNFGCR_USB3RDSNP	0x00002000
-#define SCFG_SNPCNFGCR_USB3WRSNP	0x00004000
-
-/* RGMIIPCR bit definitions*/
-#define SCFG_RGMIIPCR_EN_AUTO		(0x00000008)
-#define SCFG_RGMIIPCR_SETSP_1000M	(0x00000004)
-#define SCFG_RGMIIPCR_SETSP_100M	(0x00000000)
-#define SCFG_RGMIIPCR_SETSP_10M		(0x00000002)
-#define SCFG_RGMIIPCR_SETFD		(0x00000001)
-
-/*PFEASBCR bit definitions */
-#define SCFG_PPFEASBCR_ARCACHE0		(0x80000000)
-#define SCFG_PPFEASBCR_AWCACHE0		(0x40000000)
-#define SCFG_PPFEASBCR_ARCACHE1		(0x20000000)
-#define SCFG_PPFEASBCR_AWCACHE1		(0x10000000)
-#define SCFG_PPFEASBCR_ARSNP		(0x08000000)
-#define SCFG_PPFEASBCR_AWSNP		(0x04000000)
-
-
-
 
 /* Supplemental Configuration Unit */
 struct ccsr_scfg {
@@ -439,12 +410,7 @@ struct ccsr_scfg {
 	u8 res_140[0x158-0x140];
 	u32 altcbar;
 	u32 qspi_cfg;
-	u8 res_160[0x164-0x160];
-	u32 wr_qos1;
-	u32 wr_qos2;
-	u32 rd_qos1;
-	u32 rd_qos2;
-	u8 res_174[0x180-0x174];
+	u8 res_160[0x180-0x160];
 	u32 dmamcr;
 	u8 res_184[0x188-0x184];
 	u32 gic_align;
@@ -475,21 +441,7 @@ struct ccsr_scfg {
 	u32 usb_refclk_selcr1;
 	u32 usb_refclk_selcr2;
 	u32 usb_refclk_selcr3;
-	u8 res_424[0x434-0x424];
-	u32 rgmiipcr;
-	u32 res_438;
-	u32 rgmiipsr;
-	u32 pfepfcssr1;
-	u32 pfeintencr1;
-	u32 pfepfcssr2;
-	u32 pfeintencr2;
-	u32 pfeerrcr;
-	u32 pfeeerrintencr;
-	u32 pfeasbcr;
-	u32 pfebsbcr;
-	u8 res_460[0x484-0x460];
-	u32 mdioselcr;
-	u8 res_468[0x600-0x488];
+	u8 res_424[0x600-0x424];
 	u32 scratchrw[4];
 	u8 res_610[0x680-0x610];
 	u32 corebcr;
@@ -640,64 +592,6 @@ struct ccsr_serdes {
 		u32	srdsxficr3;	/* 0x198c XFI Protocol Control 3 */
 	} xfi[2];	/* Lane A, B */
 	u8	res_19a0[0x2000-0x19a0];	/* from 0x19a0 to 0x1fff */
-};
-
-#define CCI400_CTRLORD_TERM_BARRIER	0x00000008
-#define CCI400_CTRLORD_EN_BARRIER	0
-#define CCI400_SHAORD_NON_SHAREABLE	0x00000002
-#define CCI400_DVM_MESSAGE_REQ_EN	0x00000002
-#define CCI400_SNOOP_REQ_EN		0x00000001
-
-/* CCI-400 registers */
-struct ccsr_cci400 {
-	u32 ctrl_ord;			/* Control Override */
-	u32 spec_ctrl;			/* Speculation Control */
-	u32 secure_access;		/* Secure Access */
-	u32 status;			/* Status */
-	u32 impr_err;			/* Imprecise Error */
-	u8 res_14[0x100 - 0x14];
-	u32 pmcr;			/* Performance Monitor Control */
-	u8 res_104[0xfd0 - 0x104];
-	u32 pid[8];			/* Peripheral ID */
-	u32 cid[4];			/* Component ID */
-	struct {
-		u32 snoop_ctrl;		/* Snoop Control */
-		u32 sha_ord;		/* Shareable Override */
-		u8 res_1008[0x1100 - 0x1008];
-		u32 rc_qos_ord;		/* read channel QoS Value Override */
-		u32 wc_qos_ord;		/* read channel QoS Value Override */
-		u8 res_1108[0x110c - 0x1108];
-		u32 qos_ctrl;		/* QoS Control */
-		u32 max_ot;		/* Max OT */
-		u8 res_1114[0x1130 - 0x1114];
-		u32 target_lat;		/* Target Latency */
-		u32 latency_regu;	/* Latency Regulation */
-		u32 qos_range;		/* QoS Range */
-		u8 res_113c[0x2000 - 0x113c];
-	} slave[5];			/* Slave Interface */
-	u8 res_6000[0x9004 - 0x6000];
-	u32 cycle_counter;		/* Cycle counter */
-	u32 count_ctrl;			/* Count Control */
-	u32 overflow_status;		/* Overflow Flag Status */
-	u8 res_9010[0xa000 - 0x9010];
-	struct {
-		u32 event_select;	/* Event Select */
-		u32 event_count;	/* Event Count */
-		u32 counter_ctrl;	/* Counter Control */
-		u32 overflow_status;	/* Overflow Flag Status */
-		u8 res_a010[0xb000 - 0xa010];
-	} pcounter[4];			/* Performance Counter */
-	u8 res_e004[0x10000 - 0xe004];
-};
-
-struct ccsr_gpio {
-	u32	gpdir;
-	u32	gpodr;
-	u32	gpdat;
-	u32	gpier;
-	u32	gpimr;
-	u32	gpicr;
-	u32	gpibe;
 };
 
 /* MMU 500 */

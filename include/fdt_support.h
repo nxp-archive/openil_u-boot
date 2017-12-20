@@ -93,7 +93,15 @@ int fdt_fixup_memory(void *blob, u64 start, u64 size);
  *			property will be left untouched.
  * @return 0 if ok, or -1 or -FDT_ERR_... on error
  */
+#ifdef CONFIG_ARCH_FIXUP_FDT_MEMORY
 int fdt_fixup_memory_banks(void *blob, u64 start[], u64 size[], int banks);
+#else
+static inline int fdt_fixup_memory_banks(void *blob, u64 start[], u64 size[],
+					 int banks)
+{
+	return 0;
+}
+#endif
 
 void fdt_fixup_ethernet(void *fdt);
 int fdt_find_and_setprop(void *fdt, const char *node, const char *prop,
@@ -114,9 +122,9 @@ void fdt_fixup_qe_firmware(void *fdt);
 int fdt_fixup_display(void *blob, const char *path, const char *display);
 
 #if defined(CONFIG_USB_EHCI_FSL) || defined(CONFIG_USB_XHCI_FSL)
-void fdt_fixup_dr_usb(void *blob, bd_t *bd);
+void fsl_fdt_fixup_dr_usb(void *blob, bd_t *bd);
 #else
-static inline void fdt_fixup_dr_usb(void *blob, bd_t *bd) {}
+static inline void fsl_fdt_fixup_dr_usb(void *blob, bd_t *bd) {}
 #endif /* defined(CONFIG_USB_EHCI_FSL) || defined(CONFIG_USB_XHCI_FSL) */
 
 #if defined(CONFIG_SYS_FSL_SEC_COMPAT)
@@ -167,7 +175,15 @@ void ft_pci_setup(void *blob, bd_t *bd);
 int ft_system_setup(void *blob, bd_t *bd);
 
 void set_working_fdt_addr(ulong addr);
-int fdt_shrink_to_minimum(void *blob);
+
+/**
+ * shrink down the given blob to minimum size + some extrasize if required
+ *
+ * @param blob		FDT blob to update
+ * @param extrasize	additional bytes needed
+ * @return 0 if ok, or -FDT_ERR_... on error
+ */
+int fdt_shrink_to_minimum(void *blob, uint extrasize);
 int fdt_increase_size(void *fdt, int add_len);
 
 int fdt_fixup_nor_flash_size(void *blob);
@@ -191,7 +207,7 @@ int fdt_add_edid(void *blob, const char *compat, unsigned char *buf);
 
 int fdt_verify_alias_address(void *fdt, int anode, const char *alias,
 			      u64 addr);
-u64 fdt_get_base_address(void *fdt, int node);
+u64 fdt_get_base_address(const void *fdt, int node);
 int fdt_read_range(void *fdt, int node, int n, uint64_t *child_addr,
 		   uint64_t *addr, uint64_t *len);
 
@@ -232,7 +248,7 @@ static inline int fdt_status_fail_by_alias(void *fdt, const char *alias)
 }
 
 /* Helper to read a big number; size is in cells (not bytes) */
-static inline u64 of_read_number(const fdt32_t *cell, int size)
+static inline u64 fdt_read_number(const fdt32_t *cell, int size)
 {
 	u64 r = 0;
 	while (size--)
@@ -240,7 +256,7 @@ static inline u64 of_read_number(const fdt32_t *cell, int size)
 	return r;
 }
 
-void of_bus_default_count_cells(const void *blob, int parentoffset,
+void fdt_support_default_count_cells(const void *blob, int parentoffset,
 					int *addrc, int *sizec);
 int ft_verify_fdt(void *fdt);
 int arch_fixup_memory_node(void *blob);

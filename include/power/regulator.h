@@ -108,6 +108,7 @@ enum regulator_type {
 	REGULATOR_TYPE_BUCK,
 	REGULATOR_TYPE_DVS,
 	REGULATOR_TYPE_FIXED,
+	REGULATOR_TYPE_GPIO,
 	REGULATOR_TYPE_OTHER,
 };
 
@@ -152,6 +153,8 @@ enum regulator_flag {
  * TODO(sjg@chromium.org): Consider putting the above two into @flags
  * @flags:     - flags value (see REGULATOR_FLAG_...)
  * @name**     - fdt regulator name - should be taken from the device tree
+ * ctrl_reg:   - Control register offset used to enable/disable regulator
+ * volt_reg:   - register offset for writing voltage vsel values
  *
  * Note:
  * *  - set automatically on device probe by the uclass's '.pre_probe' method.
@@ -171,6 +174,8 @@ struct dm_regulator_uclass_platdata {
 	bool boot_on;
 	const char *name;
 	int flags;
+	u8 ctrl_reg;
+	u8 volt_reg;
 };
 
 /* Regulator device operations */
@@ -254,6 +259,16 @@ int regulator_get_value(struct udevice *dev);
  * @return - 0 on success or -errno val if fails
  */
 int regulator_set_value(struct udevice *dev, int uV);
+
+/**
+ * regulator_set_value_force: set the microvoltage value of a given regulator
+ *			      without any min-,max condition check
+ *
+ * @dev    - pointer to the regulator device
+ * @uV     - the output value to set [micro Volts]
+ * @return - 0 on success or -errno val if fails
+ */
+int regulator_set_value_force(struct udevice *dev, int uV);
 
 /**
  * regulator_get_current: get microampere value of a given regulator

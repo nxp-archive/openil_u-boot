@@ -5,6 +5,9 @@
  * Dante Su <dantesu@faraday-tech.com>
  *
  * SPDX-License-Identifier:	GPL-2.0+
+ *
+ * NOTE: This driver should be converted to driver model before June 2017.
+ * Please see doc/driver-model/i2c-howto.txt for instructions.
  */
 
 #include <common.h>
@@ -143,15 +146,6 @@ static void fti2c010_init(struct i2c_adapter *adap, int speed, int slaveaddr)
 	set_i2c_bus_speed(chip, speed);
 
 	/* slave init, don't care */
-
-#ifdef CONFIG_SYS_I2C_BOARD_LATE_INIT
-	/* Call board specific i2c bus reset routine AFTER the bus has been
-	 * initialized. Use either this callpoint or i2c_init_board;
-	 * which is called before fti2c010_init operations.
-	 * For details about this problem see doc/I2C_Edge_Conditions.
-	*/
-	i2c_board_late_init();
-#endif
 }
 
 /*

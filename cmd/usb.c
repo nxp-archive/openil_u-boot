@@ -150,6 +150,8 @@ static void usb_display_string(struct usb_device *dev, int index)
 
 static void usb_display_desc(struct usb_device *dev)
 {
+	uint packet_size = dev->descriptor.bMaxPacketSize0;
+
 	if (dev->descriptor.bDescriptorType == USB_DT_DEVICE) {
 		printf("%d: %s,  USB Revision %x.%x\n", dev->devnum,
 		usb_get_class_desc(dev->config.if_desc[0].desc.bInterfaceClass),
@@ -171,9 +173,10 @@ static void usb_display_desc(struct usb_device *dev)
 			       usb_get_class_desc(
 				dev->config.if_desc[0].desc.bInterfaceClass));
 		}
+		if (dev->descriptor.bcdUSB >= cpu_to_le16(0x0300))
+			packet_size = 1 << packet_size;
 		printf(" - PacketSize: %d  Configurations: %d\n",
-			dev->descriptor.bMaxPacketSize0,
-			dev->descriptor.bNumConfigurations);
+			packet_size, dev->descriptor.bNumConfigurations);
 		printf(" - Vendor: 0x%04x  Product 0x%04x Version %d.%d\n",
 			dev->descriptor.idVendor, dev->descriptor.idProduct,
 			(dev->descriptor.bcdDevice>>8) & 0xff,
@@ -571,11 +574,11 @@ static void do_usb_start(void)
 		return;
 
 	/* Driver model will probe the devices as they are found */
-#ifndef CONFIG_DM_USB
 # ifdef CONFIG_USB_STORAGE
 	/* try to recognize storage devices immediately */
 	usb_stor_curr_dev = usb_stor_scan(1);
 # endif
+#ifndef CONFIG_DM_USB
 # ifdef CONFIG_USB_KEYBOARD
 	drv_usb_kbd_init();
 # endif

@@ -231,6 +231,13 @@ int __pci_hose_phys_to_bus(struct pci_controller *hose,
 	return 1;
 }
 
+/*
+ * pci_hose_phys_to_bus(): Convert physical address to bus address
+ * @hose:	PCI hose of the root PCI controller
+ * @phys_addr:	physical address to convert
+ * @flags:	flags of pci regions
+ * @return bus address if OK, 0 on error
+ */
 pci_addr_t pci_hose_phys_to_bus(struct pci_controller *hose,
 				phys_addr_t phys_addr,
 				unsigned long flags)

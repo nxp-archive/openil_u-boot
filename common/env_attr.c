@@ -132,6 +132,10 @@ static int regex_callback(const char *name, const char *attributes, void *priv)
 		if (slre_match(&slre, cbp->searched_for,
 			       strlen(cbp->searched_for), caps)) {
 			free(cbp->regex);
+			if (!attributes) {
+				retval = -EINVAL;
+				goto done;
+			}
 			cbp->regex = malloc(strlen(regex) + 1);
 			if (cbp->regex) {
 				strcpy(cbp->regex, regex);
@@ -153,7 +157,7 @@ static int regex_callback(const char *name, const char *attributes, void *priv)
 		}
 	} else {
 		printf("Error compiling regex: %s\n", slre.err_str);
-		retval = EINVAL;
+		retval = -EINVAL;
 	}
 done:
 	return retval;

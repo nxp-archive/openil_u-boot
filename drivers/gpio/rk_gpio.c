@@ -10,7 +10,7 @@
 #include <common.h>
 #include <dm.h>
 #include <syscon.h>
-#include <asm/errno.h>
+#include <linux/errno.h>
 #include <asm/gpio.h>
 #include <asm/io.h>
 #include <asm/arch/clock.h>
@@ -104,7 +104,7 @@ static int rockchip_gpio_probe(struct udevice *dev)
 	int ret;
 
 	/* This only supports RK3288 at present */
-	priv->regs = (struct rockchip_gpio_regs *)dev_get_addr(dev);
+	priv->regs = (struct rockchip_gpio_regs *)devfdt_get_addr(dev);
 	ret = uclass_first_device_err(UCLASS_PINCTRL, &priv->pinctrl);
 	if (ret)
 		return ret;

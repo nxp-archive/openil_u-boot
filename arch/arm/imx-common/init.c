@@ -44,7 +44,7 @@ void init_aips(void)
 	writel(0x00000000, &aips2->opacr3);
 	writel(0x00000000, &aips2->opacr4);
 
-	if (is_mx6sx() || is_mx7()) {
+	if (is_mx6ull() || is_mx6sx() || is_mx7()) {
 		/*
 		 * Set all MPROTx to be non-bufferable, trusted for R/W,
 		 * not forced to user-mode.
@@ -113,5 +113,15 @@ void boot_mode_apply(unsigned cfg_val)
 	else
 		reg &= ~(1 << 28);
 	writel(reg, &psrc->gpr10);
+}
+#endif
+
+#if defined(CONFIG_MX6)
+u32 imx6_src_get_boot_mode(void)
+{
+	if (imx6_is_bmode_from_gpr9())
+		return readl(&src_base->gpr9);
+	else
+		return readl(&src_base->sbmr1);
 }
 #endif

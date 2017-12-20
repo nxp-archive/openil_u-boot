@@ -8,10 +8,8 @@
 #ifndef __CONFIG_H
 #define __CONFIG_H
 
-#define CONFIG_SYS_THUMB_BUILD
 #define CONFIG_STM32F4DISCOVERY
 
-#define CONFIG_BOARD_EARLY_INIT_F
 #define CONFIG_MISC_INIT_R
 
 #define CONFIG_SYS_FLASH_BASE		0x08000000
@@ -42,7 +40,6 @@
 #define CONFIG_ENV_SECT_SIZE		(128 << 10)
 #define CONFIG_ENV_SIZE			(8 << 10)
 
-#define CONFIG_BOARD_SPECIFIC_LED
 #define CONFIG_RED_LED			110
 #define CONFIG_GREEN_LED		109
 
@@ -69,9 +66,6 @@
 
 #define CONFIG_SYS_MALLOC_LEN		(2 << 20)
 
-#define CONFIG_STACKSIZE		(64 << 10)
-
-#define CONFIG_BAUDRATE			115200
 #define CONFIG_BOOTARGS							\
 	"console=ttyS0,115200 earlyprintk consoleblank=0 ignore_loglevel"
 #define CONFIG_BOOTCOMMAND						\

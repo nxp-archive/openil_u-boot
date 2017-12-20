@@ -6,13 +6,13 @@
 
 #ifndef __FSL_QBMAN_H__
 #define __FSL_QBMAN_H__
-extern void fdt_fixup_qportals(void *blob);
-extern void fdt_fixup_bportals(void *blob);
-extern void inhibit_portals(void __iomem *addr, int max_portals,
+void fdt_fixup_qportals(void *blob);
+void fdt_fixup_bportals(void *blob);
+void inhibit_portals(void __iomem *addr, int max_portals,
 		int arch_max_portals, int portal_cinh_size);
-extern void setup_qbman_portals(void);
+void setup_qbman_portals(void);
 
-typedef struct ccsr_qman {
+struct ccsr_qman {
 #ifdef CONFIG_SYS_FSL_QMAN_V3
 	u8	res0[0x200];
 #else
@@ -55,9 +55,9 @@ typedef struct ccsr_qman {
 		u32	qcsp_dd_cfg;	/* 0xc - SW Portal n Dynamic Debug cfg*/
 	} qcsp[50];
 #endif
-} ccsr_qman_t;
+};
 
-typedef struct ccsr_bman {
+struct ccsr_bman {
 	/* Not actually reserved, but irrelevant to u-boot */
 	u8	res[0xbf8];
 	u32	ip_rev_1;
@@ -70,6 +70,6 @@ typedef struct ccsr_bman {
 	u32	srcidr;		/* Source ID Register */
 	u32	liodnr;		/* LIODN Register */
 	u8	res7[0x2f4];
-} ccsr_bman_t;
+};
 
 #endif /* __FSL_QBMAN_H__ */

@@ -48,9 +48,9 @@ def ShowActions(series, why_selected, boards_selected, builder, options):
     Args:
         series: Series object
         why_selected: Dictionary where each key is a buildman argument
-                provided by the user, and the value is the boards brought
-                in by that argument. For example, 'arm' might bring in
-                400 boards, so in this case the key would be 'arm' and
+                provided by the user, and the value is the list of boards
+                brought in by that argument. For example, 'arm' might bring
+                in 400 boards, so in this case the key would be 'arm' and
                 the value would be a list of board names.
         boards_selected: Dict of selected boards, key is target name,
                 value is Board object
@@ -75,9 +75,11 @@ def ShowActions(series, why_selected, boards_selected, builder, options):
     print
     for arg in why_selected:
         if arg != 'all':
-            print arg, ': %d boards' % why_selected[arg]
+            print arg, ': %d boards' % len(why_selected[arg])
+            if options.verbose:
+                print '   %s' % ' '.join(why_selected[arg])
     print ('Total boards to build for each commit: %d\n' %
-            why_selected['all'])
+            len(why_selected['all']))
 
 def DoBuildman(options, args, toolchains=None, make_func=None, boards=None,
                clean_dir=False):
@@ -221,9 +223,10 @@ def DoBuildman(options, args, toolchains=None, make_func=None, boards=None,
                     options.git_dir, count, series=None, allow_overwrite=True)
     else:
         series = None
-        options.verbose = True
-        if not options.summary:
-            options.show_errors = True
+        if not options.dry_run:
+            options.verbose = True
+            if not options.summary:
+                options.show_errors = True
 
     # By default we have one thread per CPU. But if there are not enough jobs
     # we can have fewer threads and use a high '-j' value for make.
@@ -237,7 +240,7 @@ def DoBuildman(options, args, toolchains=None, make_func=None, boards=None,
         options.step = len(series.commits) - 1
 
     gnu_make = command.Output(os.path.join(options.git,
-                                           'scripts/show-gnu-make')).rstrip()
+            'scripts/show-gnu-make'), raise_on_error=False).rstrip()
     if not gnu_make:
         sys.exit('GNU Make not found')
 
@@ -258,7 +261,9 @@ def DoBuildman(options, args, toolchains=None, make_func=None, boards=None,
             no_subdirs=options.no_subdirs, full_path=options.full_path,
             verbose_build=options.verbose_build,
             incremental=options.incremental,
-            per_board_out_dir=options.per_board_out_dir,)
+            per_board_out_dir=options.per_board_out_dir,
+            config_only=options.config_only,
+            squash_config_y=not options.preserve_config_y)
     builder.force_config_on_failure = not options.quick
     if make_func:
         builder.do_make = make_func

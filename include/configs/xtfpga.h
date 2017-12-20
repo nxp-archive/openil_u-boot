@@ -66,7 +66,6 @@
 # define CONFIG_SYS_MONITOR_LEN		0x00040000	/* 256KB */
 #endif
 
-#define CONFIG_SYS_STACKSIZE		(512 << 10)	/* stack 512KB */
 #define CONFIG_SYS_MALLOC_LEN		(256 << 10)	/* heap  256KB */
 
 /* Linux boot param area in RAM (used only when booting linux) */
@@ -110,10 +109,7 @@
 /* U-Boot general configuration */
 /*==============================*/
 
-#undef	CONFIG_USE_IRQ			/* Keep it simple, poll only */
 #define CONFIG_BOARD_POSTCLK_INIT
-#define CONFIG_DISPLAY_CPUINFO
-#define CONFIG_DISPLAY_BOARDINFO
 #define CONFIG_MISC_INIT_R
 
 #define CONFIG_BOOTFILE			"uImage"
@@ -131,7 +127,6 @@
 /* U-Boot commands */
 /*=================*/
 
-#define CONFIG_CMD_DIAG
 #define CONFIG_CMD_SAVES
 
 /*==============================*/
@@ -143,7 +138,6 @@
 #define CONFIG_AUTO_COMPLETE			/* Support tab autocompletion */
 #define CONFIG_CMDLINE_EDITING
 #define CONFIG_SYS_LONGHELP
-#define CONFIG_CRC32_VERIFY
 #define CONFIG_MX_CYCLIC
 #define CONFIG_SHOW_BOOT_PROGRESS
 
@@ -210,7 +204,6 @@
 /* Input clk to NS16550 (in Hz; the SYS_CLK_FREQ is in kHz) */
 #define CONFIG_SYS_NS16550_CLK		CONFIG_SYS_CLK_FREQ
 #define CONFIG_CONS_INDEX		1	/* use UART0 for console */
-#define CONFIG_BAUDRATE			115200	/* Default baud rate */
 #define CONFIG_SYS_BAUDRATE_TABLE	{ 9600, 19200, 38400, 57600, 115200 }
 
 /*======================*/

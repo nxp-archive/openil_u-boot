@@ -100,7 +100,7 @@ struct us_data {
 	trans_cmnd	transport;		/* transport routine */
 };
 
-#ifdef CONFIG_USB_EHCI
+#ifdef CONFIG_USB_EHCI_HCD
 /*
  * The U-Boot EHCI driver can handle any transfer length as long as there is
  * enough free heap space left, but the SCSI READ(10) and WRITE(10) commands are
@@ -303,7 +303,6 @@ void usb_stor_reset(void)
 	usb_max_devs = 0;
 }
 
-#ifndef CONFIG_DM_USB
 /*******************************************************************************
  * scan the usb and reports device info
  * to the user if mode = 1
@@ -311,10 +310,11 @@ void usb_stor_reset(void)
  */
 int usb_stor_scan(int mode)
 {
-	unsigned char i;
-
 	if (mode == 1)
 		printf("       scanning usb for storage devices... ");
+
+#ifndef CONFIG_DM_USB
+	unsigned char i;
 
 	usb_disable_asynch(1); /* asynch transfer not allowed */
 
@@ -329,12 +329,12 @@ int usb_stor_scan(int mode)
 	} /* for */
 
 	usb_disable_asynch(0); /* asynch transfer allowed */
+#endif
 	printf("%d Storage Device(s) found\n", usb_max_devs);
 	if (usb_max_devs > 0)
 		return 0;
 	return -1;
 }
-#endif
 
 static int usb_stor_irq(struct usb_device *dev)
 {
@@ -708,13 +708,10 @@ static int usb_stor_CBI_get_status(ccb *srb, struct us_data *us)
 /* clear a stall on an endpoint - special for BBB devices */
 static int usb_stor_BBB_clear_endpt_stall(struct us_data *us, __u8 endpt)
 {
-	int result;
-
 	/* ENDPOINT_HALT = 0, so set value to 0 */
-	result = usb_control_msg(us->pusb_dev, usb_sndctrlpipe(us->pusb_dev, 0),
-				USB_REQ_CLEAR_FEATURE, USB_RECIP_ENDPOINT,
-				0, endpt, NULL, 0, USB_CNTL_TIMEOUT * 5);
-	return result;
+	return usb_control_msg(us->pusb_dev, usb_sndctrlpipe(us->pusb_dev, 0),
+			       USB_REQ_CLEAR_FEATURE, USB_RECIP_ENDPOINT, 0,
+			       endpt, NULL, 0, USB_CNTL_TIMEOUT * 5);
 }
 
 static int usb_stor_BBB_transport(ccb *srb, struct us_data *us)
@@ -1443,10 +1440,8 @@ int usb_stor_get_info(struct usb_device *dev, struct us_data *ss,
 		       "   Request Sense returned %02X %02X %02X\n",
 		       pccb->sense_buf[2], pccb->sense_buf[12],
 		       pccb->sense_buf[13]);
-		if (dev_desc->removable == 1) {
+		if (dev_desc->removable == 1)
 			dev_desc->type = perq;
-			return 1;
-		}
 		return 0;
 	}
 	pccb->pdata = (unsigned char *)cap;

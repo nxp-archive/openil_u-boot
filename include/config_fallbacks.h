@@ -29,8 +29,12 @@
 #define CONFIG_SYS_BAUDRATE_TABLE	{ 9600, 19200, 38400, 57600, 115200 }
 #endif
 
-#if defined(CONFIG_CMD_FAT) && !defined(CONFIG_FS_FAT)
+#if defined(CONFIG_ENV_IS_IN_FAT) && !defined(CONFIG_FS_FAT)
 #define CONFIG_FS_FAT
+#endif
+
+#if defined(CONFIG_ENV_IS_IN_FAT) && !defined(CONFIG_FAT_WRITE)
+#define CONFIG_FAT_WRITE
 #endif
 
 #if (defined(CONFIG_CMD_EXT4) || defined(CONFIG_CMD_EXT2)) && \
@@ -43,7 +47,7 @@
 #endif
 
 /* Rather than repeat this expression each time, add a define for it */
-#if defined(CONFIG_CMD_IDE) || \
+#if defined(CONFIG_IDE) || \
 	defined(CONFIG_CMD_SATA) || \
 	defined(CONFIG_SCSI) || \
 	defined(CONFIG_CMD_USB) || \
@@ -55,8 +59,8 @@
 #define HAVE_BLOCK_DEVICE
 #endif
 
-#if (defined(CONFIG_PARTITION_UUIDS) || \
-	defined(CONFIG_EFI_PARTITION) || \
+#if (CONFIG_IS_ENABLED(PARTITION_UUIDS) || \
+	CONFIG_IS_ENABLED(EFI_PARTITION) || \
 	defined(CONFIG_RANDOM_UUID) || \
 	defined(CONFIG_CMD_UUID) || \
 	defined(CONFIG_BOOTP_PXE)) && \
@@ -69,10 +73,6 @@
 	(!defined(CONFIG_LIB_RAND) && \
 	!defined(CONFIG_LIB_HW_RAND))
 #define CONFIG_LIB_RAND
-#endif
-
-#if defined(CONFIG_API) && defined(CONFIG_LCD)
-#define CONFIG_CMD_BMP
 #endif
 
 #ifndef CONFIG_SYS_PBSIZE
@@ -96,7 +96,6 @@
 #ifndef CONFIG_CMDLINE
 #undef CONFIG_CMDLINE_EDITING
 #undef CONFIG_SYS_LONGHELP
-#undef CONFIG_MENU
 #endif
 
 #endif	/* __CONFIG_FALLBACKS_H */

@@ -10,12 +10,15 @@
 /*
  * e.g. PCI controllers need this
  */
+
+#include <asm/io.h>
+
 #ifdef CONFIG_SYS_OHCI_SWAP_REG_ACCESS
-# define ohci_readl(a) __swap_32(*((volatile u32 *)(a)))
-# define ohci_writel(a, b) (*((volatile u32 *)(b)) = __swap_32((volatile u32)a))
+# define ohci_readl(a) __swap_32(readl(a))
+# define ohci_writel(v, a) writel(__swap_32(v), a)
 #else
-# define ohci_readl(a) (*((volatile u32 *)(a)))
-# define ohci_writel(a, b) (*((volatile u32 *)(b)) = ((volatile u32)a))
+# define ohci_readl(a) readl(a)
+# define ohci_writel(v, a) writel(v, a)
 #endif /* CONFIG_SYS_OHCI_SWAP_REG_ACCESS */
 
 #if ARCH_DMA_MINALIGN > 16
@@ -112,9 +115,7 @@ struct td {
 	__u32 hwNextTD;		/* Next TD Pointer */
 	__u32 hwBE;		/* Memory Buffer End Pointer */
 
-/* #ifndef CONFIG_MPC5200 /\* this seems wrong *\/ */
 	__u16 hwPSW[MAXPSW];
-/* #endif */
 	__u8 unused;
 	__u8 index;
 	struct ed *ed;
@@ -138,13 +139,8 @@ typedef struct td td_t;
 #define NUM_INTS 32	/* part of the OHCI standard */
 struct ohci_hcca {
 	__u32	int_table[NUM_INTS];	/* Interrupt ED table */
-#if defined(CONFIG_MPC5200)
-	__u16	pad1;			/* set to 0 on each frame_no change */
-	__u16	frame_no;		/* current frame number */
-#else
 	__u16	frame_no;		/* current frame number */
 	__u16	pad1;			/* set to 0 on each frame_no change */
-#endif
 	__u32	done_head;		/* info returned for an interrupt */
 	u8		reserved_for_hc[116];
 } __attribute__((aligned(256)));

@@ -21,13 +21,11 @@
 
 #define CONFIG_MCFUART
 #define CONFIG_SYS_UART_PORT		(0)
-#define CONFIG_BAUDRATE			115200
 
 #undef CONFIG_WATCHDOG
 #define CONFIG_WATCHDOG_TIMEOUT		5000
 
 /* Command line configuration */
-#define CONFIG_CMD_DATE
 #define CONFIG_CMD_REGINFO
 
 #define CONFIG_SYS_UNIFY_CACHE

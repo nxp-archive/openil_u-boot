@@ -19,6 +19,7 @@
 #include <asm/imx-common/spi.h>
 #include <asm/imx-common/video.h>
 #include <asm/io.h>
+#include <asm/setup.h>
 #include <dm.h>
 #include <dm/platform_data/serial_mxc.h>
 #include <hwconfig.h>
@@ -52,17 +53,6 @@ struct ventana_board_info ventana_info;
 
 static int board_type;
 
-/* MMC */
-static iomux_v3_cfg_t const usdhc3_pads[] = {
-	IOMUX_PADS(PAD_SD3_CLK__SD3_CLK    | MUX_PAD_CTRL(USDHC_PAD_CTRL)),
-	IOMUX_PADS(PAD_SD3_CMD__SD3_CMD    | MUX_PAD_CTRL(USDHC_PAD_CTRL)),
-	IOMUX_PADS(PAD_SD3_DAT0__SD3_DATA0 | MUX_PAD_CTRL(USDHC_PAD_CTRL)),
-	IOMUX_PADS(PAD_SD3_DAT1__SD3_DATA1 | MUX_PAD_CTRL(USDHC_PAD_CTRL)),
-	IOMUX_PADS(PAD_SD3_DAT2__SD3_DATA2 | MUX_PAD_CTRL(USDHC_PAD_CTRL)),
-	IOMUX_PADS(PAD_SD3_DAT3__SD3_DATA3 | MUX_PAD_CTRL(USDHC_PAD_CTRL)),
-	IOMUX_PADS(PAD_SD3_DAT5__GPIO7_IO00  | MUX_PAD_CTRL(USDHC_PAD_CTRL)),
-};
-
 /* ENET */
 static iomux_v3_cfg_t const enet_pads[] = {
 	IOMUX_PADS(PAD_ENET_MDIO__ENET_MDIO  | MUX_PAD_CTRL(ENET_PAD_CTRL)),
@@ -87,7 +77,7 @@ static iomux_v3_cfg_t const enet_pads[] = {
 	IOMUX_PADS(PAD_ENET_TXD0__GPIO1_IO30 | DIO_PAD_CFG),
 };
 
-/* NAND */
+#ifdef CONFIG_CMD_NAND
 static iomux_v3_cfg_t const nfc_pads[] = {
 	IOMUX_PADS(PAD_NANDF_CLE__NAND_CLE     | MUX_PAD_CTRL(NO_PAD_CTRL)),
 	IOMUX_PADS(PAD_NANDF_ALE__NAND_ALE     | MUX_PAD_CTRL(NO_PAD_CTRL)),
@@ -106,7 +96,6 @@ static iomux_v3_cfg_t const nfc_pads[] = {
 	IOMUX_PADS(PAD_NANDF_D7__NAND_DATA07   | MUX_PAD_CTRL(NO_PAD_CTRL)),
 };
 
-#ifdef CONFIG_CMD_NAND
 static void setup_gpmi_nand(void)
 {
 	struct mxc_ccm_reg *mxc_ccm = (struct mxc_ccm_reg *)CCM_BASE_ADDR;
@@ -143,8 +132,9 @@ static void setup_iomux_enet(int gpio)
 	/* toggle PHY_RST# */
 	gpio_request(gpio, "phy_rst#");
 	gpio_direction_output(gpio, 0);
-	mdelay(2);
+	mdelay(10);
 	gpio_set_value(gpio, 1);
+	mdelay(100);
 }
 
 #ifdef CONFIG_USB_EHCI_MX6
@@ -186,34 +176,14 @@ int board_ehci_hcd_init(int port)
 
 int board_ehci_power(int port, int on)
 {
-	if (port)
-		return 0;
-	gpio_set_value(GP_USB_OTG_PWR, on);
+	/* enable OTG VBUS */
+	if (!port && board_type < GW_UNKNOWN) {
+		if (gpio_cfg[board_type].otgpwr_en)
+			gpio_set_value(gpio_cfg[board_type].otgpwr_en, on);
+	}
 	return 0;
 }
 #endif /* CONFIG_USB_EHCI_MX6 */
-
-#ifdef CONFIG_FSL_ESDHC
-static struct fsl_esdhc_cfg usdhc_cfg = { USDHC3_BASE_ADDR };
-
-int board_mmc_getcd(struct mmc *mmc)
-{
-	/* Card Detect */
-	gpio_request(GP_SD3_CD, "sd_cd");
-	gpio_direction_input(GP_SD3_CD);
-	return !gpio_get_value(GP_SD3_CD);
-}
-
-int board_mmc_init(bd_t *bis)
-{
-	/* Only one USDHC controller on Ventana */
-	SETUP_IOMUX_PADS(usdhc3_pads);
-	usdhc_cfg.sdhc_clk = mxc_get_clock(MXC_ESDHC3_CLK);
-	usdhc_cfg.max_bus_width = 4;
-
-	return fsl_esdhc_initialize(bis, &usdhc_cfg);
-}
-#endif /* CONFIG_FSL_ESDHC */
 
 #ifdef CONFIG_MXC_SPI
 iomux_v3_cfg_t const ecspi1_pads[] = {
@@ -257,11 +227,55 @@ int board_phy_config(struct phy_device *phydev)
 		phy_write(phydev, MDIO_DEVAD_NONE, 22, 0);
 	}
 
+	/* TI DP83867 */
+	else if (phydev->phy_id == 0x2000a231) {
+		/* configure register 0x170 for ref CLKOUT */
+		phy_write(phydev, MDIO_DEVAD_NONE, 13, 0x001f);
+		phy_write(phydev, MDIO_DEVAD_NONE, 14, 0x0170);
+		phy_write(phydev, MDIO_DEVAD_NONE, 13, 0x401f);
+		val = phy_read(phydev, MDIO_DEVAD_NONE, 14);
+		val &= ~0x1f00;
+		val |= 0x0b00; /* chD tx clock*/
+		phy_write(phydev, MDIO_DEVAD_NONE, 14, val);
+	}
+
 	if (phydev->drv->config)
 		phydev->drv->config(phydev);
 
 	return 0;
 }
+
+#ifdef CONFIG_MV88E61XX_SWITCH
+int mv88e61xx_hw_reset(struct phy_device *phydev)
+{
+	struct mii_dev *bus = phydev->bus;
+
+	/* GPIO[0] output, CLK125 */
+	debug("enabling RGMII_REFCLK\n");
+	bus->write(bus, 0x1c /*MV_GLOBAL2*/, 0,
+		   0x1a /*MV_SCRATCH_MISC*/,
+		   (1 << 15) | (0x62 /*MV_GPIO_DIR*/ << 8) | 0xfe);
+	bus->write(bus, 0x1c /*MV_GLOBAL2*/, 0,
+		   0x1a /*MV_SCRATCH_MISC*/,
+		   (1 << 15) | (0x68 /*MV_GPIO01_CNTL*/ << 8) | 7);
+
+	/* RGMII delay - Physical Control register bit[15:14] */
+	debug("setting port%d RGMII rx/tx delay\n", CONFIG_MV88E61XX_CPU_PORT);
+	/* forced 1000mbps full-duplex link */
+	bus->write(bus, 0x10 + CONFIG_MV88E61XX_CPU_PORT, 0, 1, 0xc0fe);
+	phydev->autoneg = AUTONEG_DISABLE;
+	phydev->speed = SPEED_1000;
+	phydev->duplex = DUPLEX_FULL;
+
+	/* LED configuration: 7:4-green (8=Activity)  3:0 amber (9=10Link) */
+	bus->write(bus, 0x10, 0, 0x16, 0x8089);
+	bus->write(bus, 0x11, 0, 0x16, 0x8089);
+	bus->write(bus, 0x12, 0, 0x16, 0x8089);
+	bus->write(bus, 0x13, 0, 0x16, 0x8089);
+
+	return 0;
+}
+#endif // CONFIG_MV88E61XX_SWITCH
 
 int board_eth_init(bd_t *bis)
 {
@@ -692,6 +706,8 @@ int checkboard(void)
 static const struct boot_mode board_boot_modes[] = {
 	/* NAND: 64pages per block, 3 row addr cycles, 2 copies of FCB/DBBT */
 	{ "nand", MAKE_CFGVAL(0x80, 0x02, 0x00, 0x00) },
+	{ "emmc2", MAKE_CFGVAL(0x60, 0x48, 0x00, 0x00) }, /* GW5600 */
+	{ "emmc3", MAKE_CFGVAL(0x60, 0x50, 0x00, 0x00) }, /* GW5903/GW5904 */
 	{ NULL, 0 },
 };
 #endif
@@ -743,7 +759,8 @@ int misc_init_r(void)
 			setenv("fdt_file1", fdt);
 			if (board_type != GW551x &&
 			    board_type != GW552x &&
-			    board_type != GW553x)
+			    board_type != GW553x &&
+			    board_type != GW560x)
 				str[4] = 'x';
 			str[5] = 'x';
 			str[6] = 0;
@@ -772,7 +789,7 @@ int misc_init_r(void)
 
 	/* Set a non-initialized hwconfig based on board configuration */
 	if (!strcmp(getenv("hwconfig"), "_UNKNOWN_")) {
-		sprintf(buf, "hwconfig=");
+		buf[0] = 0;
 		if (gpio_cfg[board_type].rs232_en)
 			strcat(buf, "rs232;");
 		for (i = 0; i < gpio_cfg[board_type].dio_num; i++) {
@@ -1074,6 +1091,12 @@ void ft_board_pci_fixup(void *blob, bd_t *bd)
 }
 #endif /* if defined(CONFIG_CMD_PCI) */
 
+void ft_board_wdog_fixup(void *blob, const char *path)
+{
+	ft_delprop_path(blob, path, "ext-reset-output");
+	ft_delprop_path(blob, path, "fsl,ext-reset-output");
+}
+
 /*
  * called prior to booting kernel or by 'fdt boardsetup' command
  *
@@ -1156,8 +1179,7 @@ int ft_board_setup(void *blob, bd_t *bd)
 
 		/* GW51xx-E adds WDOG1_B external reset */
 		if (rev < 'E')
-			ft_delprop_path(blob, WDOG1_PATH,
-					"fsl,ext-reset-output");
+			ft_board_wdog_fixup(blob, WDOG1_PATH);
 		break;
 
 	case GW52xx:
@@ -1187,23 +1209,19 @@ int ft_board_setup(void *blob, bd_t *bd)
 			    strstr((const char *)info->model, "SP331-B"))
 				gpio_cfg[board_type].usd_vsel = 0;
 
-			/* GW520x-E adds WDOG1_B external reset */
-			if (info->model[4] == '0' && rev < 'E')
-				ft_delprop_path(blob, WDOG1_PATH,
-						"fsl,ext-reset-output");
-
 			/* GW522x-B adds WDOG1_B external reset */
-			if (info->model[4] == '2' && rev < 'B')
-				ft_delprop_path(blob, WDOG1_PATH,
-						"fsl,ext-reset-output");
+			ft_board_wdog_fixup(blob, WDOG1_PATH);
 		}
+
+		/* GW520x-E adds WDOG1_B external reset */
+		else if (info->model[4] == '0' && rev < 'E')
+			ft_board_wdog_fixup(blob, WDOG1_PATH);
 		break;
 
 	case GW53xx:
 		/* GW53xx-E adds WDOG1_B external reset */
 		if (rev < 'E')
-			ft_delprop_path(blob, WDOG1_PATH,
-					"fsl,ext-reset-output");
+			ft_board_wdog_fixup(blob, WDOG1_PATH);
 		break;
 
 	case GW54xx:
@@ -1217,8 +1235,7 @@ int ft_board_setup(void *blob, bd_t *bd)
 
 		/* GW54xx-E adds WDOG2_B external reset */
 		if (rev < 'E')
-			ft_delprop_path(blob, WDOG2_PATH,
-					"fsl,ext-reset-output");
+			ft_board_wdog_fixup(blob, WDOG2_PATH);
 		break;
 
 	case GW551x:
@@ -1267,8 +1284,7 @@ int ft_board_setup(void *blob, bd_t *bd)
 
 		/* GW551x-C adds WDOG1_B external reset */
 		if (rev < 'C')
-			ft_delprop_path(blob, WDOG1_PATH,
-					"fsl,ext-reset-output");
+			ft_board_wdog_fixup(blob, WDOG1_PATH);
 		break;
 	}
 

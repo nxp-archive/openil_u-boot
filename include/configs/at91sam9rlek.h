@@ -23,48 +23,27 @@
 
 #define CONFIG_ARCH_CPU_INIT
 #define CONFIG_SKIP_LOWLEVEL_INIT
-#define CONFIG_BOARD_EARLY_INIT_F
 
 #define CONFIG_CMDLINE_TAG		1	/* enable passing of ATAGs */
 #define CONFIG_SETUP_MEMORY_TAGS	1
 #define CONFIG_INITRD_TAG		1
 
-#define CONFIG_DISPLAY_CPUINFO
-
 #define CONFIG_ATMEL_LEGACY
-#define CONFIG_AT91_GPIO		1
-#define CONFIG_AT91_GPIO_PULLUP		1
 
 /*
  * Hardware drivers
  */
 
-/* serial console */
-#define CONFIG_ATMEL_USART
-#define CONFIG_USART_BASE		ATMEL_BASE_DBGU
-#define CONFIG_USART_ID			ATMEL_ID_SYS
-#define CONFIG_BAUDRATE			115200
-
 /* LCD */
-#define CONFIG_LCD			1
 #define LCD_BPP				LCD_COLOR8
 #define CONFIG_LCD_LOGO			1
 #undef LCD_TEST_PATTERN
 #define CONFIG_LCD_INFO			1
 #define CONFIG_LCD_INFO_BELOW_LOGO	1
-#define CONFIG_SYS_WHITE_ON_BLACK	1
 #define CONFIG_ATMEL_LCD		1
 #define CONFIG_ATMEL_LCD_RGB565		1
 /* Let board_init_f handle the framebuffer allocation */
 #undef CONFIG_FB_ADDR
-#define CONFIG_SYS_CONSOLE_IS_IN_ENV	1
-
-/* LED */
-#define CONFIG_AT91_LED
-#define	CONFIG_RED_LED		AT91_PIN_PD14	/* this is the power led */
-#define	CONFIG_GREEN_LED	AT91_PIN_PD15	/* this is the user1 led */
-#define	CONFIG_YELLOW_LED	AT91_PIN_PD16	/* this is the user2 led */
-
 
 /*
  * Command line configuration.
@@ -78,7 +57,7 @@
 #define CONFIG_SYS_SDRAM_SIZE		0x04000000
 
 #define CONFIG_SYS_INIT_SP_ADDR \
-	(ATMEL_BASE_SRAM + 0x1000 - GENERATED_GBL_DATA_SIZE)
+	(ATMEL_BASE_SRAM + 16 * 1024 - GENERATED_GBL_DATA_SIZE)
 
 /* DataFlash */
 #define CONFIG_ATMEL_DATAFLASH_SPI
@@ -88,9 +67,6 @@
 #define AT91_SPI_CLK				15000000
 #define DATAFLASH_TCSS				(0x1a << 16)
 #define DATAFLASH_TCHS				(0x1 << 24)
-
-/* NOR flash - not present */
-#define CONFIG_SYS_NO_FLASH			1
 
 /* NAND flash */
 #ifdef CONFIG_CMD_NAND
@@ -105,15 +81,6 @@
 #define CONFIG_SYS_NAND_ENABLE_PIN		AT91_PIN_PB6
 #define CONFIG_SYS_NAND_READY_PIN		AT91_PIN_PD17
 
-#endif
-
-/* MMC */
-
-#ifdef CONFIG_CMD_MMC
-#define CONFIG_MMC
-#define CONFIG_GENERIC_MMC
-#define CONFIG_GENERIC_ATMEL_MCI
-#define CONFIG_DOS_PARTITION
 #endif
 
 /* Ethernet - not present */
@@ -143,7 +110,7 @@
 
 /* bootstrap + u-boot + env + linux in nandflash */
 #define CONFIG_ENV_IS_IN_NAND		1
-#define CONFIG_ENV_OFFSET		0xc0000
+#define CONFIG_ENV_OFFSET		0x120000
 #define CONFIG_ENV_OFFSET_REDUND	0x100000
 #define CONFIG_ENV_SIZE		0x20000		/* 1 sector = 128 kB */
 #define CONFIG_BOOTCOMMAND	"nand read 0x22000000 0x200000 0x600000; "	\
@@ -152,7 +119,7 @@
 #define CONFIG_BOOTARGS		\
 				"console=ttyS0,115200 earlyprintk "				\
 				"mtdparts=atmel_nand:256k(bootstrap)ro,512k(uboot)ro,"		\
-				"256K(env),256k(env_redundent),256k(spare),"			\
+				"256K(env),256k(env_redundant),256k(spare),"			\
 				"512k(dtb),6M(kernel)ro,-(rootfs) "				\
 				"rootfstype=ubifs ubi.mtd=7 root=ubi0:rootfs"
 
@@ -160,7 +127,6 @@
 
 /* bootstrap + u-boot + env + linux in mmc */
 #define CONFIG_ENV_IS_IN_FAT
-#define CONFIG_FAT_WRITE
 #define FAT_ENV_INTERFACE	"mmc"
 #define FAT_ENV_FILE		"uboot.env"
 #define FAT_ENV_DEVICE_AND_PART	"0"

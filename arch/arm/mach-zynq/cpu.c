@@ -35,7 +35,6 @@ int arch_cpu_init(void)
 	writel(0xC, &slcr_base->ddr_urgent);
 #endif
 #endif
-	zynq_clk_early_init();
 	zynq_slcr_lock();
 
 	return 0;
@@ -43,12 +42,8 @@ int arch_cpu_init(void)
 
 unsigned int zynq_get_silicon_version(void)
 {
-	unsigned int ver;
-
-	ver = (readl(&devcfg_base->mctrl) &
-	       ZYNQ_SILICON_VER_MASK) >> ZYNQ_SILICON_VER_SHIFT;
-
-	return ver;
+	return (readl(&devcfg_base->mctrl) & ZYNQ_SILICON_VER_MASK)
+						>> ZYNQ_SILICON_VER_SHIFT;
 }
 
 void reset_cpu(ulong addr)

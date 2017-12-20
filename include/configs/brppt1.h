@@ -16,17 +16,10 @@
 #include <configs/bur_am335x_common.h>
 /* ------------------------------------------------------------------------- */
 #define CONFIG_AM335X_LCD
-#define CONFIG_LCD
 #define CONFIG_LCD_ROTATION
 #define CONFIG_LCD_DT_SIMPLEFB
-#define CONFIG_SYS_WHITE_ON_BLACK
 #define LCD_BPP				LCD_COLOR32
 
-#define CONFIG_HW_WATCHDOG
-#define CONFIG_OMAP_WATCHDOG
-#define CONFIG_SPL_WATCHDOG_SUPPORT
-
-#define CONFIG_SPL_GPIO_SUPPORT
 /* Bootcount using the RTC block */
 #define CONFIG_SYS_BOOTCOUNT_ADDR	0x44E3E000
 #define CONFIG_BOOTCOUNT_LIMIT
@@ -51,14 +44,7 @@
 
 /* MMC/SD IP block */
 #if defined(CONFIG_EMMC_BOOT)
- #define CONFIG_MMC
- #define CONFIG_GENERIC_MMC
- #define CONFIG_OMAP_HSMMC
  #define CONFIG_SUPPORT_EMMC_BOOT
-/* RAW SD card / eMMC locations. */
- #define CONFIG_SYS_MMCSD_RAW_MODE_U_BOOT_SECTOR	0x300 /*addr. 0x60000 */
- #define CONFIG_SYS_U_BOOT_MAX_SIZE_SECTORS		0x200 /* 256 KB */
- #define CONFIG_SPL_MMC_SUPPORT
 #endif /* CONFIG_EMMC_BOOT */
 
 /*
@@ -71,7 +57,6 @@
 #define CONFIG_CMD_MTDPARTS
 #endif /* CONFIG_SPI_BOOT, ... */
 
-#undef CONFIG_SPL_OS_BOOT
 #ifdef CONFIG_SPL_OS_BOOT
 #define CONFIG_SYS_SPL_ARGS_ADDR		0x80F80000
 
@@ -90,7 +75,6 @@
 
 #ifdef CONFIG_NAND
 #define CONFIG_SPL_NAND_AM33XX_BCH	/* OMAP4 and later ELM support */
-#define CONFIG_SPL_NAND_SUPPORT
 #define CONFIG_SPL_NAND_BASE
 #define CONFIG_SPL_NAND_DRIVERS
 #define CONFIG_SPL_NAND_ECC
@@ -126,24 +110,24 @@
 #ifdef CONFIG_MMC
 #define MMCARGS \
 "dtbdev=mmc\0" \
-"dtbpart=0:1\0" \
+"dtbpart=1:1\0" \
 "mmcroot0=setenv bootargs ${optargs_rot} ${optargs} console=${console}\0" \
 "mmcroot1=setenv bootargs ${optargs_rot} ${optargs} console=${console} " \
 	"root=/dev/mmcblk0p2 rootfstype=ext4\0" \
 "mmcboot0=echo booting Updatesystem from mmc (ext4-fs) ...; " \
 	"setenv simplefb 1; " \
-	"ext4load mmc 0:1 ${loadaddr} /${kernel}; " \
-	"ext4load mmc 0:1 ${ramaddr} /${ramdisk}; " \
+	"ext4load mmc 1:1 ${loadaddr} /${kernel}; " \
+	"ext4load mmc 1:1 ${ramaddr} /${ramdisk}; " \
 	"run mmcroot0; bootz ${loadaddr} ${ramaddr} ${dtbaddr};\0" \
 "mmcboot1=echo booting PPT-OS from mmc (ext4-fs) ...; " \
 	"setenv simplefb 0; " \
-	"ext4load mmc 0:2 ${loadaddr} /boot/${kernel}; " \
+	"ext4load mmc 1:2 ${loadaddr} /boot/${kernel}; " \
 	"run mmcroot1; bootz ${loadaddr} - ${dtbaddr};\0" \
-"defboot=ext4load mmc 0:2 ${loadaddr} /boot/PPTImage.md5 && run mmcboot1; " \
-	"ext4load mmc 0:1 ${dtbaddr} /$dtb && run mmcboot0; " \
+"defboot=ext4load mmc 1:2 ${loadaddr} /boot/PPTImage.md5 && run mmcboot1; " \
+	"ext4load mmc 1:1 ${dtbaddr} /$dtb && run mmcboot0; " \
 	"run ramboot; run usbscript;\0" \
 "bootlimit=1\0" \
-"altbootcmd=run mmcboot0;\0" \
+"altbootcmd=mmc dev 1; run mmcboot0;\0" \
 "upduboot=dhcp; " \
 	"tftp ${loadaddr} MLO && mmc write ${loadaddr} 100 100; " \
 	"tftp ${loadaddr} u-boot.img && mmc write ${loadaddr} 300 400;\0"
@@ -194,7 +178,7 @@ MMCARGS
 #endif /* !CONFIG_SPL_BUILD*/
 
 #define CONFIG_BOOTCOMMAND \
-	"run defboot;"
+	"mmc dev 1; run defboot;"
 
 #ifdef CONFIG_NAND
 /*
@@ -243,7 +227,6 @@ MMCARGS
 
 /* USB configuration */
 #define CONFIG_USB_MUSB_DSPS
-#define CONFIG_ARCH_MISC_INIT
 #define CONFIG_USB_MUSB_PIO_ONLY
 #define CONFIG_USB_MUSB_DISABLE_BULK_COMBINE_SPLIT
 #define CONFIG_AM335X_USB0
@@ -257,8 +240,6 @@ MMCARGS
 #define CONFIG_OMAP3_SPI
 #define CONFIG_SF_DEFAULT_SPEED		24000000
 
-#define CONFIG_SPL_SPI_SUPPORT
-#define CONFIG_SPL_SPI_FLASH_SUPPORT
 #define CONFIG_SPL_SPI_LOAD
 #define CONFIG_SYS_SPI_U_BOOT_OFFS	0x20000
 #undef CONFIG_ENV_IS_NOWHERE
@@ -272,7 +253,7 @@ MMCARGS
 #elif defined(CONFIG_EMMC_BOOT)
 #undef CONFIG_ENV_IS_NOWHERE
 #define CONFIG_ENV_IS_IN_MMC
-#define CONFIG_SYS_MMC_ENV_DEV		0
+#define CONFIG_SYS_MMC_ENV_DEV		1
 #define CONFIG_SYS_MMC_ENV_PART		2
 #define CONFIG_ENV_OFFSET		0x40000	/* TODO: Adresse definieren */
 #define CONFIG_ENV_OFFSET_REDUND	(CONFIG_ENV_OFFSET + CONFIG_ENV_SIZE)
@@ -295,8 +276,6 @@ MMCARGS
  * enabled a number of useful commands and support.
  */
 #if defined(CONFIG_MMC) || defined(CONFIG_USB_STORAGE)
-#define CONFIG_DOS_PARTITION
-#define CONFIG_FAT_WRITE
 #define CONFIG_FS_EXT4
 #define CONFIG_EXT4_WRITE
 #endif /* CONFIG_MMC, ... */

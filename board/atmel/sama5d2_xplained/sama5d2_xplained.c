@@ -7,49 +7,21 @@
 
 #include <common.h>
 #include <atmel_hlcdc.h>
+#include <debug_uart.h>
+#include <dm.h>
+#include <i2c.h>
 #include <lcd.h>
-#include <mmc.h>
-#include <net.h>
-#include <netdev.h>
-#include <spi.h>
 #include <version.h>
 #include <asm/io.h>
 #include <asm/arch/at91_common.h>
 #include <asm/arch/atmel_pio4.h>
 #include <asm/arch/atmel_mpddrc.h>
-#include <asm/arch/atmel_usba_udc.h>
 #include <asm/arch/atmel_sdhci.h>
 #include <asm/arch/clk.h>
 #include <asm/arch/gpio.h>
 #include <asm/arch/sama5d2.h>
 
 DECLARE_GLOBAL_DATA_PTR;
-
-int spi_cs_is_valid(unsigned int bus, unsigned int cs)
-{
-	return bus == 0 && cs == 0;
-}
-
-void spi_cs_activate(struct spi_slave *slave)
-{
-	atmel_pio4_set_pio_output(AT91_PIO_PORTA, 17, 0);
-}
-
-void spi_cs_deactivate(struct spi_slave *slave)
-{
-	atmel_pio4_set_pio_output(AT91_PIO_PORTA, 17, 1);
-}
-
-static void board_spi0_hw_init(void)
-{
-	atmel_pio4_set_a_periph(AT91_PIO_PORTA, 14, 0);
-	atmel_pio4_set_a_periph(AT91_PIO_PORTA, 15, 0);
-	atmel_pio4_set_a_periph(AT91_PIO_PORTA, 16, 0);
-
-	atmel_pio4_set_pio_output(AT91_PIO_PORTA, 17, 1);
-
-	at91_periph_clk_enable(ATMEL_ID_SPI0);
-}
 
 static void board_usb_hw_init(void)
 {
@@ -141,71 +113,7 @@ void lcd_show_board_info(void)
 #endif /* CONFIG_LCD_INFO */
 #endif /* CONFIG_LCD */
 
-static void board_gmac_hw_init(void)
-{
-	atmel_pio4_set_f_periph(AT91_PIO_PORTB, 14, 0);	/* GTXCK */
-	atmel_pio4_set_f_periph(AT91_PIO_PORTB, 15, 0);	/* GTXEN */
-	atmel_pio4_set_f_periph(AT91_PIO_PORTB, 16, 0);	/* GRXDV */
-	atmel_pio4_set_f_periph(AT91_PIO_PORTB, 17, 0);	/* GRXER */
-	atmel_pio4_set_f_periph(AT91_PIO_PORTB, 18, 0);	/* GRX0 */
-	atmel_pio4_set_f_periph(AT91_PIO_PORTB, 19, 0);	/* GRX1 */
-	atmel_pio4_set_f_periph(AT91_PIO_PORTB, 20, 0);	/* GTX0 */
-	atmel_pio4_set_f_periph(AT91_PIO_PORTB, 21, 0);	/* GTX1 */
-	atmel_pio4_set_f_periph(AT91_PIO_PORTB, 22, 0);	/* GMDC */
-	atmel_pio4_set_f_periph(AT91_PIO_PORTB, 23, 0);	/* GMDIO */
-
-	at91_periph_clk_enable(ATMEL_ID_GMAC);
-}
-
-static void board_sdhci0_hw_init(void)
-{
-	atmel_pio4_set_a_periph(AT91_PIO_PORTA, 0, 0);	/* SDMMC0_CK */
-	atmel_pio4_set_a_periph(AT91_PIO_PORTA, 1, 0);	/* SDMMC0_CMD */
-	atmel_pio4_set_a_periph(AT91_PIO_PORTA, 2, 0);	/* SDMMC0_DAT0 */
-	atmel_pio4_set_a_periph(AT91_PIO_PORTA, 3, 0);	/* SDMMC0_DAT1 */
-	atmel_pio4_set_a_periph(AT91_PIO_PORTA, 4, 0);	/* SDMMC0_DAT2 */
-	atmel_pio4_set_a_periph(AT91_PIO_PORTA, 5, 0);	/* SDMMC0_DAT3 */
-	atmel_pio4_set_a_periph(AT91_PIO_PORTA, 6, 0);	/* SDMMC0_DAT4 */
-	atmel_pio4_set_a_periph(AT91_PIO_PORTA, 7, 0);	/* SDMMC0_DAT5 */
-	atmel_pio4_set_a_periph(AT91_PIO_PORTA, 8, 0);	/* SDMMC0_DAT6 */
-	atmel_pio4_set_a_periph(AT91_PIO_PORTA, 9, 0);	/* SDMMC0_DAT7 */
-	atmel_pio4_set_a_periph(AT91_PIO_PORTA, 10, 0);	/* SDMMC0_RSTN */
-	atmel_pio4_set_a_periph(AT91_PIO_PORTA, 11, 0);	/* SDMMC0_VDDSEL */
-	atmel_pio4_set_a_periph(AT91_PIO_PORTA, 13, 0);	/* SDMMC0_CD */
-
-	at91_periph_clk_enable(ATMEL_ID_SDMMC0);
-	at91_enable_periph_generated_clk(ATMEL_ID_SDMMC0,
-					 GCK_CSS_UPLL_CLK, 1);
-}
-
-static void board_sdhci1_hw_init(void)
-{
-	atmel_pio4_set_e_periph(AT91_PIO_PORTA, 18, 0);	/* SDMMC1_DAT0 */
-	atmel_pio4_set_e_periph(AT91_PIO_PORTA, 19, 0);	/* SDMMC1_DAT1 */
-	atmel_pio4_set_e_periph(AT91_PIO_PORTA, 20, 0);	/* SDMMC1_DAT2 */
-	atmel_pio4_set_e_periph(AT91_PIO_PORTA, 21, 0);	/* SDMMC1_DAT3 */
-	atmel_pio4_set_e_periph(AT91_PIO_PORTA, 22, 0);	/* SDMMC1_CK */
-	atmel_pio4_set_e_periph(AT91_PIO_PORTA, 27, 0);	/* SDMMC1_RSTN */
-	atmel_pio4_set_e_periph(AT91_PIO_PORTA, 28, 0);	/* SDMMC1_CMD */
-	atmel_pio4_set_e_periph(AT91_PIO_PORTA, 30, 0);	/* SDMMC1_CD */
-
-	at91_periph_clk_enable(ATMEL_ID_SDMMC1);
-	at91_enable_periph_generated_clk(ATMEL_ID_SDMMC1,
-					 GCK_CSS_UPLL_CLK, 1);
-}
-
-int board_mmc_init(bd_t *bis)
-{
-#ifdef CONFIG_ATMEL_SDHCI0
-	atmel_sdhci_init((void *)ATMEL_BASE_SDMMC0, ATMEL_ID_SDMMC0);
-#endif
-#ifdef CONFIG_ATMEL_SDHCI1
-	atmel_sdhci_init((void *)ATMEL_BASE_SDMMC1, ATMEL_ID_SDMMC1);
-#endif
-
-	return 0;
-}
-
+#ifdef CONFIG_DEBUG_UART_BOARD_INIT
 static void board_uart1_hw_init(void)
 {
 	atmel_pio4_set_a_periph(AT91_PIO_PORTD, 2, 1);	/* URXD1 */
@@ -214,45 +122,33 @@ static void board_uart1_hw_init(void)
 	at91_periph_clk_enable(ATMEL_ID_UART1);
 }
 
+void board_debug_uart_init(void)
+{
+	board_uart1_hw_init();
+}
+#endif
+
+#ifdef CONFIG_BOARD_EARLY_INIT_F
 int board_early_init_f(void)
 {
-	at91_periph_clk_enable(ATMEL_ID_PIOA);
-	at91_periph_clk_enable(ATMEL_ID_PIOB);
-	at91_periph_clk_enable(ATMEL_ID_PIOC);
-	at91_periph_clk_enable(ATMEL_ID_PIOD);
-
-	board_uart1_hw_init();
+#ifdef CONFIG_DEBUG_UART
+	debug_uart_init();
+#endif
 
 	return 0;
 }
+#endif
 
 int board_init(void)
 {
 	/* address of boot parameters */
 	gd->bd->bi_boot_params = CONFIG_SYS_SDRAM_BASE + 0x100;
 
-#ifdef CONFIG_ATMEL_SPI
-	board_spi0_hw_init();
-#endif
-#ifdef CONFIG_ATMEL_SDHCI
-#ifdef CONFIG_ATMEL_SDHCI0
-	board_sdhci0_hw_init();
-#endif
-#ifdef CONFIG_ATMEL_SDHCI1
-	board_sdhci1_hw_init();
-#endif
-#endif
-#ifdef CONFIG_MACB
-	board_gmac_hw_init();
-#endif
 #ifdef CONFIG_LCD
 	board_lcd_hw_init();
 #endif
 #ifdef CONFIG_CMD_USB
 	board_usb_hw_init();
-#endif
-#ifdef CONFIG_USB_GADGET_ATMEL_USBA
-	at91_udp_hw_init();
 #endif
 
 	return 0;
@@ -265,39 +161,59 @@ int dram_init(void)
 	return 0;
 }
 
-int board_eth_init(bd_t *bis)
+#ifdef CONFIG_CMD_I2C
+static int set_ethaddr_from_eeprom(void)
 {
-	int rc = 0;
+	const int ETH_ADDR_LEN = 6;
+	unsigned char ethaddr[ETH_ADDR_LEN];
+	const char *ETHADDR_NAME = "ethaddr";
+	struct udevice *bus, *dev;
 
-#ifdef CONFIG_MACB
-	rc = macb_eth_initialize(0, (void *)ATMEL_BASE_GMAC, 0x00);
-#endif
+	if (getenv(ETHADDR_NAME))
+		return 0;
 
-#ifdef CONFIG_USB_GADGET_ATMEL_USBA
-	usba_udc_probe(&pdata);
-#ifdef CONFIG_USB_ETH_RNDIS
-	usb_eth_initialize(bis);
-#endif
-#endif
+	if (uclass_get_device_by_seq(UCLASS_I2C, 1, &bus)) {
+		printf("Cannot find I2C bus 1\n");
+		return -1;
+	}
 
-	return rc;
+	if (dm_i2c_probe(bus, AT24MAC_ADDR, 0, &dev)) {
+		printf("Failed to probe I2C chip\n");
+		return -1;
+	}
+
+	if (dm_i2c_read(dev, AT24MAC_REG, ethaddr, ETH_ADDR_LEN)) {
+		printf("Failed to read ethernet address from EEPROM\n");
+		return -1;
+	}
+
+	if (!is_valid_ethaddr(ethaddr)) {
+		printf("The ethernet address read from EEPROM is not valid!\n");
+		return -1;
+	}
+
+	return eth_setenv_enetaddr(ETHADDR_NAME, ethaddr);
 }
+#else
+static int set_ethaddr_from_eeprom(void)
+{
+	return 0;
+}
+#endif
+
+#ifdef CONFIG_MISC_INIT_R
+int misc_init_r(void)
+{
+	set_ethaddr_from_eeprom();
+
+	return 0;
+}
+#endif
 
 /* SPL */
 #ifdef CONFIG_SPL_BUILD
 void spl_board_init(void)
 {
-#ifdef CONFIG_SYS_USE_SERIALFLASH
-	board_spi0_hw_init();
-#endif
-#ifdef CONFIG_ATMEL_SDHCI
-#ifdef CONFIG_ATMEL_SDHCI0
-	board_sdhci0_hw_init();
-#endif
-#ifdef CONFIG_ATMEL_SDHCI1
-	board_sdhci1_hw_init();
-#endif
-#endif
 }
 
 static void ddrc_conf(struct atmel_mpddrc_config *ddrc)

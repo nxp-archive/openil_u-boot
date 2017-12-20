@@ -113,7 +113,7 @@ static int vybrid_gpio_bind(struct udevice *dev)
 	if (plat)
 		return 0;
 
-	base_addr = dev_get_addr(dev);
+	base_addr = devfdt_get_addr(dev);
 	if (base_addr == FDT_ADDR_T_NONE)
 		return -ENODEV;
 
@@ -129,7 +129,7 @@ static int vybrid_gpio_bind(struct udevice *dev)
 
 	plat->base = base_addr;
 	plat->chip = dev->req_seq;
-	plat->port_name = fdt_get_name(gd->fdt_blob, dev->of_offset, NULL);
+	plat->port_name = fdt_get_name(gd->fdt_blob, dev_of_offset(dev), NULL);
 	dev->platdata = plat;
 
 	return 0;

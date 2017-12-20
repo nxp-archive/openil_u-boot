@@ -44,7 +44,7 @@ static uint rockchip_dwmmc_get_mmc_clk(struct dwmci_host *host, uint freq)
 
 	ret = clk_set_rate(&priv->clk, freq);
 	if (ret < 0) {
-		debug("%s: err=%d\n", __func__, ret);
+		printf("%s: err=%d\n", __func__, ret);
 		return ret;
 	}
 
@@ -58,27 +58,43 @@ static int rockchip_dwmmc_ofdata_to_platdata(struct udevice *dev)
 	struct dwmci_host *host = &priv->host;
 
 	host->name = dev->name;
-	host->ioaddr = (void *)dev_get_addr(dev);
-	host->buswidth = fdtdec_get_int(gd->fdt_blob, dev->of_offset,
+	host->ioaddr = (void *)devfdt_get_addr(dev);
+	host->buswidth = fdtdec_get_int(gd->fdt_blob, dev_of_offset(dev),
 					"bus-width", 4);
 	host->get_mmc_clk = rockchip_dwmmc_get_mmc_clk;
 	host->priv = dev;
 
 	/* use non-removeable as sdcard and emmc as judgement */
-	if (fdtdec_get_bool(gd->fdt_blob, dev->of_offset, "non-removable"))
+	if (fdtdec_get_bool(gd->fdt_blob, dev_of_offset(dev), "non-removable"))
 		host->dev_index = 0;
 	else
 		host->dev_index = 1;
 
-	priv->fifo_depth = fdtdec_get_int(gd->fdt_blob, dev->of_offset,
+	priv->fifo_depth = fdtdec_get_int(gd->fdt_blob, dev_of_offset(dev),
 				    "fifo-depth", 0);
 	if (priv->fifo_depth < 0)
 		return -EINVAL;
-	priv->fifo_mode = fdtdec_get_bool(gd->fdt_blob, dev->of_offset,
+	priv->fifo_mode = fdtdec_get_bool(gd->fdt_blob, dev_of_offset(dev),
 					  "fifo-mode");
-	if (fdtdec_get_int_array(gd->fdt_blob, dev->of_offset,
-				 "clock-freq-min-max", priv->minmax, 2))
-		return -EINVAL;
+
+	/*
+	 * 'clock-freq-min-max' is deprecated
+	 * (see https://github.com/torvalds/linux/commit/b023030f10573de738bbe8df63d43acab64c9f7b)
+	 */
+	if (fdtdec_get_int_array(gd->fdt_blob, dev_of_offset(dev),
+				 "clock-freq-min-max", priv->minmax, 2)) {
+		int val = fdtdec_get_int(gd->fdt_blob, dev_of_offset(dev),
+					  "max-frequency", -EINVAL);
+
+		if (val < 0)
+			return val;
+
+		priv->minmax[0] = 400000;  /* 400 kHz */
+		priv->minmax[1] = val;
+	} else {
+		debug("%s: 'clock-freq-min-max' property was deprecated.\n",
+		      __func__);
+	}
 #endif
 	return 0;
 }
@@ -109,7 +125,7 @@ static int rockchip_dwmmc_probe(struct udevice *dev)
 	if (ret < 0)
 		return ret;
 #else
-	ret = clk_get_by_index(dev, 0, &priv->clk);
+	ret = clk_get_by_name(dev, "ciu", &priv->clk);
 	if (ret < 0)
 		return ret;
 #endif
@@ -129,8 +145,7 @@ static int rockchip_dwmmc_probe(struct udevice *dev)
 			return ret;
 	}
 #endif
-	dwmci_setup_cfg(&plat->cfg, dev->name, host->buswidth, host->caps,
-			priv->minmax[1], priv->minmax[0]);
+	dwmci_setup_cfg(&plat->cfg, host, priv->minmax[1], priv->minmax[0]);
 	host->mmc = &plat->mmc;
 	host->mmc->priv = &priv->host;
 	host->mmc->dev = dev;
@@ -142,13 +157,8 @@ static int rockchip_dwmmc_probe(struct udevice *dev)
 static int rockchip_dwmmc_bind(struct udevice *dev)
 {
 	struct rockchip_mmc_plat *plat = dev_get_platdata(dev);
-	int ret;
 
-	ret = dwmci_bind(dev, &plat->mmc, &plat->cfg);
-	if (ret)
-		return ret;
-
-	return 0;
+	return dwmci_bind(dev, &plat->mmc, &plat->cfg);
 }
 
 static const struct udevice_id rockchip_dwmmc_ids[] = {

@@ -163,14 +163,14 @@ void configure_secondary_pll(const struct pll_init_data *data)
 {
 	int pllod = data->pll_od - 1;
 
+	/* Enable Glitch free bypass for ARM PLL */
+	if (cpu_is_k2hk() && data->pll == TETRIS_PLL)
+		clrbits_le32(KS2_MISC_CTRL, MISC_CTL1_ARM_PLL_EN);
+
 	/* Enable Bypass mode */
 	setbits_le32(keystone_pll_regs[data->pll].reg1, CFG_PLLCTL1_ENSAT_MASK);
 	setbits_le32(keystone_pll_regs[data->pll].reg0,
 		     CFG_PLLCTL0_BYPASS_MASK);
-
-	/* Enable Glitch free bypass for ARM PLL */
-	if (cpu_is_k2hk() && data->pll == TETRIS_PLL)
-		clrbits_le32(KS2_MISC_CTRL, MISC_CTL1_ARM_PLL_EN);
 
 	configure_mult_div(data);
 
@@ -189,10 +189,6 @@ void configure_secondary_pll(const struct pll_init_data *data)
 	if (data->pll == PASS_PLL && cpu_is_k2hk())
 		pll_pa_clk_sel();
 
-	/* Select the Output of ARM PLL as input to ARM */
-	if (data->pll == TETRIS_PLL)
-		setbits_le32(KS2_MISC_CTRL, MISC_CTL1_ARM_PLL_EN);
-
 	clrbits_le32(keystone_pll_regs[data->pll].reg1, CFG_PLLCTL1_RST_MASK);
 	/* Wait for 500 * REFCLK cucles * (PLLD + 1) */
 	sdelay(105000);
@@ -200,6 +196,10 @@ void configure_secondary_pll(const struct pll_init_data *data)
 	/* Switch to PLL mode */
 	clrbits_le32(keystone_pll_regs[data->pll].reg0,
 		     CFG_PLLCTL0_BYPASS_MASK);
+
+	/* Select the Output of ARM PLL as input to ARM */
+	if (cpu_is_k2hk() && data->pll == TETRIS_PLL)
+		setbits_le32(KS2_MISC_CTRL, MISC_CTL1_ARM_PLL_EN);
 }
 
 void init_pll(const struct pll_init_data *data)
@@ -284,7 +284,7 @@ static unsigned long pll_freq_get(int pll)
 	u32 tmp, reg;
 
 	if (pll == MAIN_PLL) {
-		ret = external_clk[sys_clk];
+		ret = get_external_clk(sys_clk);
 		if (pllctl_reg_read(pll, ctl) & PLLCTL_PLLEN_MASK) {
 			/* PLL mode */
 			tmp = __raw_readl(KS2_MAINPLLCTL0);
@@ -302,23 +302,23 @@ static unsigned long pll_freq_get(int pll)
 	} else {
 		switch (pll) {
 		case PASS_PLL:
-			ret = external_clk[pa_clk];
+			ret = get_external_clk(pa_clk);
 			reg = KS2_PASSPLLCTL0;
 			break;
 		case TETRIS_PLL:
-			ret = external_clk[tetris_clk];
+			ret = get_external_clk(tetris_clk);
 			reg = KS2_ARMPLLCTL0;
 			break;
 		case DDR3A_PLL:
-			ret = external_clk[ddr3a_clk];
+			ret = get_external_clk(ddr3a_clk);
 			reg = KS2_DDR3APLLCTL0;
 			break;
 		case DDR3B_PLL:
-			ret = external_clk[ddr3b_clk];
+			ret = get_external_clk(ddr3b_clk);
 			reg = KS2_DDR3BPLLCTL0;
 			break;
 		case UART_PLL:
-			ret = external_clk[uart_clk];
+			ret = get_external_clk(uart_clk);
 			reg = KS2_UARTPLLCTL0;
 			break;
 		default:
@@ -341,7 +341,7 @@ static unsigned long pll_freq_get(int pll)
 	return ret;
 }
 
-unsigned long clk_get_rate(unsigned int clk)
+unsigned long ks_clk_get_rate(unsigned int clk)
 {
 	unsigned long freq = 0;
 
@@ -381,37 +381,37 @@ unsigned long clk_get_rate(unsigned int clk)
 		freq = pll_freq_get(CORE_PLL) / pll0div_read(4);
 		break;
 	case sys_clk0_2_clk:
-		freq = clk_get_rate(sys_clk0_clk) / 2;
+		freq = ks_clk_get_rate(sys_clk0_clk) / 2;
 		break;
 	case sys_clk0_3_clk:
-		freq = clk_get_rate(sys_clk0_clk) / 3;
+		freq = ks_clk_get_rate(sys_clk0_clk) / 3;
 		break;
 	case sys_clk0_4_clk:
-		freq = clk_get_rate(sys_clk0_clk) / 4;
+		freq = ks_clk_get_rate(sys_clk0_clk) / 4;
 		break;
 	case sys_clk0_6_clk:
-		freq = clk_get_rate(sys_clk0_clk) / 6;
+		freq = ks_clk_get_rate(sys_clk0_clk) / 6;
 		break;
 	case sys_clk0_8_clk:
-		freq = clk_get_rate(sys_clk0_clk) / 8;
+		freq = ks_clk_get_rate(sys_clk0_clk) / 8;
 		break;
 	case sys_clk0_12_clk:
-		freq = clk_get_rate(sys_clk0_clk) / 12;
+		freq = ks_clk_get_rate(sys_clk0_clk) / 12;
 		break;
 	case sys_clk0_24_clk:
-		freq = clk_get_rate(sys_clk0_clk) / 24;
+		freq = ks_clk_get_rate(sys_clk0_clk) / 24;
 		break;
 	case sys_clk1_3_clk:
-		freq = clk_get_rate(sys_clk1_clk) / 3;
+		freq = ks_clk_get_rate(sys_clk1_clk) / 3;
 		break;
 	case sys_clk1_4_clk:
-		freq = clk_get_rate(sys_clk1_clk) / 4;
+		freq = ks_clk_get_rate(sys_clk1_clk) / 4;
 		break;
 	case sys_clk1_6_clk:
-		freq = clk_get_rate(sys_clk1_clk) / 6;
+		freq = ks_clk_get_rate(sys_clk1_clk) / 6;
 		break;
 	case sys_clk1_12_clk:
-		freq = clk_get_rate(sys_clk1_clk) / 12;
+		freq = ks_clk_get_rate(sys_clk1_clk) / 12;
 		break;
 	default:
 		break;

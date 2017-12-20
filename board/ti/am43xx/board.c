@@ -10,7 +10,7 @@
 
 #include <common.h>
 #include <i2c.h>
-#include <asm/errno.h>
+#include <linux/errno.h>
 #include <spl.h>
 #include <usb.h>
 #include <asm/omap_sec_common.h>
@@ -20,6 +20,7 @@
 #include <asm/arch/ddr_defs.h>
 #include <asm/arch/gpio.h>
 #include <asm/emif.h>
+#include <asm/omap_common.h>
 #include "../common/board_detect.h"
 #include "board.h"
 #include <power/pmic.h>
@@ -39,14 +40,16 @@ static struct ctrl_dev *cdev = (struct ctrl_dev *)CTRL_DEVICE_BASE;
 /*
  * Read header information from EEPROM into global structure.
  */
-static inline int __maybe_unused read_eeprom(void)
+#ifdef CONFIG_TI_I2C_BOARD_DETECT
+void do_board_detect(void)
 {
-	return ti_i2c_eeprom_am_get(-1, CONFIG_SYS_I2C_EEPROM_ADDR);
+	if (ti_i2c_eeprom_am_get(CONFIG_EEPROM_BUS_ADDRESS,
+				 CONFIG_EEPROM_CHIP_ADDRESS))
+		printf("ti_i2c_eeprom_init failed\n");
 }
+#endif
 
 #ifndef CONFIG_SKIP_LOWLEVEL_INIT
-
-#define NUM_OPPS	6
 
 const struct dpll_params dpll_mpu[NUM_CRYSTAL_FREQ][NUM_OPPS] = {
 	{	/* 19.2 MHz */
@@ -314,31 +317,9 @@ void emif_get_ext_phy_ctrl_const_regs(const u32 **regs, u32 *size)
 	return;
 }
 
-/*
- * get_sys_clk_index : returns the index of the sys_clk read from
- *			ctrl status register. This value is either
- *			read from efuse or sysboot pins.
- */
-static u32 get_sys_clk_index(void)
-{
-	struct ctrl_stat *ctrl = (struct ctrl_stat *)CTRL_BASE;
-	u32 ind = readl(&ctrl->statusreg), src;
-
-	src = (ind & CTRL_CRYSTAL_FREQ_SRC_MASK) >> CTRL_CRYSTAL_FREQ_SRC_SHIFT;
-	if (src == CTRL_CRYSTAL_FREQ_SRC_EFUSE) /* Value read from EFUSE */
-		return ((ind & CTRL_CRYSTAL_FREQ_SELECTION_MASK) >>
-			CTRL_CRYSTAL_FREQ_SELECTION_SHIFT);
-	else /* Value read from SYS BOOT pins */
-		return ((ind & CTRL_SYSBOOT_15_14_MASK) >>
-			CTRL_SYSBOOT_15_14_SHIFT);
-}
-
 const struct dpll_params *get_dpll_ddr_params(void)
 {
 	int ind = get_sys_clk_index();
-
-	if (read_eeprom() < 0)
-		return NULL;
 
 	if (board_is_eposevm())
 		return &epos_evm_dpll_ddr[ind];
@@ -441,6 +422,13 @@ void scale_vcores_generic(u32 m)
 		printf("%s failure\n", __func__);
 		return;
 	}
+
+	/* Set DCDC3 (DDR) voltage */
+	if (tps65218_voltage_update(TPS65218_DCDC3,
+	    TPS65218_DCDC3_VOLT_SEL_1350MV)) {
+		printf("%s failure\n", __func__);
+		return;
+	}
 }
 
 void scale_vcores_idk(u32 m)
@@ -495,9 +483,6 @@ void scale_vcores(void)
 {
 	const struct dpll_params *mpu_params;
 
-	if (read_eeprom() < 0)
-		puts("Could not get board ID.\n");
-
 	/* Ensure I2C is initialized for PMIC configuration */
 	gpi2c_init();
 
@@ -537,8 +522,6 @@ static void enable_vtt_regulator(void)
 
 void sdram_init(void)
 {
-	if (read_eeprom() < 0)
-		return;
 	/*
 	 * EPOS EVM has 1GB LPDDR2 connected to EMIF.
 	 * GP EMV has 1GB DDR3 connected to EMIF
@@ -637,6 +620,13 @@ int board_late_init(void)
 {
 #ifdef CONFIG_ENV_VARS_UBOOT_RUNTIME_CONFIG
 	set_board_info_env(NULL);
+
+	/*
+	 * Default FIT boot on HS devices. Non FIT images are not allowed
+	 * on HS devices.
+	 */
+	if (get_device_type() == HS_DEVICE)
+		setenv("boot_fit", "1");
 #endif
 	return 0;
 }
@@ -692,7 +682,7 @@ int usb_gadget_handle_interrupts(int index)
 #endif /* CONFIG_USB_DWC3 */
 
 #if defined(CONFIG_USB_DWC3) || defined(CONFIG_USB_XHCI_OMAP)
-int board_usb_init(int index, enum usb_init_type init)
+int omap_xhci_board_usb_init(int index, enum usb_init_type init)
 {
 	enable_usb_clocks(index);
 #ifdef CONFIG_USB_DWC3
@@ -723,7 +713,7 @@ int board_usb_init(int index, enum usb_init_type init)
 	return 0;
 }
 
-int board_usb_cleanup(int index, enum usb_init_type init)
+int omap_xhci_board_usb_cleanup(int index, enum usb_init_type init)
 {
 #ifdef CONFIG_USB_DWC3
 	switch (index) {

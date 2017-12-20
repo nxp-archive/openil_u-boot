@@ -10,7 +10,7 @@
 
 #include <common.h>
 #include <usb.h>
-#include <asm-generic/errno.h>
+#include <linux/errno.h>
 #include <linux/compat.h>
 #include <linux/usb/xhci-fsl.h>
 #include <linux/usb/dwc3.h>
@@ -40,7 +40,8 @@ __weak int __board_usb_init(int index, enum usb_init_type init)
 
 static int erratum_a008751(void)
 {
-#if defined(CONFIG_TARGET_LS2080AQDS) || defined(CONFIG_TARGET_LS2080ARDB)
+#if defined(CONFIG_TARGET_LS2080AQDS) || defined(CONFIG_TARGET_LS2080ARDB) ||\
+					defined(CONFIG_TARGET_LS2080AQDS)
 	u32 __iomem *scfg = (u32 __iomem *)SCFG_BASE;
 	writel(SCFG_USB3PRM1CR_INIT, scfg + SCFG_USB3PRM1CR / 4);
 	return 0;
@@ -121,7 +122,7 @@ static int xhci_fsl_probe(struct udevice *dev)
 	/*
 	 * Get the base address for XHCI controller from the device node
 	 */
-	priv->hcd_base = dev_get_addr(dev);
+	priv->hcd_base = devfdt_get_addr(dev);
 	if (priv->hcd_base == FDT_ADDR_T_NONE) {
 		debug("Can't get the XHCI register base address\n");
 		return -ENXIO;
@@ -152,15 +153,10 @@ static int xhci_fsl_probe(struct udevice *dev)
 static int xhci_fsl_remove(struct udevice *dev)
 {
 	struct xhci_fsl_priv *priv = dev_get_priv(dev);
-	int ret;
 
 	fsl_xhci_core_exit(&priv->ctx);
 
-	ret = xhci_deregister(dev);
-	if (ret)
-		return ret;
-
-	return 0;
+	return xhci_deregister(dev);
 }
 
 static const struct udevice_id xhci_usb_ids[] = {

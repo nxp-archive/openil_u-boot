@@ -271,6 +271,21 @@ static int mvebu_spi_set_speed(struct udevice *bus, uint hz)
 
 static int mvebu_spi_set_mode(struct udevice *bus, uint mode)
 {
+	struct mvebu_spi_platdata *plat = dev_get_platdata(bus);
+	struct kwspi_registers *reg = plat->spireg;
+	u32 data = readl(&reg->cfg);
+
+	data &= ~(KWSPI_CPHA | KWSPI_CPOL | KWSPI_RXLSBF | KWSPI_TXLSBF);
+
+	if (mode & SPI_CPHA)
+		data |= KWSPI_CPHA;
+	if (mode & SPI_CPOL)
+		data |= KWSPI_CPOL;
+	if (mode & SPI_LSB_FIRST)
+		data |= (KWSPI_RXLSBF | KWSPI_TXLSBF);
+
+	writel(data, &reg->cfg);
+
 	return 0;
 }
 
@@ -312,7 +327,7 @@ static int mvebu_spi_ofdata_to_platdata(struct udevice *bus)
 {
 	struct mvebu_spi_platdata *plat = dev_get_platdata(bus);
 
-	plat->spireg = (struct kwspi_registers *)dev_get_addr(bus);
+	plat->spireg = (struct kwspi_registers *)devfdt_get_addr(bus);
 
 	return 0;
 }

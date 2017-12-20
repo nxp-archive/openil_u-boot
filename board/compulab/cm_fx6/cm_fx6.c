@@ -602,7 +602,7 @@ int ft_board_setup(void *blob, bd_t *bd)
 	char baseboard_name[16];
 	int err;
 
-	fdt_shrink_to_minimum(blob); /* Make room for new properties */
+	fdt_shrink_to_minimum(blob, 0); /* Make room for new properties */
 
 	/* MAC addr */
 	if (eth_getenv_enetaddr("ethaddr", enetaddr)) {
@@ -688,7 +688,7 @@ int misc_init_r(void)
 	return 0;
 }
 
-void dram_init_banksize(void)
+int dram_init_banksize(void)
 {
 	gd->bd->bi_dram[0].start = PHYS_SDRAM_1;
 	gd->bd->bi_dram[1].start = PHYS_SDRAM_2;
@@ -720,6 +720,8 @@ void dram_init_banksize(void)
 		gd->bd->bi_dram[1].size = 0x7FF00000;
 		break;
 	}
+
+	return 0;
 }
 
 int dram_init(void)

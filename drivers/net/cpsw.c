@@ -21,7 +21,7 @@
 #include <net.h>
 #include <netdev.h>
 #include <cpsw.h>
-#include <asm/errno.h>
+#include <linux/errno.h>
 #include <asm/gpio.h>
 #include <asm/io.h>
 #include <phy.h>
@@ -224,6 +224,18 @@ struct cpdma_chan {
 	struct cpdma_desc	*head, *tail;
 	void			*hdp, *cp, *rxfree;
 };
+
+/* AM33xx SoC specific definitions for the CONTROL port */
+#define AM33XX_GMII_SEL_MODE_MII	0
+#define AM33XX_GMII_SEL_MODE_RMII	1
+#define AM33XX_GMII_SEL_MODE_RGMII	2
+
+#define AM33XX_GMII_SEL_RGMII1_IDMODE	BIT(4)
+#define AM33XX_GMII_SEL_RGMII2_IDMODE	BIT(5)
+#define AM33XX_GMII_SEL_RMII1_IO_CLK_EN	BIT(6)
+#define AM33XX_GMII_SEL_RMII2_IO_CLK_EN	BIT(7)
+
+#define GMII_SEL_MODE_MASK		0x3
 
 #define desc_write(desc, fld, val)	__raw_writel((u32)(val), &(desc)->fld)
 #define desc_read(desc, fld)		__raw_readl(&(desc)->fld)
@@ -600,21 +612,25 @@ static void cpsw_set_slave_mac(struct cpsw_slave *slave,
 #endif
 }
 
-static void cpsw_slave_update_link(struct cpsw_slave *slave,
+static int cpsw_slave_update_link(struct cpsw_slave *slave,
 				   struct cpsw_priv *priv, int *link)
 {
 	struct phy_device *phy;
 	u32 mac_control = 0;
+	int ret = -ENODEV;
 
 	phy = priv->phydev;
-
 	if (!phy)
-		return;
+		goto out;
 
-	phy_startup(phy);
-	*link = phy->link;
+	ret = phy_startup(phy);
+	if (ret)
+		goto out;
 
-	if (*link) { /* link up */
+	if (link)
+		*link = phy->link;
+
+	if (phy->link) { /* link up */
 		mac_control = priv->data.mac_control;
 		if (phy->speed == 1000)
 			mac_control |= GIGABITEN;
@@ -625,7 +641,7 @@ static void cpsw_slave_update_link(struct cpsw_slave *slave,
 	}
 
 	if (mac_control == slave->mac_control)
-		return;
+		goto out;
 
 	if (mac_control) {
 		printf("link up on port %d, speed %d, %s duplex\n",
@@ -637,17 +653,20 @@ static void cpsw_slave_update_link(struct cpsw_slave *slave,
 
 	__raw_writel(mac_control, &slave->sliver->mac_control);
 	slave->mac_control = mac_control;
+
+out:
+	return ret;
 }
 
 static int cpsw_update_link(struct cpsw_priv *priv)
 {
-	int link = 0;
+	int ret = -ENODEV;
 	struct cpsw_slave *slave;
 
 	for_active_slave(slave, priv)
-		cpsw_slave_update_link(slave, priv, &link);
+		ret = cpsw_slave_update_link(slave, priv, NULL);
 
-	return link;
+	return ret;
 }
 
 static inline u32  cpsw_get_slave_port(struct cpsw_priv *priv, u32 slave_num)
@@ -810,7 +829,9 @@ static int _cpsw_init(struct cpsw_priv *priv, u8 *enetaddr)
 	for_active_slave(slave, priv)
 		cpsw_slave_init(slave, priv);
 
-	cpsw_update_link(priv);
+	ret = cpsw_update_link(priv);
+	if (ret)
+		goto out;
 
 	/* init descriptor pool */
 	for (i = 0; i < NUM_DESCS; i++) {
@@ -885,7 +906,8 @@ static int _cpsw_init(struct cpsw_priv *priv, u8 *enetaddr)
 		}
 	}
 
-	return 0;
+out:
+	return ret;
 }
 
 static void _cpsw_halt(struct cpsw_priv *priv)
@@ -969,7 +991,7 @@ static int cpsw_phy_init(struct cpsw_priv *priv, struct cpsw_slave *slave)
 
 #ifdef CONFIG_DM_ETH
 	if (slave->data->phy_of_handle)
-		phydev->dev->of_offset = slave->data->phy_of_handle;
+		dev_set_of_offset(phydev->dev, slave->data->phy_of_handle);
 #endif
 
 	priv->phydev = phydev;
@@ -1150,21 +1172,138 @@ static inline fdt_addr_t cpsw_get_addr_by_node(const void *fdt, int node)
 						  false);
 }
 
+static void cpsw_gmii_sel_am3352(struct cpsw_priv *priv,
+				 phy_interface_t phy_mode)
+{
+	u32 reg;
+	u32 mask;
+	u32 mode = 0;
+	bool rgmii_id = false;
+	int slave = priv->data.active_slave;
+
+	reg = readl(priv->data.gmii_sel);
+
+	switch (phy_mode) {
+	case PHY_INTERFACE_MODE_RMII:
+		mode = AM33XX_GMII_SEL_MODE_RMII;
+		break;
+
+	case PHY_INTERFACE_MODE_RGMII:
+		mode = AM33XX_GMII_SEL_MODE_RGMII;
+		break;
+	case PHY_INTERFACE_MODE_RGMII_ID:
+	case PHY_INTERFACE_MODE_RGMII_RXID:
+	case PHY_INTERFACE_MODE_RGMII_TXID:
+		mode = AM33XX_GMII_SEL_MODE_RGMII;
+		rgmii_id = true;
+		break;
+
+	case PHY_INTERFACE_MODE_MII:
+	default:
+		mode = AM33XX_GMII_SEL_MODE_MII;
+		break;
+	};
+
+	mask = GMII_SEL_MODE_MASK << (slave * 2) | BIT(slave + 6);
+	mode <<= slave * 2;
+
+	if (priv->data.rmii_clock_external) {
+		if (slave == 0)
+			mode |= AM33XX_GMII_SEL_RMII1_IO_CLK_EN;
+		else
+			mode |= AM33XX_GMII_SEL_RMII2_IO_CLK_EN;
+	}
+
+	if (rgmii_id) {
+		if (slave == 0)
+			mode |= AM33XX_GMII_SEL_RGMII1_IDMODE;
+		else
+			mode |= AM33XX_GMII_SEL_RGMII2_IDMODE;
+	}
+
+	reg &= ~mask;
+	reg |= mode;
+
+	writel(reg, priv->data.gmii_sel);
+}
+
+static void cpsw_gmii_sel_dra7xx(struct cpsw_priv *priv,
+				 phy_interface_t phy_mode)
+{
+	u32 reg;
+	u32 mask;
+	u32 mode = 0;
+	int slave = priv->data.active_slave;
+
+	reg = readl(priv->data.gmii_sel);
+
+	switch (phy_mode) {
+	case PHY_INTERFACE_MODE_RMII:
+		mode = AM33XX_GMII_SEL_MODE_RMII;
+		break;
+
+	case PHY_INTERFACE_MODE_RGMII:
+	case PHY_INTERFACE_MODE_RGMII_ID:
+	case PHY_INTERFACE_MODE_RGMII_RXID:
+	case PHY_INTERFACE_MODE_RGMII_TXID:
+		mode = AM33XX_GMII_SEL_MODE_RGMII;
+		break;
+
+	case PHY_INTERFACE_MODE_MII:
+	default:
+		mode = AM33XX_GMII_SEL_MODE_MII;
+		break;
+	};
+
+	switch (slave) {
+	case 0:
+		mask = GMII_SEL_MODE_MASK;
+		break;
+	case 1:
+		mask = GMII_SEL_MODE_MASK << 4;
+		mode <<= 4;
+		break;
+	default:
+		dev_err(priv->dev, "invalid slave number...\n");
+		return;
+	}
+
+	if (priv->data.rmii_clock_external)
+		dev_err(priv->dev, "RMII External clock is not supported\n");
+
+	reg &= ~mask;
+	reg |= mode;
+
+	writel(reg, priv->data.gmii_sel);
+}
+
+static void cpsw_phy_sel(struct cpsw_priv *priv, const char *compat,
+			 phy_interface_t phy_mode)
+{
+	if (!strcmp(compat, "ti,am3352-cpsw-phy-sel"))
+		cpsw_gmii_sel_am3352(priv, phy_mode);
+	if (!strcmp(compat, "ti,am43xx-cpsw-phy-sel"))
+		cpsw_gmii_sel_am3352(priv, phy_mode);
+	else if (!strcmp(compat, "ti,dra7xx-cpsw-phy-sel"))
+		cpsw_gmii_sel_dra7xx(priv, phy_mode);
+}
+
 static int cpsw_eth_ofdata_to_platdata(struct udevice *dev)
 {
 	struct eth_pdata *pdata = dev_get_platdata(dev);
 	struct cpsw_priv *priv = dev_get_priv(dev);
 	struct gpio_desc *mode_gpios;
 	const char *phy_mode;
+	const char *phy_sel_compat = NULL;
 	const void *fdt = gd->fdt_blob;
-	int node = dev->of_offset;
+	int node = dev_of_offset(dev);
 	int subnode;
 	int slave_index = 0;
 	int active_slave;
 	int num_mode_gpios;
 	int ret;
 
-	pdata->iobase = dev_get_addr(dev);
+	pdata->iobase = devfdt_get_addr(dev);
 	priv->data.version = CPSW_CTRL_VERSION_2;
 	priv->data.bd_ram_ofs = CPSW_BD_OFFSET;
 	priv->data.ale_reg_ofs = CPSW_ALE_OFFSET;
@@ -1219,7 +1358,7 @@ static int cpsw_eth_ofdata_to_platdata(struct udevice *dev)
 	active_slave = fdtdec_get_int(fdt, node, "active_slave", 0);
 	priv->data.active_slave = active_slave;
 
-	fdt_for_each_subnode(fdt, subnode, node) {
+	fdt_for_each_subnode(subnode, fdt, node) {
 		int len;
 		const char *name;
 
@@ -1271,6 +1410,17 @@ static int cpsw_eth_ofdata_to_platdata(struct udevice *dev)
 				error("Not able to get gmii_sel reg address\n");
 				return -ENOENT;
 			}
+
+			if (fdt_get_property(fdt, subnode, "rmii-clock-ext",
+					     NULL))
+				priv->data.rmii_clock_external = true;
+
+			phy_sel_compat = fdt_getprop(fdt, subnode, "compatible",
+						     NULL);
+			if (!phy_sel_compat) {
+				error("Not able to get gmii_sel compatible\n");
+				return -ENOENT;
+			}
 		}
 	}
 
@@ -1293,20 +1443,9 @@ static int cpsw_eth_ofdata_to_platdata(struct udevice *dev)
 		debug("%s: Invalid PHY interface '%s'\n", __func__, phy_mode);
 		return -EINVAL;
 	}
-	switch (pdata->phy_interface) {
-	case PHY_INTERFACE_MODE_MII:
-		writel(MII_MODE_ENABLE, priv->data.gmii_sel);
-		break;
-	case PHY_INTERFACE_MODE_RMII:
-		writel(RMII_MODE_ENABLE, priv->data.gmii_sel);
-		break;
-	case PHY_INTERFACE_MODE_RGMII:
-	case PHY_INTERFACE_MODE_RGMII_ID:
-	case PHY_INTERFACE_MODE_RGMII_RXID:
-	case PHY_INTERFACE_MODE_RGMII_TXID:
-		writel(RGMII_MODE_ENABLE, priv->data.gmii_sel);
-		break;
-	}
+
+	/* Select phy interface in control module */
+	cpsw_phy_sel(priv, phy_sel_compat, pdata->phy_interface);
 
 	return 0;
 }

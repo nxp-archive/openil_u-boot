@@ -40,11 +40,8 @@
 
 /* select serial console configuration */
 #define CONFIG_SERIAL1
-#define CONFIG_BAUDRATE			115200
 
 /* Console configuration */
-#define CONFIG_SYS_CONSOLE_INFO_QUIET
-#define CONFIG_SYS_CONSOLE_IS_IN_ENV
 
 #define CONFIG_BOOTARGS			"Please use defined boot"
 #define CONFIG_BOOTCOMMAND		"run autoboot"
@@ -178,11 +175,6 @@
 	"scriptaddr=0x42000000\0" \
 	"fdtaddr=40800000\0"
 
-/* I2C */
-#define CONFIG_SYS_I2C_S3C24X0
-#define CONFIG_SYS_I2C_S3C24X0_SPEED	100000
-#define CONFIG_SYS_I2C_S3C24X0_SLAVE	0
-
 /* GPT */
 #define CONFIG_RANDOM_UUID
 
@@ -191,10 +183,8 @@
 #define CONFIG_LIB_HW_RAND
 
 /* USB */
-#define CONFIG_USB_EHCI
 #define CONFIG_USB_EHCI_EXYNOS
 
-#define CONFIG_SYS_USB_EHCI_MAX_ROOT_PORTS	3
 #define CONFIG_USB_HOST_ETHER
 #define CONFIG_USB_ETHER_SMSC95XX
 

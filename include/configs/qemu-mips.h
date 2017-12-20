@@ -14,11 +14,7 @@
 
 #define CONFIG_QEMU_MIPS
 
-#define CONFIG_DISPLAY_BOARDINFO
 #define CONFIG_MISC_INIT_R
-
-
-#define CONFIG_BAUDRATE		115200
 
 #define CONFIG_TIMESTAMP		/* Print image info with timestamp */
 #undef CONFIG_BOOTARGS
@@ -54,9 +50,6 @@
 #define CONFIG_SYS_NS16550_COM1		0xb40003f8
 #define CONFIG_CONS_INDEX		1
 
-#define CONFIG_CMD_IDE
-#define CONFIG_DOS_PARTITION
-
 #ifdef CONFIG_SYS_BIG_ENDIAN
 #define CONFIG_IDE_SWAP_IO
 #endif
@@ -85,7 +78,7 @@
 /* max number of command args */
 #define CONFIG_SYS_MAXARGS		16
 
-#define CONFIG_SYS_MALLOC_LEN		128*1024
+#define CONFIG_SYS_MALLOC_LEN		(256 << 10)
 
 #define CONFIG_SYS_BOOTPARAMS_LEN	128*1024
 
@@ -107,7 +100,6 @@
  */
 /* The following #defines are needed to get flash environment right */
 #define CONFIG_SYS_MONITOR_BASE	CONFIG_SYS_TEXT_BASE
-#define CONFIG_SYS_MONITOR_LEN		(192 << 10)
 
 #define CONFIG_SYS_INIT_SP_OFFSET	0x400000
 
@@ -120,15 +112,13 @@
 #define CONFIG_SYS_FLASH_USE_BUFFER_WRITE
 
 #define CONFIG_ENV_IS_IN_FLASH
-#define CONFIG_ENV_ADDR		(CONFIG_SYS_FLASH_BASE + CONFIG_SYS_MONITOR_LEN)
 
 /* Address and size of Primary Environment Sector */
 #define CONFIG_ENV_SIZE		0x8000
+#define CONFIG_ENV_ADDR		(CONFIG_SYS_FLASH_BASE + (4 << 20) - CONFIG_ENV_SIZE)
 
 #define CONFIG_ENV_OVERWRITE	1
 
 #define MEM_SIZE		128
-
-#define CONFIG_LZMA
 
 #endif /* __CONFIG_H */

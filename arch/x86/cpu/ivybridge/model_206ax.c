@@ -20,8 +20,9 @@
 #include <asm/processor.h>
 #include <asm/speedstep.h>
 #include <asm/turbo.h>
-#include <asm/arch/bd82x6x.h>
 #include <asm/arch/model_206ax.h>
+
+DECLARE_GLOBAL_DATA_PTR;
 
 static void enable_vmx(void)
 {
@@ -287,8 +288,8 @@ static int configure_thermal_target(struct udevice *dev)
 	int tcc_offset;
 	msr_t msr;
 
-	tcc_offset = fdtdec_get_int(gd->fdt_blob, dev->of_offset, "tcc-offset",
-				    0);
+	tcc_offset = fdtdec_get_int(gd->fdt_blob, dev_of_offset(dev),
+				    "tcc-offset", 0);
 
 	/* Set TCC activaiton offset if supported */
 	msr = msr_read(MSR_PLATFORM_INFO);
@@ -478,6 +479,7 @@ static const struct cpu_ops cpu_x86_model_206ax_ops = {
 	.get_desc	= cpu_x86_get_desc,
 	.get_info	= model_206ax_get_info,
 	.get_count	= model_206ax_get_count,
+	.get_vendor	= cpu_x86_get_vendor,
 };
 
 static const struct udevice_id cpu_x86_model_206ax_ids[] = {

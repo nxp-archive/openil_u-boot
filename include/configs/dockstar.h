@@ -13,11 +13,6 @@
 #define _CONFIG_DOCKSTAR_H
 
 /*
- * Version number information
- */
-#define CONFIG_IDENT_STRING	"\nSeagate FreeAgent DockStar"
-
-/*
  * High Level Configuration Options (easy to change)
  */
 #define CONFIG_FEROCEON_88FR131	1	/* CPU Core subversion */
@@ -28,8 +23,6 @@
 /*
  * Commands configuration
  */
-#define CONFIG_SYS_NO_FLASH		/* Declare no flash (NOR/SPI) */
-#define CONFIG_CMD_ENV
 #define CONFIG_CMD_NAND
 /*
  * mv-common.h should be defined after CMD configs since it used them
@@ -86,8 +79,6 @@
 /*
  * File system
  */
-#define CONFIG_CMD_JFFS2
-#define CONFIG_CMD_UBI
 #define CONFIG_CMD_UBIFS
 #define CONFIG_RBTREE
 #define CONFIG_MTD_DEVICE               /* needed for mtdparts commands */

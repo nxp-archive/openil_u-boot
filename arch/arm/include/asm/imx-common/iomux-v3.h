@@ -39,10 +39,9 @@
  * MUX_CTRL_OFS:	    0..11 (12)
  * PAD_CTRL_OFS:	   12..23 (12)
  * SEL_INPUT_OFS:	   24..35 (12)
- * MUX_MODE + SION:	   36..40  (5)
- * PAD_CTRL + NO_PAD_CTRL: 41..58 (18)
- * SEL_INP:		   59..62  (4)
- * reserved:		     63    (1)
+ * MUX_MODE + SION + LPSR: 36..41  (6)
+ * PAD_CTRL + NO_PAD_CTRL: 42..59 (18)
+ * SEL_INP:		   60..63  (4)
 */
 
 typedef u64 iomux_v3_cfg_t;
@@ -57,10 +56,10 @@ typedef u64 iomux_v3_cfg_t;
 	MUX_SEL_INPUT_OFS_SHIFT)
 
 #define MUX_MODE_SHIFT		36
-#define MUX_MODE_MASK		((iomux_v3_cfg_t)0x1f << MUX_MODE_SHIFT)
-#define MUX_PAD_CTRL_SHIFT	41
+#define MUX_MODE_MASK		((iomux_v3_cfg_t)0x3f << MUX_MODE_SHIFT)
+#define MUX_PAD_CTRL_SHIFT	42
 #define MUX_PAD_CTRL_MASK	((iomux_v3_cfg_t)0x3ffff << MUX_PAD_CTRL_SHIFT)
-#define MUX_SEL_INPUT_SHIFT	59
+#define MUX_SEL_INPUT_SHIFT	60
 #define MUX_SEL_INPUT_MASK	((iomux_v3_cfg_t)0xf << MUX_SEL_INPUT_SHIFT)
 
 #define MUX_MODE_SION		((iomux_v3_cfg_t)IOMUX_CONFIG_SION << \
@@ -85,12 +84,12 @@ typedef u64 iomux_v3_cfg_t;
 
 #define NO_PAD_CTRL		(1 << 17)
 
+#define IOMUX_CONFIG_LPSR       0x20
+#define MUX_MODE_LPSR           ((iomux_v3_cfg_t)IOMUX_CONFIG_LPSR << \
+				MUX_MODE_SHIFT)
 #ifdef CONFIG_MX7
 
 #define IOMUX_LPSR_SEL_INPUT_OFS 0x70000
-#define IOMUX_CONFIG_LPSR       0x8
-#define MUX_MODE_LPSR           ((iomux_v3_cfg_t)IOMUX_CONFIG_LPSR << \
-				MUX_MODE_SHIFT)
 
 #define PAD_CTL_DSE_1P8V_140OHM   (0x0<<0)
 #define PAD_CTL_DSE_1P8V_35OHM    (0x1<<0)
@@ -145,10 +144,12 @@ typedef u64 iomux_v3_cfg_t;
 #define PAD_CTL_DSE_40ohm	(6 << 3)
 #define PAD_CTL_DSE_34ohm	(7 << 3)
 
-#if defined CONFIG_MX6SL
+/* i.MX6SL/SLL */
 #define PAD_CTL_LVE		(1 << 1)
 #define PAD_CTL_LVE_BIT		(1 << 22)
-#endif
+
+/* i.MX6SLL */
+#define PAD_CTL_IPD_BIT		(1 << 27)
 
 #elif defined(CONFIG_VF610)
 
@@ -164,7 +165,10 @@ typedef u64 iomux_v3_cfg_t;
 #define PAD_CTL_ODE		(1 << 10)
 
 #define PAD_CTL_DSE_150ohm	(1 << 6)
+#define PAD_CTL_DSE_75ohm	(2 << 6)
 #define PAD_CTL_DSE_50ohm	(3 << 6)
+#define PAD_CTL_DSE_37ohm	(4 << 6)
+#define PAD_CTL_DSE_30ohm	(5 << 6)
 #define PAD_CTL_DSE_25ohm	(6 << 6)
 #define PAD_CTL_DSE_20ohm	(7 << 6)
 
@@ -247,6 +251,12 @@ if (is_cpu_type(MXC_CPU_MX6Q) || is_cpu_type(MXC_CPU_MX6D)) {				\
 #define IOMUX_PADS(x) MX6Q_##x
 #define SETUP_IOMUX_PAD(def)					\
 	imx_iomux_v3_setup_pad(MX6Q_##def);
+#define SETUP_IOMUX_PADS(x)					\
+	imx_iomux_v3_setup_multiple_pads(x, ARRAY_SIZE(x))
+#elif defined(CONFIG_MX6UL)
+#define IOMUX_PADS(x) MX6_##x
+#define SETUP_IOMUX_PAD(def)					\
+	imx_iomux_v3_setup_pad(MX6_##def);
 #define SETUP_IOMUX_PADS(x)					\
 	imx_iomux_v3_setup_multiple_pads(x, ARRAY_SIZE(x))
 #else

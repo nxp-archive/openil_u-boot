@@ -17,6 +17,7 @@
 #include <config.h>
 #include <asm/system.h>
 #include <linux/linkage.h>
+#include <asm/armv7.h>
 
 /*************************************************************************
  *
@@ -30,11 +31,24 @@
 
 	.globl	reset
 	.globl	save_boot_params_ret
+#ifdef CONFIG_ARMV7_LPAE
+	.global	switch_to_hypervisor_ret
+#endif
 
 reset:
 	/* Allow the board to save important registers */
 	b	save_boot_params
 save_boot_params_ret:
+#ifdef CONFIG_ARMV7_LPAE
+/*
+ * check for Hypervisor support
+ */
+	mrc	p15, 0, r0, c0, c1, 1		@ read ID_PFR1
+	and	r0, r0, #CPUID_ARM_VIRT_MASK	@ mask virtualization bits
+	cmp	r0, #(1 << CPUID_ARM_VIRT_SHIFT)
+	beq	switch_to_hypervisor
+switch_to_hypervisor_ret:
+#endif
 	/*
 	 * disable interrupts (FIQ and IRQ), also set the cpu to SVC32 mode,
 	 * except if in HYP mode already
@@ -102,6 +116,13 @@ ENTRY(save_boot_params)
 	b	save_boot_params_ret		@ back to my caller
 ENDPROC(save_boot_params)
 	.weak	save_boot_params
+
+#ifdef CONFIG_ARMV7_LPAE
+ENTRY(switch_to_hypervisor)
+	b	switch_to_hypervisor_ret
+ENDPROC(switch_to_hypervisor)
+	.weak	switch_to_hypervisor
+#endif
 
 /*************************************************************************
  *
@@ -247,6 +268,31 @@ skip_errata_430973:
 	pop	{r1-r5}			@ Restore the cpu info - fall through
 
 skip_errata_621766:
+#endif
+
+#ifdef CONFIG_ARM_ERRATA_725233
+	cmp	r2, #0x21		@ Only on < r2p1 (Cortex A8)
+	bge	skip_errata_725233
+
+	mrc	p15, 1, r0, c9, c0, 2	@ Read L2ACR
+	orr	r0, r0, #(0x1 << 27)	@ L2 PLD data forwarding disable
+	push	{r1-r5}			@ Save the cpu info registers
+	bl	v7_arch_cp15_set_l2aux_ctrl
+	pop	{r1-r5}			@ Restore the cpu info - fall through
+
+skip_errata_725233:
+#endif
+
+#ifdef CONFIG_ARM_ERRATA_852421
+	mrc	p15, 0, r0, c15, c0, 1	@ read diagnostic register
+	orr	r0, r0, #1 << 24	@ set bit #24
+	mcr	p15, 0, r0, c15, c0, 1	@ write diagnostic register
+#endif
+
+#ifdef CONFIG_ARM_ERRATA_852423
+	mrc	p15, 0, r0, c15, c0, 1	@ read diagnostic register
+	orr	r0, r0, #1 << 12	@ set bit #12
+	mcr	p15, 0, r0, c15, c0, 1	@ write diagnostic register
 #endif
 
 	mov	pc, r5			@ back to my caller

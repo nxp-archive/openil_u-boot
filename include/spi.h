@@ -26,16 +26,9 @@
 #define SPI_TX_BYTE	BIT(8)			/* transmit with 1 wire byte */
 #define SPI_TX_DUAL	BIT(9)			/* transmit with 2 wires */
 #define SPI_TX_QUAD	BIT(10)			/* transmit with 4 wires */
-
-/* SPI mode_rx flags */
-#define SPI_RX_SLOW	BIT(0)			/* receive with 1 wire slow */
-#define SPI_RX_FAST	BIT(1)			/* receive with 1 wire fast */
-#define SPI_RX_DUAL	BIT(2)			/* receive with 2 wires */
-#define SPI_RX_QUAD	BIT(3)			/* receive with 4 wires */
-
-/* SPI bus connection options - see enum spi_dual_flash */
-#define SPI_CONN_DUAL_SHARED		(1 << 0)
-#define SPI_CONN_DUAL_SEPARATED	(1 << 1)
+#define SPI_RX_SLOW	BIT(11)			/* receive with 1 wire slow */
+#define SPI_RX_DUAL	BIT(12)			/* receive with 2 wires */
+#define SPI_RX_QUAD	BIT(13)			/* receive with 4 wires */
 
 /* Header byte that marks the start of the message */
 #define SPI_PREAMBLE_END_BYTE	0xec
@@ -61,13 +54,11 @@ struct dm_spi_bus {
  * @cs:		Chip select number (0..n-1)
  * @max_hz:	Maximum bus speed that this slave can tolerate
  * @mode:	SPI mode to use for this device (see SPI mode flags)
- * @mode_rx:	SPI RX mode to use for this slave (see SPI mode_rx flags)
  */
 struct dm_spi_slave_platdata {
 	unsigned int cs;
 	uint max_hz;
 	uint mode;
-	u8 mode_rx;
 };
 
 #endif /* CONFIG_DM_SPI */
@@ -94,12 +85,10 @@ struct dm_spi_slave_platdata {
  *			bus (bus->seq) so does not need to be stored
  * @cs:			ID of the chip select connected to the slave.
  * @mode:		SPI mode to use for this slave (see SPI mode flags)
- * @mode_rx:		SPI RX mode to use for this slave (see SPI mode_rx flags)
  * @wordlen:		Size of SPI word in number of bits
  * @max_write_size:	If non-zero, the maximum number of bytes which can
  *			be written at once, excluding command bytes.
  * @memory_map:		Address of read-only SPI flash access.
- * @option:		Varies SPI bus options - separate, shared bus.
  * @flags:		Indication of SPI flags.
  */
 struct spi_slave {
@@ -112,7 +101,6 @@ struct spi_slave {
 	unsigned int cs;
 #endif
 	uint mode;
-	u8 mode_rx;
 	unsigned int wordlen;
 	unsigned int max_write_size;
 	void *memory_map;
@@ -124,7 +112,6 @@ struct spi_slave {
 #define SPI_XFER_ONCE		(SPI_XFER_BEGIN | SPI_XFER_END)
 #define SPI_XFER_MMAP		BIT(2)	/* Memory Mapped start */
 #define SPI_XFER_MMAP_END	BIT(3)	/* Memory Mapped End */
-#define SPI_XFER_U_PAGE		BIT(4)
 };
 
 /**
@@ -575,7 +562,7 @@ int spi_find_chip_select(struct udevice *bus, int cs, struct udevice **devp);
  * @node:	Node offset to read from
  * @plat:	Place to put the decoded information
  */
-int spi_slave_ofdata_to_platdata(const void *blob, int node,
+int spi_slave_ofdata_to_platdata(struct udevice *dev,
 				 struct dm_spi_slave_platdata *plat);
 
 /**

@@ -24,13 +24,12 @@
 #define CONFIG_SKIP_LOWLEVEL_INIT
 #endif
 
-#define CONFIG_BOARD_EARLY_INIT_F
-#define CONFIG_DISPLAY_CPUINFO
-
 #define CONFIG_ENV_VARS_UBOOT_CONFIG
 
 /* general purpose I/O */
+#ifndef CONFIG_DM_GPIO
 #define CONFIG_AT91_GPIO
+#endif
 
 
 /*
@@ -55,7 +54,6 @@
 #else
 /* u-boot env in sd/mmc card */
 #define CONFIG_ENV_IS_IN_FAT
-#define CONFIG_FAT_WRITE
 #define FAT_ENV_INTERFACE	"mmc"
 #define FAT_ENV_DEVICE_AND_PART	"0"
 #define FAT_ENV_FILE		"uboot.env"
@@ -75,7 +73,7 @@
 #define CONFIG_BOOTARGS							\
 	"console=ttyS0,115200 earlyprintk "				\
 	"mtdparts=atmel_nand:256k(bootstrap)ro,512k(uboot)ro,"		\
-	"256K(env),256k(env_redundent),256k(spare),"			\
+	"256K(env),256k(env_redundant),256k(spare),"			\
 	"512k(dtb),6M(kernel)ro,-(rootfs) "				\
 	"rootfstype=ubifs ubi.mtd=7 root=ubi0:rootfs"
 
@@ -101,8 +99,6 @@
 #endif
 
 #endif
-
-#define CONFIG_BAUDRATE			115200
 
 #define CONFIG_SYS_CBSIZE		256
 #define CONFIG_SYS_MAXARGS		16

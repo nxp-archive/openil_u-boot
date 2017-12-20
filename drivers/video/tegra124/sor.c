@@ -466,9 +466,18 @@ void tegra_dc_sor_set_lane_count(struct udevice *dev, u8 lane_count)
 static int tegra_dc_sor_power_up(struct udevice *dev, int is_lvds)
 {
 	struct tegra_dc_sor_data *sor = dev_get_priv(dev);
+	u32 reg;
 	int ret;
 
 	if (sor->power_is_up)
+		return 0;
+
+	/*
+	 * If for some reason it is already powered up, don't do it again.
+	 * This can happen if U-Boot is the secondary boot loader.
+	 */
+	reg = tegra_sor_readl(sor, DP_PADCTL(sor->portnum));
+	if (reg & DP_PADCTL_PD_TXD_0_NO)
 		return 0;
 
 	/* Set link bw */
@@ -757,7 +766,7 @@ int tegra_dc_sor_attach(struct udevice *dc_dev, struct udevice *dev,
 
 	/* Use the first display controller */
 	debug("%s\n", __func__);
-	node = dc_dev->of_offset;
+	node = dev_of_offset(dc_dev);
 	disp_ctrl = (struct dc_ctlr *)fdtdec_get_addr(blob, node, "reg");
 
 	tegra_dc_sor_enable_dc(disp_ctrl);
@@ -973,7 +982,7 @@ int tegra_dc_sor_detach(struct udevice *dc_dev, struct udevice *dev)
 
 	debug("%s\n", __func__);
 	/* Use the first display controller */
-	node = dc_dev->of_offset;
+	node = dev_of_offset(dc_dev);
 	disp_ctrl = (struct dc_ctlr *)fdtdec_get_addr(blob, node, "reg");
 
 	/* Sleep mode */
@@ -1045,7 +1054,7 @@ static int tegra_sor_ofdata_to_platdata(struct udevice *dev)
 	int node;
 	int ret;
 
-	priv->base = (void *)fdtdec_get_addr(blob, dev->of_offset, "reg");
+	priv->base = (void *)fdtdec_get_addr(blob, dev_of_offset(dev), "reg");
 
 	node = fdtdec_next_compatible(blob, 0, COMPAT_NVIDIA_TEGRA124_PMC);
 	if (node < 0) {

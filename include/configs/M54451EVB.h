@@ -20,11 +20,8 @@
  */
 #define CONFIG_M54451EVB	/* M54451EVB board */
 
-#define CONFIG_DISPLAY_BOARDINFO
-
 #define CONFIG_MCFUART
 #define CONFIG_SYS_UART_PORT		(0)
-#define CONFIG_BAUDRATE		115200
 
 #undef CONFIG_WATCHDOG
 
@@ -39,8 +36,6 @@
 #define CONFIG_BOOTP_HOSTNAME
 
 /* Command line configuration */
-#define CONFIG_CMD_DATE
-#undef CONFIG_CMD_JFFS2
 #define CONFIG_CMD_REGINFO
 
 /* Network configuration */

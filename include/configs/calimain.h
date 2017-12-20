@@ -16,7 +16,6 @@
  * Board
  */
 #define CONFIG_DRIVER_TI_EMAC
-#define MACH_TYPE_CALIMAIN	3528
 #define CONFIG_MACH_TYPE	MACH_TYPE_CALIMAIN
 
 /*
@@ -32,8 +31,6 @@
 #define CONFIG_SYS_HZ_CLOCK		clk_get(DAVINCI_AUXCLK_CLKID)
 #define CONFIG_SYS_TEXT_BASE		0x60000000
 #define CONFIG_DA850_LOWLEVEL
-#define CONFIG_SYS_DA850_PLL_INIT
-#define CONFIG_SYS_DA850_DDR_INIT
 #define CONFIG_ARCH_CPU_INIT
 #define CONFIG_DA8XX_GPIO
 #define CONFIG_HW_WATCHDOG
@@ -156,7 +153,6 @@
 #define CONFIG_SYS_NS16550_COM1	DAVINCI_UART2_BASE /* Base address of UART2 */
 #define CONFIG_SYS_NS16550_CLK	clk_get(DAVINCI_UART2_CLKID)
 #define CONFIG_CONS_INDEX	1		/* use UART0 for console */
-#define CONFIG_BAUDRATE		115200		/* Default baud rate */
 
 #define CONFIG_ENV_IS_IN_FLASH
 #define CONFIG_FLASH_CFI_DRIVER
@@ -180,7 +176,6 @@
  * Network & Ethernet Configuration
  */
 #ifdef CONFIG_DRIVER_TI_EMAC
-#define CONFIG_EMAC_MDIO_PHY_NUM	1
 #define CONFIG_MII
 #define CONFIG_BOOTP_DNS
 #define CONFIG_BOOTP_DNS2
@@ -201,7 +196,6 @@
 #define CONFIG_AUTO_COMPLETE
 #define CONFIG_CMDLINE_EDITING
 #define CONFIG_SYS_LONGHELP
-#define CONFIG_CRC32_VERIFY
 #define CONFIG_MX_CYCLIC
 
 /*
@@ -304,8 +298,6 @@
 /*
  * U-Boot commands
  */
-#define CONFIG_CMD_ENV
-#define CONFIG_CMD_DIAG
 #define CONFIG_CMD_SAVES
 
 #ifndef CONFIG_DRIVER_TI_EMAC
@@ -323,5 +315,7 @@
 #ifndef __ASSEMBLY__
 int calimain_get_osc_freq(void);
 #endif
+
+#include <asm/arch/hardware.h>
 
 #endif /* __CONFIG_H */

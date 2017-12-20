@@ -70,11 +70,13 @@ struct image_tool_params {
 	int orig_file_size;	/* Original size for file before padding */
 	bool auto_its;		/* Automatically create the .its file */
 	int fit_image_type;	/* Image type to put into the FIT */
+	char *fit_ramdisk;	/* Ramdisk file to include */
 	struct content_info *content_head;	/* List of files to include */
 	struct content_info *content_tail;
 	bool external_data;	/* Store data outside the FIT */
 	bool quiet;		/* Don't output text in normal operation */
 	unsigned int external_offset;	/* Add padding to external data */
+	const char *engine_id;	/* Engine to use for signing */
 };
 
 /*

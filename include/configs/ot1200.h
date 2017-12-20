@@ -13,7 +13,6 @@
 /* Size of malloc() pool */
 #define CONFIG_SYS_MALLOC_LEN           (10 * 1024 * 1024)
 
-#define CONFIG_BOARD_EARLY_INIT_F
 #define CONFIG_MISC_INIT_R
 
 /* UART Configs */
@@ -44,7 +43,6 @@
 #define CONFIG_SYS_I2C_SPEED            100000
 
 /* OCOTP Configs */
-#define CONFIG_CMD_IMXOTP
 #define CONFIG_IMX_OTP
 #define IMX_OTP_BASE                    OCOTP_BASE_ADDR
 #define IMX_OTP_ADDR_MAX                0x7F
@@ -56,8 +54,6 @@
 #define CONFIG_SYS_FSL_USDHC_NUM       2
 
 /* USB Configs */
-#define CONFIG_USB_EHCI
-#define CONFIG_USB_EHCI_MX6
 #define CONFIG_MXC_USB_PORTSC   (PORT_PTS_UTMI | PORT_PTS_PTW)
 #define CONFIG_USB_MAX_CONTROLLER_COUNT 2
 
@@ -80,9 +76,6 @@
 /* SPL */
 #ifdef CONFIG_SPL
 #include "imx6_spl.h"
-#define CONFIG_SPL_SPI_SUPPORT
-#define CONFIG_SPL_LIBCOMMON_SUPPORT
-#define CONFIG_SPL_SPI_FLASH_SUPPORT
 #define CONFIG_SYS_SPI_U_BOOT_OFFS     (64 * 1024)
 #define CONFIG_SPL_SPI_LOAD
 #endif
@@ -97,16 +90,12 @@
 #define CONFIG_PHY_SMSC
 
 #ifndef CONFIG_SPL
-#define CONFIG_CMD_EEPROM
 #define CONFIG_ENV_EEPROM_IS_ON_I2C
 #define CONFIG_SYS_I2C_EEPROM_BUS             1
 #define CONFIG_SYS_I2C_EEPROM_ADDR_LEN        1
 #define CONFIG_SYS_EEPROM_PAGE_WRITE_BITS     3
 #define CONFIG_SYS_EEPROM_PAGE_WRITE_DELAY_MS 5
 #endif
-
-/* Miscellaneous commands */
-#define CONFIG_CMD_BMODE
 
 #define CONFIG_PREBOOT                 ""
 

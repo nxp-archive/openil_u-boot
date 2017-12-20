@@ -13,6 +13,10 @@
 #include <fsl_ddr.h>
 #include <fsl_immap.h>
 #include <asm/io.h>
+#if defined(CONFIG_FSL_LSCH2) || defined(CONFIG_FSL_LSCH3) || \
+	defined(CONFIG_ARM)
+#include <asm/arch/clock.h>
+#endif
 
 /* To avoid 64-bit full-divides, we factor this here */
 #define ULL_2E12 2000000000000ULL
@@ -30,17 +34,17 @@ u32 fsl_ddr_get_version(unsigned int ctrl_num)
 	case 0:
 		ddr = (void *)CONFIG_SYS_FSL_DDR_ADDR;
 		break;
-#if defined(CONFIG_SYS_FSL_DDR2_ADDR) && (CONFIG_NUM_DDR_CONTROLLERS > 1)
+#if defined(CONFIG_SYS_FSL_DDR2_ADDR) && (CONFIG_SYS_NUM_DDR_CTLRS > 1)
 	case 1:
 		ddr = (void *)CONFIG_SYS_FSL_DDR2_ADDR;
 		break;
 #endif
-#if defined(CONFIG_SYS_FSL_DDR3_ADDR) && (CONFIG_NUM_DDR_CONTROLLERS > 2)
+#if defined(CONFIG_SYS_FSL_DDR3_ADDR) && (CONFIG_SYS_NUM_DDR_CTLRS > 2)
 	case 2:
 		ddr = (void *)CONFIG_SYS_FSL_DDR3_ADDR;
 		break;
 #endif
-#if defined(CONFIG_SYS_FSL_DDR4_ADDR) && (CONFIG_NUM_DDR_CONTROLLERS > 3)
+#if defined(CONFIG_SYS_FSL_DDR4_ADDR) && (CONFIG_SYS_NUM_DDR_CTLRS > 3)
 	case 3:
 		ddr = (void *)CONFIG_SYS_FSL_DDR4_ADDR;
 		break;
@@ -174,23 +178,23 @@ void print_ddr_info(unsigned int start_ctrl)
 	struct ccsr_ddr __iomem *ddr =
 		(struct ccsr_ddr __iomem *)(CONFIG_SYS_FSL_DDR_ADDR);
 
-#if	defined(CONFIG_E6500) && (CONFIG_NUM_DDR_CONTROLLERS == 3)
+#if	defined(CONFIG_E6500) && (CONFIG_SYS_NUM_DDR_CTLRS == 3)
 	u32 *mcintl3r = (void *) (CONFIG_SYS_IMMR + 0x18004);
 #endif
-#if (CONFIG_NUM_DDR_CONTROLLERS > 1)
+#if (CONFIG_SYS_NUM_DDR_CTLRS > 1)
 	uint32_t cs0_config = ddr_in32(&ddr->cs0_config);
 #endif
 	uint32_t sdram_cfg = ddr_in32(&ddr->sdram_cfg);
 	int cas_lat;
 
-#if CONFIG_NUM_DDR_CONTROLLERS >= 2
+#if CONFIG_SYS_NUM_DDR_CTLRS >= 2
 	if ((!(sdram_cfg & SDRAM_CFG_MEM_EN)) ||
 	    (start_ctrl == 1)) {
 		ddr = (void __iomem *)CONFIG_SYS_FSL_DDR2_ADDR;
 		sdram_cfg = ddr_in32(&ddr->sdram_cfg);
 	}
 #endif
-#if CONFIG_NUM_DDR_CONTROLLERS >= 3
+#if CONFIG_SYS_NUM_DDR_CTLRS >= 3
 	if ((!(sdram_cfg & SDRAM_CFG_MEM_EN)) ||
 	    (start_ctrl == 2)) {
 		ddr = (void __iomem *)CONFIG_SYS_FSL_DDR3_ADDR;
@@ -246,7 +250,7 @@ void print_ddr_info(unsigned int start_ctrl)
 	else
 		puts(", ECC off)");
 
-#if (CONFIG_NUM_DDR_CONTROLLERS == 3)
+#if (CONFIG_SYS_NUM_DDR_CTLRS == 3)
 #ifdef CONFIG_E6500
 	if (*mcintl3r & 0x80000000) {
 		puts("\n");
@@ -268,7 +272,7 @@ void print_ddr_info(unsigned int start_ctrl)
 	}
 #endif
 #endif
-#if (CONFIG_NUM_DDR_CONTROLLERS >= 2)
+#if (CONFIG_SYS_NUM_DDR_CTLRS >= 2)
 	if ((cs0_config & 0x20000000) && (start_ctrl == 0)) {
 		puts("\n");
 		puts("       DDR Controller Interleaving Mode: ");
@@ -337,8 +341,8 @@ void fsl_ddr_sync_memctl_refresh(unsigned int first_ctrl,
 {
 	unsigned int i;
 	u32 ddrc_debug20;
-	u32 ddrc_debug2[CONFIG_NUM_DDR_CONTROLLERS] = {};
-	u32 *ddrc_debug2_p[CONFIG_NUM_DDR_CONTROLLERS] = {};
+	u32 ddrc_debug2[CONFIG_SYS_NUM_DDR_CTLRS] = {};
+	u32 *ddrc_debug2_p[CONFIG_SYS_NUM_DDR_CTLRS] = {};
 	struct ccsr_ddr __iomem *ddr;
 
 	for (i = first_ctrl; i <= last_ctrl; i++) {
@@ -346,17 +350,17 @@ void fsl_ddr_sync_memctl_refresh(unsigned int first_ctrl,
 		case 0:
 			ddr = (void *)CONFIG_SYS_FSL_DDR_ADDR;
 			break;
-#if defined(CONFIG_SYS_FSL_DDR2_ADDR) && (CONFIG_NUM_DDR_CONTROLLERS > 1)
+#if defined(CONFIG_SYS_FSL_DDR2_ADDR) && (CONFIG_SYS_NUM_DDR_CTLRS > 1)
 		case 1:
 			ddr = (void *)CONFIG_SYS_FSL_DDR2_ADDR;
 			break;
 #endif
-#if defined(CONFIG_SYS_FSL_DDR3_ADDR) && (CONFIG_NUM_DDR_CONTROLLERS > 2)
+#if defined(CONFIG_SYS_FSL_DDR3_ADDR) && (CONFIG_SYS_NUM_DDR_CTLRS > 2)
 		case 2:
 			ddr = (void *)CONFIG_SYS_FSL_DDR3_ADDR;
 			break;
 #endif
-#if defined(CONFIG_SYS_FSL_DDR4_ADDR) && (CONFIG_NUM_DDR_CONTROLLERS > 3)
+#if defined(CONFIG_SYS_FSL_DDR4_ADDR) && (CONFIG_SYS_NUM_DDR_CTLRS > 3)
 		case 3:
 			ddr = (void *)CONFIG_SYS_FSL_DDR4_ADDR;
 			break;
@@ -386,7 +390,7 @@ void fsl_ddr_sync_memctl_refresh(unsigned int first_ctrl,
 
 void remove_unused_controllers(fsl_ddr_info_t *info)
 {
-#ifdef CONFIG_FSL_LSCH3
+#ifdef CONFIG_SYS_FSL_HAS_CCN504
 	int i;
 	u64 nodeid;
 	void *hnf_sam_ctrl = (void *)(CCI_HN_F_0_BASE + CCN_HN_F_SAM_CTL);

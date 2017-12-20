@@ -67,7 +67,7 @@ void get_sys_info(struct sys_info *sys_info)
 			FSL_CHASSIS2_RCWSR0_SYS_PLL_RAT_SHIFT) &
 			FSL_CHASSIS2_RCWSR0_SYS_PLL_RAT_MASK;
 
-#ifdef CONFIG_LS1012A
+#ifdef CONFIG_ARCH_LS1012A
 	sys_info->freq_ddrbus = 2 * sys_info->freq_systembus;
 #else
 	sys_info->freq_ddrbus *= (gur_in32(&gur->rcwsr[0]) >>
@@ -108,8 +108,7 @@ void get_sys_info(struct sys_info *sys_info)
 		sys_info->freq_fman[0] = freq_c_pll[0] / 4;
 		break;
 	case 5:
-		sys_info->freq_fman[0] = sys_info->freq_systembus /
-					CONFIG_SYS_FSL_PCLK_DIV;
+		sys_info->freq_fman[0] = sys_info->freq_systembus;
 		break;
 	case 6:
 		sys_info->freq_fman[0] = freq_c_pll[1] / 2;
@@ -153,13 +152,12 @@ void get_sys_info(struct sys_info *sys_info)
 #endif
 
 #if defined(CONFIG_FSL_IFC)
-	sys_info->freq_localbus = (sys_info->freq_systembus /
-						CONFIG_SYS_FSL_PCLK_DIV) /
+	sys_info->freq_localbus = sys_info->freq_systembus /
 						CONFIG_SYS_FSL_IFC_CLK_DIV;
 #endif
 #ifdef CONFIG_SYS_DPAA_QBMAN
 	sys_info->freq_qman = (sys_info->freq_systembus /
-				CONFIG_SYS_FSL_PCLK_DIV) /
+				CONFIG_SYS_FSL_PCLK_DIV)/
 				CONFIG_SYS_FSL_QMAN_CLK_DIV;
 #endif
 }

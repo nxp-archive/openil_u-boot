@@ -67,7 +67,6 @@ _start:
  * use it here.
  */
 #include <asm/arch/boot0.h>
-ARM_SOC_BOOT0_HOOK
 #endif
 
 /*
@@ -118,7 +117,6 @@ data_abort:
 not_used:
 irq:
 fiq:
-
 1:
 	bl	1b			/* hang and never return */
 
@@ -127,20 +125,11 @@ fiq:
 /* IRQ stack memory (calculated at run-time) + 8 bytes */
 .globl IRQ_STACK_START_IN
 IRQ_STACK_START_IN:
+#ifdef IRAM_BASE_ADDR
+	.word   IRAM_BASE_ADDR + 0x20
+#else
 	.word	0x0badc0de
-
-#ifdef CONFIG_USE_IRQ
-/* IRQ stack memory (calculated at run-time) */
-.globl IRQ_STACK_START
-IRQ_STACK_START:
-	.word	0x0badc0de
-
-/* IRQ stack memory (calculated at run-time) */
-.globl FIQ_STACK_START
-FIQ_STACK_START:
-	.word 0x0badc0de
-
-#endif /* CONFIG_USE_IRQ */
+#endif
 
 @
 @ IRQ stack frame.
@@ -265,24 +254,6 @@ not_used:
 	bad_save_user_regs
 	bl	do_not_used
 
-#ifdef CONFIG_USE_IRQ
-
-	.align	5
-irq:
-	get_irq_stack
-	irq_save_user_regs
-	bl	do_irq
-	irq_restore_user_regs
-
-	.align	5
-fiq:
-	get_fiq_stack
-	/* someone ought to write a more effiction fiq_save_user_regs */
-	irq_save_user_regs
-	bl	do_fiq
-	irq_restore_user_regs
-
-#else
 
 	.align	5
 irq:
@@ -295,7 +266,5 @@ fiq:
 	get_bad_stack
 	bad_save_user_regs
 	bl	do_fiq
-
-#endif /* CONFIG_USE_IRQ */
 
 #endif	/* CONFIG_SPL_BUILD */

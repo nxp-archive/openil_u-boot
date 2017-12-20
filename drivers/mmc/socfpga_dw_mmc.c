@@ -70,7 +70,7 @@ static int socfpga_dwmmc_ofdata_to_platdata(struct udevice *dev)
 		return -EINVAL;
 	}
 
-	fifo_depth = fdtdec_get_int(gd->fdt_blob, dev->of_offset,
+	fifo_depth = fdtdec_get_int(gd->fdt_blob, dev_of_offset(dev),
 				    "fifo-depth", 0);
 	if (fifo_depth < 0) {
 		printf("DWMMC: Can't get FIFO depth\n");
@@ -78,8 +78,8 @@ static int socfpga_dwmmc_ofdata_to_platdata(struct udevice *dev)
 	}
 
 	host->name = dev->name;
-	host->ioaddr = (void *)dev_get_addr(dev);
-	host->buswidth = fdtdec_get_int(gd->fdt_blob, dev->of_offset,
+	host->ioaddr = (void *)devfdt_get_addr(dev);
+	host->buswidth = fdtdec_get_int(gd->fdt_blob, dev_of_offset(dev),
 					"bus-width", 4);
 	host->clksel = socfpga_dwmci_clksel;
 
@@ -92,9 +92,9 @@ static int socfpga_dwmmc_ofdata_to_platdata(struct udevice *dev)
 	host->bus_hz = clk;
 	host->fifoth_val = MSIZE(0x2) |
 		RX_WMARK(fifo_depth / 2 - 1) | TX_WMARK(fifo_depth / 2);
-	priv->drvsel = fdtdec_get_uint(gd->fdt_blob, dev->of_offset,
+	priv->drvsel = fdtdec_get_uint(gd->fdt_blob, dev_of_offset(dev),
 				       "drvsel", 3);
-	priv->smplsel = fdtdec_get_uint(gd->fdt_blob, dev->of_offset,
+	priv->smplsel = fdtdec_get_uint(gd->fdt_blob, dev_of_offset(dev),
 					"smplsel", 0);
 	host->priv = priv;
 
@@ -111,8 +111,7 @@ static int socfpga_dwmmc_probe(struct udevice *dev)
 	struct dwmci_host *host = &priv->host;
 
 #ifdef CONFIG_BLK
-	dwmci_setup_cfg(&plat->cfg, dev->name, host->buswidth, host->caps,
-			host->bus_hz, 400000);
+	dwmci_setup_cfg(&plat->cfg, host, host->bus_hz, 400000);
 	host->mmc = &plat->mmc;
 #else
 	int ret;
@@ -152,7 +151,9 @@ U_BOOT_DRIVER(socfpga_dwmmc_drv) = {
 	.id		= UCLASS_MMC,
 	.of_match	= socfpga_dwmmc_ids,
 	.ofdata_to_platdata = socfpga_dwmmc_ofdata_to_platdata,
+	.ops		= &dm_dwmci_ops,
 	.bind		= socfpga_dwmmc_bind,
 	.probe		= socfpga_dwmmc_probe,
 	.priv_auto_alloc_size = sizeof(struct dwmci_socfpga_priv_data),
+	.platdata_auto_alloc_size = sizeof(struct socfpga_dwmci_plat),
 };

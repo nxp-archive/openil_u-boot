@@ -49,6 +49,20 @@ config I2C_CROS_EC_LDO
 	avoid duplicating the logic in the TPS65090 regulator driver for
 	enabling/disabling an LDO.
 
+config I2C_SET_DEFAULT_BUS_NUM
+	bool "Set default I2C bus number"
+	depends on DM_I2C
+	help
+	  Set default number of I2C bus to be accessed. This option provides
+	  behaviour similar to old (i.e. pre DM) I2C bus driver.
+
+config I2C_DEFAULT_BUS_NUMBER
+	hex "I2C default bus number"
+	depends on I2C_SET_DEFAULT_BUS_NUM
+	default 0x0
+	help
+	  Number of default I2C bus to use
+
 config DM_I2C_GPIO
 	bool "Enable Driver Model for software emulated I2C bus driver"
 	depends on DM_I2C && DM_GPIO
@@ -100,6 +114,15 @@ config SYS_I2C_DW_ENABLE_STATUS_UNSUPPORTED
 	  enable status register. This config option can be enabled in such
 	  cases.
 
+config SYS_I2C_ASPEED
+	bool "Aspeed I2C Controller"
+	depends on DM_I2C && ARCH_ASPEED
+	help
+	  Say yes here to select Aspeed I2C Host Controller. The driver
+	  supports AST2500 and AST2400 controllers, but is very limited.
+	  Only single master mode is supported and only byte-by-byte
+	  synchronous reads and writes are supported, no Pool Buffers or DMA.
+
 config SYS_I2C_INTEL
 	bool "Intel I2C/SMBUS driver"
 	depends on DM_I2C
@@ -108,6 +131,19 @@ config SYS_I2C_INTEL
 	  a stub which perhaps some basic init. There is no implementation of
 	  the I2C API meaning that any I2C operations will immediately fail
 	  for now.
+
+config SYS_I2C_IMX_LPI2C
+	bool "NXP i.MX LPI2C driver"
+	help
+	  Add support for the NXP i.MX LPI2C driver.
+
+config SYS_I2C_MXC
+	bool "NXP i.MX I2C driver"
+	depends on MX6
+	help
+	  Add support for the NXP i.MX I2C driver. This supports upto for bus
+	  channels and operating on standard mode upto 100 kbits/s and fast
+	  mode upto 400 kbits/s.
 
 config SYS_I2C_ROCKCHIP
 	bool "Rockchip I2C driver"
@@ -124,29 +160,13 @@ config SYS_I2C_SANDBOX
 	help
 	  Enable I2C support for sandbox. This is an emulation of a real I2C
 	  bus. Devices can be attached to the bus using the device tree
-	  which specifies the driver to use. As an example, see this device
-	  tree fragment from sandbox.dts. It shows that the I2C bus has a
-	  single EEPROM at address 0x2c (7-bit address) which is emulated by
-	  the driver for "sandbox,i2c-eeprom", which is in
-	  drivers/misc/i2c_eeprom_emul.c.
+	  which specifies the driver to use.  See sandbox.dts as an example.
 
-	  i2c@0 {
-		#address-cells = <1>;
-		#size-cells = <0>;
-		reg = <0>;
-		compatible = "sandbox,i2c";
-		clock-frequency = <400000>;
-		eeprom@2c {
-			reg = <0x2c>;
-			compatible = "i2c-eeprom";
-			emul {
-				compatible = "sandbox,i2c-eeprom";
-				sandbox,filename = "i2c.bin";
-				sandbox,size = <128>;
-			};
-		};
-	};
-
+config SYS_I2C_S3C24X0
+	bool "Samsung I2C driver"
+	depends on ARCH_EXYNOS4 && DM_I2C
+	help
+	  Support for Samsung I2C controller as Samsung SoCs.
 
 config SYS_I2C_UNIPHIER
 	bool "UniPhier I2C driver"

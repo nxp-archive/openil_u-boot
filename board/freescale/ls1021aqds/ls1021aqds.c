@@ -23,7 +23,6 @@
 #include <fsl_devdis.h>
 #include <fsl_validate.h>
 #include <fsl_ddr.h>
-#include <asm/tzasc380.h>
 #include "../common/sleep.h"
 #include "../common/qixis.h"
 #include "ls1021aqds_qixis.h"
@@ -163,31 +162,7 @@ int dram_init(void)
 	 * before accessing DDR SPD.
 	 */
 	select_i2c_ch_pca9547(I2C_MUX_CH_DEFAULT);
-	gd->ram_size = initdram(0);
-
-
-#ifdef	CONFIG_ARMV7_TEE
-#define	CSU_SEC_ACCESS_REG_OFFSET	(0x21c/4)
-#define	TZASC_BYPASS_MUX_DISABLE	0x4
-#define	CCI_TERMINATE_BARRIER_TX	0x8
-	/* Configure CCI control override register to terminate all barrier transactions */
-	out_le32(((u32 *)CONFIG_SYS_CCI400_ADDR), CCI_TERMINATE_BARRIER_TX);
-	/* Configure CSU secure access register to disable TZASC bypass mux */
-	out_be32(((u32 *)((u32 *)CONFIG_SYS_FSL_CSU_ADDR + CSU_SEC_ACCESS_REG_OFFSET)), TZASC_BYPASS_MUX_DISABLE);
-	/* Set security permissions for region 0 */
-	tzasc_set_region(CONFIG_SYS_FSL_TZASC_ADDR, 0, 0, 0, 0, 0, TZASC_REGION_SECURITY_NSRW, 0);
-
-	/* Set region 1 */
-	tzasc_set_region(CONFIG_SYS_FSL_TZASC_ADDR, 1, TZASC_REGION_ENABLED, CONFIG_OPTEE_ENTRY,
-			0, TZASC_REGION_SIZE_64MB, TZASC_REGION_SECURITY_SRW, 0x80);
-	/* Set region 2 */
-	#define TEE_RAM_UPPER_SUBREGION_OFFSET  0x03800000
-	tzasc_set_region(CONFIG_SYS_FSL_TZASC_ADDR, 2, TZASC_REGION_ENABLED, (CONFIG_OPTEE_ENTRY + TEE_RAM_UPPER_SUBREGION_OFFSET),
-			0, TZASC_REGION_SIZE_8MB, TZASC_REGION_SECURITY_SRW, 0xc0);
-#endif
-
-
-	return 0;
+	return fsl_initdram();
 }
 
 #ifdef CONFIG_FSL_ESDHC
@@ -229,7 +204,8 @@ int board_early_init_f(void)
 #ifdef CONFIG_SPL_BUILD
 void board_init_f(ulong dummy)
 {
-	struct ccsr_cci400 *cci = (struct ccsr_cci400 *)CONFIG_SYS_CCI400_ADDR;
+	struct ccsr_cci400 *cci = (struct ccsr_cci400 *)(CONFIG_SYS_IMMR +
+					CONFIG_SYS_CCI400_OFFSET);
 	unsigned int major;
 
 #ifdef CONFIG_NAND_BOOT
@@ -450,9 +426,13 @@ int misc_init_r(void)
 
 int board_init(void)
 {
-	struct ccsr_cci400 *cci = (struct ccsr_cci400 *)CONFIG_SYS_CCI400_ADDR;
+	struct ccsr_cci400 *cci = (struct ccsr_cci400 *)(CONFIG_SYS_IMMR +
+					CONFIG_SYS_CCI400_OFFSET);
 	unsigned int major;
 
+#ifdef CONFIG_SYS_FSL_ERRATUM_A010315
+	erratum_a010315();
+#endif
 #ifdef CONFIG_SYS_FSL_ERRATUM_A009942
 	erratum_a009942_check_cpo();
 #endif
@@ -472,10 +452,6 @@ int board_init(void)
 
 	ls102xa_smmu_stream_id_init();
 
-#ifdef CONFIG_LAYERSCAPE_NS_ACCESS
-	enable_layerscape_ns_access();
-#endif
-
 #ifdef CONFIG_U_QE
 	u_qe_init();
 #endif
@@ -486,7 +462,8 @@ int board_init(void)
 #if defined(CONFIG_DEEP_SLEEP)
 void board_sleep_prepare(void)
 {
-	struct ccsr_cci400 __iomem *cci = (void *)CONFIG_SYS_CCI400_ADDR;
+	struct ccsr_cci400 __iomem *cci = (void *)(CONFIG_SYS_IMMR +
+						CONFIG_SYS_CCI400_OFFSET);
 	unsigned int major;
 
 	major = get_soc_major_rev();

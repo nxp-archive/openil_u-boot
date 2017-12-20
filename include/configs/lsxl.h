@@ -12,12 +12,10 @@
  * Version number information
  */
 #if defined(CONFIG_LSCHLV2)
-#define CONFIG_IDENT_STRING " LS-CHLv2"
 #define CONFIG_SYS_KWD_CONFIG $(CONFIG_BOARDDIR)/kwbimage-lschl.cfg
 #define CONFIG_MACH_TYPE 3006
 #define CONFIG_SYS_TCLK 166666667 /* 166 MHz */
 #elif defined(CONFIG_LSXHL)
-#define CONFIG_IDENT_STRING " LS-XHL"
 #define CONFIG_SYS_KWD_CONFIG $(CONFIG_BOARDDIR)/kwbimage-lsxhl.cfg
 #define CONFIG_MACH_TYPE 2663
 /* CONFIG_SYS_TCLK is 200000000 by default */
@@ -37,23 +35,9 @@
 
 #define CONFIG_KIRKWOOD_GPIO
 
-#define CONFIG_SYS_NO_FLASH
-#define CONFIG_SYS_CONSOLE_IS_IN_ENV
-#define CONFIG_SYS_CONSOLE_INFO_QUIET
-
-/*
- * Enable u-boot API for standalone programs.
- */
-#define CONFIG_API
-
 /*
  * Commands configuration
  */
-#define CONFIG_CMD_ENV
-#define CONFIG_CMD_IDE
-
-#define CONFIG_DOS_PARTITION
-#define CONFIG_EFI_PARTITION
 
 /*
  * mv-common.h should be defined after CMD configs since it used them
@@ -161,7 +145,7 @@
 #undef CONFIG_RESET_PHY_R
 #endif /* CONFIG_CMD_NET */
 
-#ifdef CONFIG_CMD_IDE
+#ifdef CONFIG_IDE
 #undef CONFIG_IDE_LED
 #undef CONFIG_SYS_IDE_MAXBUS
 #define CONFIG_SYS_IDE_MAXBUS		1

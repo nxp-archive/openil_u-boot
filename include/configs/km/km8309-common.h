@@ -10,8 +10,6 @@
 #ifndef __CONFIG_KM8309_COMMON_H
 #define __CONFIG_KM8309_COMMON_H
 
-#define CONFIG_DISPLAY_BOARDINFO
-
 /*
  * High Level Configuration Options
  */
@@ -21,7 +19,6 @@
 #define CONFIG_MPC8309		1	/* MPC8309 CPU specific */
 
 #define CONFIG_KM_DEF_ARCH	"arch=ppc_82xx\0"
-#define CONFIG_CMD_DIAG		1
 
 /* include common defines/options for all 83xx Keymile boards */
 #include "km83xx-common.h"

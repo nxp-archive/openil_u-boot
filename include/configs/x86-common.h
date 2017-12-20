@@ -16,10 +16,8 @@
  * (easy to change)
  */
 #define CONFIG_SHOW_BOOT_PROGRESS
-#define CONFIG_ZBOOT_32
 #define CONFIG_PHYSMEM
 #define CONFIG_DISPLAY_BOARDINFO_LATE
-#define CONFIG_DISPLAY_CPUINFO
 #define CONFIG_LAST_STAGE_INIT
 #define CONFIG_NR_DRAM_BANKS		8
 
@@ -57,36 +55,14 @@
 /*-----------------------------------------------------------------------
  * Serial Configuration
  */
-#define CONFIG_BAUDRATE			115200
 #define CONFIG_SYS_BAUDRATE_TABLE	{300, 600, 1200, 2400, 4800, \
 					 9600, 19200, 38400, 115200}
 #define CONFIG_SYS_NS16550_PORT_MAPPED
 
-#define CONFIG_CONSOLE_MUX
-#define CONFIG_SYS_CONSOLE_IS_IN_ENV
-#define CONFIG_SYS_STDIO_DEREGISTER
-
 #define CONFIG_CMDLINE_EDITING
-#define CONFIG_COMMAND_HISTORY
 #define CONFIG_AUTO_COMPLETE
 
 #define CONFIG_SUPPORT_VFAT
-
-/************************************************************
- * DISK Partition support
- ************************************************************/
-#define CONFIG_EFI_PARTITION
-#define CONFIG_DOS_PARTITION
-#define CONFIG_MAC_PARTITION
-#define CONFIG_ISO_PARTITION		/* Experimental */
-
-#define CONFIG_CMD_PART
-#ifdef CONFIG_SYS_COREBOOT
-#define CONFIG_CMD_CBFS
-#endif
-#define CONFIG_PARTITION_UUIDS
-
-#define CONFIG_SYS_CONSOLE_INFO_QUIET
 
 /* x86 GPIOs are accessed through a PCI device */
 #define CONFIG_INTEL_ICH6_GPIO
@@ -94,12 +70,7 @@
 /*-----------------------------------------------------------------------
  * Command line configuration.
  */
-#define CONFIG_CMD_DATE
-#define CONFIG_CMD_FPGA_LOADMK
-#define CONFIG_CMD_IO
-#define CONFIG_CMD_IRQ
 #define CONFIG_CMD_PCI
-#define CONFIG_CMD_GETTIME
 #define CONFIG_SCSI
 
 #define CONFIG_CMD_ZBOOT
@@ -129,16 +100,6 @@
 #define CONFIG_SYS_LOAD_ADDR			0x20000000
 
 /*-----------------------------------------------------------------------
- * Video Configuration
- */
-#define CONFIG_VIDEO
-#define CONFIG_VIDEO_SW_CURSOR
-#define VIDEO_FB_16BPP_WORD_SWAP
-#define CONFIG_VGA_AS_SINGLE_DEVICE
-#define CONFIG_CFB_CONSOLE
-#define CONFIG_CONSOLE_SCROLL_LINES 5
-
-/*-----------------------------------------------------------------------
  * CPU Features
  */
 
@@ -152,7 +113,6 @@
 /*-----------------------------------------------------------------------
  * FLASH configuration
  */
-#define CONFIG_SYS_NO_FLASH
 #define CONFIG_CMD_SF_TEST
 #define CONFIG_SPI
 
@@ -165,17 +125,12 @@
 /*-----------------------------------------------------------------------
  * PCI configuration
  */
-#define CONFIG_PCI
 #define CONFIG_PCI_CONFIG_HOST_BRIDGE
 
 /*-----------------------------------------------------------------------
  * USB configuration
  */
-#define CONFIG_USB_EHCI
 #define CONFIG_USB_EHCI_PCI
-#define CONFIG_SYS_USB_EHCI_MAX_ROOT_PORTS     12
-#define CONFIG_USB_MAX_CONTROLLER_COUNT        2
-#define CONFIG_USB_KEYBOARD
 #define CONFIG_SYS_USB_EVENT_POLL
 
 #define CONFIG_USB_HOST_ETHER

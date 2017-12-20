@@ -158,9 +158,10 @@ static void spi0_disable_clock(void)
 			     (1 << AHB_RESET_SPI0_SHIFT));
 }
 
-static int spi0_init(void)
+static void spi0_init(void)
 {
 	unsigned int pin_function = SUNXI_GPC_SPI0;
+
 	if (IS_ENABLED(CONFIG_MACH_SUN50I))
 		pin_function = SUN50I_GPC_SPI0;
 
@@ -184,14 +185,14 @@ static void spi0_deinit(void)
 #define SPI_READ_MAX_SIZE 60 /* FIFO size, minus 4 bytes of the header */
 
 static void sunxi_spi0_read_data(u8 *buf, u32 addr, u32 bufsize,
-				 u32 spi_ctl_reg,
-				 u32 spi_ctl_xch_bitmask,
-				 u32 spi_fifo_reg,
-				 u32 spi_tx_reg,
-				 u32 spi_rx_reg,
-				 u32 spi_bc_reg,
-				 u32 spi_tc_reg,
-				 u32 spi_bcc_reg)
+				 ulong spi_ctl_reg,
+				 ulong spi_ctl_xch_bitmask,
+				 ulong spi_fifo_reg,
+				 ulong spi_tx_reg,
+				 ulong spi_rx_reg,
+				 ulong spi_bc_reg,
+				 ulong spi_tc_reg,
+				 ulong spi_bcc_reg)
 {
 	writel(4 + bufsize, spi_bc_reg); /* Burst counter (total bytes) */
 	writel(4, spi_tc_reg);           /* Transfer counter (bytes to send) */
@@ -262,7 +263,8 @@ static void spi0_read_data(void *buf, u32 addr, u32 len)
 
 /*****************************************************************************/
 
-int spl_spi_load_image(void)
+static int spl_spi_load_image(struct spl_image_info *spl_image,
+			      struct spl_boot_device *bootdev)
 {
 	int err;
 	struct image_header *header;
@@ -271,13 +273,15 @@ int spl_spi_load_image(void)
 	spi0_init();
 
 	spi0_read_data((void *)header, CONFIG_SYS_SPI_U_BOOT_OFFS, 0x40);
-	err = spl_parse_image_header(header);
+	err = spl_parse_image_header(spl_image, header);
 	if (err)
 		return err;
 
-	spi0_read_data((void *)spl_image.load_addr, CONFIG_SYS_SPI_U_BOOT_OFFS,
-		       spl_image.size);
+	spi0_read_data((void *)spl_image->load_addr, CONFIG_SYS_SPI_U_BOOT_OFFS,
+		       spl_image->size);
 
 	spi0_deinit();
 	return 0;
 }
+/* Use priorty 0 to override the default if it happens to be linked in */
+SPL_LOAD_IMAGE_METHOD("sunxi SPI", 0, BOOT_DEVICE_SPI, spl_spi_load_image);

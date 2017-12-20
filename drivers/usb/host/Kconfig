@@ -15,23 +15,56 @@ config USB_XHCI_HCD
 
 if USB_XHCI_HCD
 
-config USB_XHCI_UNIPHIER
-	bool "Support for UniPhier on-chip xHCI USB controller"
-	depends on ARCH_UNIPHIER
-	default y
-	---help---
-	  Enables support for the on-chip xHCI controller on UniPhier SoCs.
-
 config USB_XHCI_DWC3
 	bool "DesignWare USB3 DRD Core Support"
 	help
 	  Say Y or if your system has a Dual Role SuperSpeed
 	  USB controller based on the DesignWare USB3 IP Core.
 
+config USB_XHCI_MVEBU
+	bool "MVEBU USB 3.0 support"
+	default y
+	depends on ARCH_MVEBU
+	select DM_REGULATOR
+	help
+	  Choose this option to add support for USB 3.0 driver on mvebu
+	  SoCs, which includes Armada8K, Armada3700 and other Armada
+	  family SoCs.
+
+config USB_XHCI_PCI
+	bool "Support for PCI-based xHCI USB controller"
+	depends on DM_USB
+	default y if X86
+	help
+	  Enables support for the PCI-based xHCI controller.
+
+config USB_XHCI_ROCKCHIP
+	bool "Support for Rockchip on-chip xHCI USB controller"
+	depends on ARCH_ROCKCHIP
+	default y
+	help
+	  Enables support for the on-chip xHCI controller on Rockchip SoCs.
+
+config USB_XHCI_ZYNQMP
+	bool "Support for Xilinx ZynqMP on-chip xHCI USB controller"
+	depends on ARCH_ZYNQMP
+	help
+	  Enables support for the on-chip xHCI controller on Xilinx ZynqMP SoCs.
+
+config USB_XHCI_DRA7XX_INDEX
+	int "DRA7XX xHCI USB index"
+	range 0 1
+	default 0
+	depends on DRA7XX
+	help
+	  Select the DRA7XX xHCI USB index.
+	  Current supported values: 0, 1.
+
 endif # USB_XHCI_HCD
 
 config USB_EHCI_HCD
 	bool "EHCI HCD (USB 2.0) support"
+	default y if ARCH_MX5 || ARCH_MX6
 	select USB_HOST
 	---help---
 	  The Enhanced Host Controller Interface (EHCI) is standard for USB 2.0
@@ -49,12 +82,6 @@ config USB_EHCI_HCD
 
 	  You may want to read <file:Documentation/usb/ehci.txt>.
 
-config USB_EHCI
-	bool
-	default USB_EHCI_HCD
-	---help---
-	  TODO: rename after most boards switch to Kconfig
-
 if USB_EHCI_HCD
 
 config USB_EHCI_ATMEL
@@ -65,8 +92,8 @@ config USB_EHCI_ATMEL
 	  Enables support for the on-chip EHCI controller on Atmel chips.
 
 config USB_EHCI_MARVELL
-	bool "Support for MVEBU (AXP / A38x) on-chip EHCI USB controller"
-	depends on ARCH_MVEBU
+	bool "Support for Marvell on-chip EHCI USB controller"
+	depends on ARCH_MVEBU || KIRKWOOD || ORION5X
 	default y
 	---help---
 	  Enables support for the on-chip EHCI controller on MVEBU SoCs.
@@ -84,6 +111,14 @@ config USB_EHCI_MX7
 	default y
 	---help---
 	  Enables support for the on-chip EHCI controller on i.MX7 SoCs.
+
+config USB_EHCI_OMAP
+	bool "Support for OMAP3+ on-chip EHCI USB controller"
+	depends on ARCH_OMAP2PLUS
+	default y
+	---help---
+	  Enables support for the on-chip EHCI controller on OMAP3 and later
+	  SoCs.
 
 if USB_EHCI_MX7
 
@@ -104,6 +139,14 @@ config USB_EHCI_MSM
 	  Snapdragon SoCs.
 	  This driver supports combination of Chipidea USB controller
 	  and Synapsys USB PHY in host mode only.
+
+config USB_EHCI_RCAR_GEN3
+	bool "Support for Renesas RCar M3/H3 EHCI USB controller"
+	depends on RCAR_GEN3
+	default y
+	---help---
+	  Enables support for the on-chip EHCI controller on Renesas
+	  R8A7795 and R8A7796 SoCs.
 
 config USB_EHCI_ZYNQ
 	bool "Support for Xilinx Zynq on-chip EHCI USB controller"

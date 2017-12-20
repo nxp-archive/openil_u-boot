@@ -8,16 +8,11 @@
 #define __CONFIG_H
 
 /* SPL */
-#define CONFIG_SPL_BOARD_INIT
-#define CONFIG_SPL_NAND_SUPPORT
-#define CONFIG_SPL_MMC_SUPPORT
-#define CONFIG_SPL_POWER_SUPPORT
 /* Location in NAND to read U-Boot from */
 #define CONFIG_SYS_NAND_U_BOOT_OFFS     (14 * SZ_1M)
 
 /* Falcon Mode */
 #define CONFIG_CMD_SPL
-#define CONFIG_SPL_OS_BOOT
 #define CONFIG_SYS_SPL_ARGS_ADDR	0x18000000
 #define CONFIG_CMD_SPL_WRITE_SIZE	(128 * SZ_1K)
 
@@ -32,8 +27,6 @@
 
 #include "imx6_spl.h"                  /* common IMX6 SPL configuration */
 #include "mx6_common.h"
-#undef CONFIG_SPL_EXT_SUPPORT
-#undef CONFIG_DISPLAY_BOARDINFO
 #define CONFIG_DISPLAY_BOARDINFO_LATE
 
 #define CONFIG_MACH_TYPE	4520   /* Gateworks Ventana Platform */
@@ -45,7 +38,6 @@
 #define CONFIG_SYS_MALLOC_LEN		(10 * SZ_1M)
 
 /* Init Functions */
-#define CONFIG_BOARD_EARLY_INIT_F
 #define CONFIG_MISC_INIT_R
 
 /* Driver Model */
@@ -75,7 +67,7 @@
   #define CONFIG_SF_DEFAULT_MODE             (SPI_MODE_0)
 #endif
 
-#else
+#elif defined(CONFIG_SPL_NAND_SUPPORT)
 /* Enable NAND support */
 #define CONFIG_CMD_NAND
 #define CONFIG_CMD_NAND_TRIMFFS
@@ -102,12 +94,14 @@
 #define CONFIG_SYS_I2C_MXC_I2C3		/* enable I2C bus 3 */
 #define CONFIG_SYS_I2C_SPEED		100000
 #define CONFIG_I2C_GSC			0
-#define CONFIG_I2C_PMIC			1
 #define CONFIG_I2C_EDID
 
 /* MMC Configs */
 #define CONFIG_SYS_FSL_ESDHC_ADDR      0
-#define CONFIG_SYS_FSL_USDHC_NUM       1
+
+/* eMMC Configs */
+#define CONFIG_SUPPORT_EMMC_BOOT
+#define CONFIG_SUPPORT_EMMC_RPMB
 
 /* Filesystem support */
 #define CONFIG_CMD_UBIFS
@@ -130,8 +124,6 @@
  */
 #define CONFIG_CMD_PCI
 #ifdef CONFIG_CMD_PCI
-#define CONFIG_PCI
-#define CONFIG_PCI_PNP
 #define CONFIG_PCI_SCAN_SHOW
 #define CONFIG_PCI_FIXUP_DEV
 #define CONFIG_PCIE_IMX
@@ -148,11 +140,7 @@
 #define CONFIG_POWER_LTC3676_I2C_ADDR  0x3c
 
 /* Various command support */
-#define CONFIG_CMD_BMODE         /* set eFUSE shadow for a boot dev and reset */
-#define CONFIG_CMD_HDMIDETECT    /* detect HDMI output device */
-#define CONFIG_CMD_GSC
-#define CONFIG_CMD_EECONFIG      /* Gateworks EEPROM config cmd */
-#define CONFIG_CMD_UBI
+#define CONFIG_CMD_UNZIP         /* gzwrite */
 #define CONFIG_RBTREE
 
 /* Ethernet support */
@@ -161,12 +149,9 @@
 #define IMX_FEC_BASE             ENET_BASE_ADDR
 #define CONFIG_FEC_XCV_TYPE      RGMII
 #define CONFIG_FEC_MXC_PHYADDR   0
-#define CONFIG_PHYLIB
 #define CONFIG_ARP_TIMEOUT       200UL
 
 /* USB Configs */
-#define CONFIG_USB_EHCI
-#define CONFIG_USB_EHCI_MX6
 #define CONFIG_USB_HOST_ETHER
 #define CONFIG_USB_ETHER_ASIX
 #define CONFIG_USB_ETHER_SMSC95XX
@@ -174,7 +159,6 @@
 #define CONFIG_EHCI_HCD_INIT_AFTER_RESET  /* For OTG port */
 #define CONFIG_MXC_USB_PORTSC     (PORT_PTS_UTMI | PORT_PTS_PTW)
 #define CONFIG_MXC_USB_FLAGS      0
-#define CONFIG_USB_KEYBOARD
 #define CONFIG_USBD_HS
 #define CONFIG_USB_ETHER
 #define CONFIG_USB_ETH_CDC
@@ -185,15 +169,9 @@
 #define CONFIG_USB_FUNCTION_MASS_STORAGE
 
 /* Framebuffer and LCD */
-#define CONFIG_VIDEO
 #define CONFIG_VIDEO_IPUV3
-#define CONFIG_CFB_CONSOLE
-#define CONFIG_VGA_AS_SINGLE_DEVICE
-#define CONFIG_SYS_CONSOLE_IS_IN_ENV
 #define CONFIG_VIDEO_LOGO
 #define CONFIG_IPUV3_CLK          260000000
-#define CONFIG_CMD_HDMIDETECT
-#define CONFIG_CONSOLE_MUX
 #define CONFIG_IMX_HDMI
 #define CONFIG_IMX_VIDEO_SKIP
 #define CONFIG_VIDEO_BMP_LOGO
@@ -242,12 +220,15 @@
 
 /* Persistent Environment Config */
 #ifdef CONFIG_SPI_FLASH
-#define CONFIG_ENV_IS_IN_SPI_FLASH
+  #define CONFIG_ENV_IS_IN_SPI_FLASH
+#elif defined(CONFIG_SPL_NAND_SUPPORT)
+  #define CONFIG_ENV_IS_IN_NAND
 #else
-#define CONFIG_ENV_IS_IN_NAND
+  #define CONFIG_ENV_IS_IN_MMC
 #endif
 #if defined(CONFIG_ENV_IS_IN_MMC)
   #define CONFIG_SYS_MMC_ENV_DEV         0
+  #define CONFIG_SYS_MMC_ENV_PART        1
   #define CONFIG_ENV_OFFSET              (709 * SZ_1K)
   #define CONFIG_ENV_SIZE                (128 * SZ_1K)
   #define CONFIG_ENV_OFFSET_REDUND       (CONFIG_ENV_OFFSET + (128 * SZ_1K))
@@ -311,14 +292,14 @@
 		"fi\0" \
 	\
 	"uimage=uImage\0" \
-	"mmc_root=/dev/mmcblk0p1 rootfstype=${fs} rootwait rw\0" \
+	"mmc_root=mmcblk0p1\0" \
 	"mmc_boot=" \
 		"setenv fsload \"${fs}load mmc ${disk}:${part}\"; " \
 		"mmc dev ${disk} && mmc rescan && " \
 		"setenv dtype mmc; run loadscript; " \
 		"if ${fsload} ${loadaddr} ${bootdir}/${uimage}; then " \
 			"setenv bootargs console=${console},${baudrate} " \
-				"root=/dev/mmcblk0p1 rootfstype=${fs} " \
+				"root=/dev/${mmc_root} rootfstype=${fs} " \
 				"rootwait rw ${video} ${extra}; " \
 			"if run loadfdt; then " \
 				"bootm ${loadaddr} - ${fdt_addr}; " \
@@ -426,8 +407,5 @@
 		"echo; echo Attempting ${btype} boot...; " \
 		"if run ${btype}_boot; then; fi; " \
 	"done"
-
-/* Device Tree Support */
-#define CONFIG_FDT_FIXUP_PARTITIONS
 
 #endif			       /* __CONFIG_H */

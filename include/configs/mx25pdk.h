@@ -20,9 +20,6 @@
 #define CONFIG_SYS_TIMER_COUNTER	\
 	(&((struct gpt_regs *)IMX_GPT1_BASE)->counter)
 
-#define CONFIG_DISPLAY_CPUINFO
-#define CONFIG_DISPLAY_BOARDINFO
-
 #define CONFIG_CMDLINE_TAG		/* enable passing of ATAGs */
 #define CONFIG_SETUP_MEMORY_TAGS
 #define CONFIG_INITRD_TAG
@@ -37,9 +34,6 @@
 #define CONFIG_NR_DRAM_BANKS	1
 #define PHYS_SDRAM_1		0x80000000
 #define PHYS_SDRAM_1_SIZE	(64 * 1024 * 1024)
-
-#define CONFIG_BOARD_EARLY_INIT_F
-#define CONFIG_BOARD_LATE_INIT
 
 #define CONFIG_SYS_SDRAM_BASE		PHYS_SDRAM_1
 #define CONFIG_SYS_INIT_RAM_ADDR	IMX_RAM_BASE
@@ -58,14 +52,12 @@
 #define CONFIG_MXC_UART
 #define CONFIG_MXC_UART_BASE	UART1_BASE
 #define CONFIG_CONS_INDEX	1	/* use UART0 for console */
-#define CONFIG_BAUDRATE		115200	/* Default baud rate */
 
 /* No NOR flash present */
 #define CONFIG_ENV_OFFSET      (6 * 64 * 1024)
 #define CONFIG_ENV_SIZE        (8 * 1024)
 #define CONFIG_SYS_MMC_ENV_DEV		0
 
-#define CONFIG_SYS_NO_FLASH
 #define CONFIG_ENV_IS_IN_MMC
 #define CONFIG_SYS_MMC_ENV_DEV 0
 
@@ -90,8 +82,6 @@
 #define CONFIG_ENV_OVERWRITE
 
 /* ESDHC driver */
-#define CONFIG_MMC
-#define CONFIG_GENERIC_MMC
 #define CONFIG_FSL_ESDHC
 #define CONFIG_SYS_FSL_ESDHC_ADDR	IMX_MMC_SDHC1_BASE
 #define CONFIG_SYS_FSL_ESDHC_NUM	1
@@ -103,8 +93,6 @@
 #define CONFIG_POWER_FSL_MC34704
 #define CONFIG_SYS_FSL_PMIC_I2C_ADDR	0x54
 
-#define CONFIG_DOS_PARTITION
-
 /* I2C Configs */
 #define CONFIG_SYS_I2C
 #define CONFIG_SYS_I2C_MXC
@@ -113,15 +101,16 @@
 
 /* RTC */
 #define CONFIG_RTC_IMXDI
-#define CONFIG_CMD_DATE
+
+/* Fuse API support */
+#define CONFIG_FSL_IIM
+#define CONFIG_CMD_FUSE
 
 /* Ethernet Configs */
 
 
 #define CONFIG_LOADADDR		0x81000000	/* loadaddr env var */
 #define CONFIG_SYS_LOAD_ADDR	CONFIG_LOADADDR
-
-#define CONFIG_DEFAULT_FDT_FILE		"imx25-pdk.dtb"
 
 #define CONFIG_EXTRA_ENV_SETTINGS \
 	"script=boot.scr\0" \

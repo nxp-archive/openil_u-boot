@@ -35,7 +35,7 @@ int checkboard (void)
 	return 0;
 }
 
-phys_size_t initdram (int board_type)
+int dram_init(void)
 {
 	int size, i;
 
@@ -92,7 +92,9 @@ phys_size_t initdram (int board_type)
 	*(unsigned int *) (CONFIG_SYS_SDRAM_BASE1 + 0x220) = 0xA5A5;
 	size += CONFIG_SYS_SDRAM_SIZE1 * 1024 * 1024;
 #endif
-	return size;
+	gd->ram_size = size;
+
+	return 0;
 }
 
 #if defined(CONFIG_SYS_DRAM_TEST)
@@ -174,7 +176,7 @@ void __led_init(led_id_t mask, int state)
 
 void __led_set(led_id_t mask, int state)
 {
-	if (state == STATUS_LED_ON)
+	if (state == CONFIG_LED_STATUS_ON)
 		MCFGPTA_GPTPORT |= (1 << 3);
 	else
 		MCFGPTA_GPTPORT &= ~(1 << 3);

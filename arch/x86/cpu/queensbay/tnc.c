@@ -76,13 +76,13 @@ static int __maybe_unused disable_igd(void)
 	 *
 	 * So the only option we have is to manually remove these two devices.
 	 */
-	ret = device_remove(igd);
+	ret = device_remove(igd, DM_REMOVE_NORMAL);
 	if (ret)
 		return ret;
 	ret = device_unbind(igd);
 	if (ret)
 		return ret;
-	ret = device_remove(sdvo);
+	ret = device_remove(sdvo, DM_REMOVE_NORMAL);
 	if (ret)
 		return ret;
 	ret = device_unbind(sdvo);
@@ -94,15 +94,9 @@ static int __maybe_unused disable_igd(void)
 
 int arch_cpu_init(void)
 {
-	int ret;
-
 	post_code(POST_CPU_INIT);
 
-	ret = x86_cpu_init_f();
-	if (ret)
-		return ret;
-
-	return 0;
+	return x86_cpu_init_f();
 }
 
 int arch_early_init_r(void)

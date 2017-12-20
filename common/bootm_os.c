@@ -56,7 +56,6 @@ static int do_bootm_netbsd(int flag, int argc, char * const argv[],
 	void (*loader)(bd_t *, image_header_t *, char *, char *);
 	image_header_t *os_hdr, *hdr;
 	ulong kernel_data, kernel_len;
-	char *consdev;
 	char *cmdline;
 
 	if (flag != BOOTM_STATE_OS_GO)
@@ -88,17 +87,6 @@ static int do_bootm_netbsd(int flag, int argc, char * const argv[],
 			os_hdr = hdr;
 	}
 
-	consdev = "";
-#if   defined(CONFIG_8xx_CONS_SMC1)
-	consdev = "smc1";
-#elif defined(CONFIG_8xx_CONS_SMC2)
-	consdev = "smc2";
-#elif defined(CONFIG_8xx_CONS_SCC2)
-	consdev = "scc2";
-#elif defined(CONFIG_8xx_CONS_SCC3)
-	consdev = "scc3";
-#endif
-
 	if (argc > 0) {
 		ulong len;
 		int   i;
@@ -127,7 +115,7 @@ static int do_bootm_netbsd(int flag, int argc, char * const argv[],
 	 *   arg[2]: char pointer to the console device to use
 	 *   arg[3]: char pointer to the boot arguments
 	 */
-	(*loader)(gd->bd, os_hdr, consdev, cmdline);
+	(*loader)(gd->bd, os_hdr, "", cmdline);
 
 	return 1;
 }
@@ -288,8 +276,6 @@ void do_bootvx_fdt(bootm_headers_t *images)
 		if (ret)
 			return;
 
-		fdt_fixup_ethernet(*of_flat_tree);
-
 		ret = fdt_add_subnode(*of_flat_tree, 0, "chosen");
 		if ((ret >= 0 || ret == -FDT_ERR_EXISTS)) {
 			bootline = getenv("bootargs");
@@ -353,6 +339,7 @@ static int do_bootm_qnxelf(int flag, int argc, char * const argv[],
 {
 	char *local_args[2];
 	char str[16];
+	int dcache;
 
 	if (flag != BOOTM_STATE_OS_GO)
 		return 0;
@@ -367,7 +354,18 @@ static int do_bootm_qnxelf(int flag, int argc, char * const argv[],
 	sprintf(str, "%lx", images->ep); /* write entry-point into string */
 	local_args[0] = argv[0];
 	local_args[1] = str;	/* and provide it via the arguments */
+
+	/*
+	 * QNX images require the data cache is disabled.
+	 */
+	dcache = dcache_status();
+	if (dcache)
+		dcache_disable();
+
 	do_bootelf(NULL, 0, 2, local_args);
+
+	if (dcache)
+		dcache_enable();
 
 	return 1;
 }

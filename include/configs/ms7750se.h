@@ -15,13 +15,13 @@
 #define CONFIG_MS7750SE		1
 #define __LITTLE_ENDIAN__	1
 
+#define CONFIG_DISPLAY_BOARDINFO
+
 /*
  * Command line configuration.
  */
 #define CONFIG_SCIF_CONSOLE	1
-#define CONFIG_BAUDRATE		38400
 #define CONFIG_CONS_SCIF1	1
-#define CONFIG_BOARD_LATE_INIT
 
 #define CONFIG_BOOTARGS		"console=ttySC0,38400"
 #define CONFIG_ENV_OVERWRITE	1

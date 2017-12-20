@@ -12,7 +12,6 @@
 #include <asm/pch_common.h>
 #include <asm/pci.h>
 #include <asm/arch/pch.h>
-#include <asm/arch/bd82x6x.h>
 
 DECLARE_GLOBAL_DATA_PTR;
 
@@ -40,7 +39,7 @@ static void bd82x6x_sata_init(struct udevice *dev, struct udevice *pch)
 {
 	unsigned int port_map, speed_support, port_tx;
 	const void *blob = gd->fdt_blob;
-	int node = dev->of_offset;
+	int node = dev_of_offset(dev);
 	const char *mode;
 	u32 reg32;
 	u16 reg16;
@@ -54,7 +53,7 @@ static void bd82x6x_sata_init(struct udevice *dev, struct udevice *pch)
 
 	mode = fdt_getprop(blob, node, "intel,sata-mode", NULL);
 	if (!mode || !strcmp(mode, "ahci")) {
-		u32 abar;
+		ulong abar;
 
 		debug("SATA: Controller in AHCI mode\n");
 
@@ -73,7 +72,7 @@ static void bd82x6x_sata_init(struct udevice *dev, struct udevice *pch)
 
 		/* Initialize AHCI memory-mapped space */
 		abar = dm_pci_read_bar32(dev, 5);
-		debug("ABAR: %08X\n", abar);
+		debug("ABAR: %08lx\n", abar);
 		/* CAP (HBA Capabilities) : enable power management */
 		reg32 = readl(abar + 0x00);
 		reg32 |= 0x0c006000;  /* set PSC+SSC+SALP+SSS */
@@ -191,7 +190,7 @@ static void bd82x6x_sata_init(struct udevice *dev, struct udevice *pch)
 static void bd82x6x_sata_enable(struct udevice *dev)
 {
 	const void *blob = gd->fdt_blob;
-	int node = dev->of_offset;
+	int node = dev_of_offset(dev);
 	unsigned port_map;
 	const char *mode;
 	u16 map = 0;

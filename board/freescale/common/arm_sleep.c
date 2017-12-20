@@ -13,7 +13,7 @@
 #endif
 #include <asm/armv7.h>
 
-#if defined(CONFIG_LS102XA)
+#if defined(CONFIG_ARCH_LS1021A)
 #include <asm/arch/immap_ls102xa.h>
 #endif
 
@@ -66,6 +66,36 @@ static void dp_ddr_restore(void)
 		*dst++ = *src++;
 }
 
+#if defined(CONFIG_ARMV7_PSCI) && defined(CONFIG_ARCH_LS1021A)
+void ls1_psci_resume_fixup(void)
+{
+	u32 tmp;
+	struct ccsr_scfg __iomem *scfg = (void *)CONFIG_SYS_FSL_SCFG_ADDR;
+
+#ifdef QIXIS_BASE
+	void *qixis_base = (void *)QIXIS_BASE;
+
+	/* Pull on PCIe RST# */
+	out_8(qixis_base + QIXIS_RST_FORCE_3, 0);
+
+	/* disable deep sleep signals in FPGA */
+	tmp = in_8(qixis_base + QIXIS_PWR_CTL2);
+	tmp &= ~QIXIS_PWR_CTL2_PCTL;
+	out_8(qixis_base + QIXIS_PWR_CTL2, tmp);
+#endif
+
+	/* Disable wakeup interrupt during deep sleep */
+	out_be32(&scfg->pmcintecr, 0);
+	/* Clear PMC interrupt status */
+	out_be32(&scfg->pmcintsr, 0xffffffff);
+
+	/* Disable Warm Device Reset */
+	tmp = in_be32(&scfg->dpslpcr);
+	tmp &= ~SCFG_DPSLPCR_WDRR_EN;
+	out_be32(&scfg->dpslpcr, tmp);
+}
+#endif
+
 static void dp_resume_prepare(void)
 {
 	dp_ddr_restore();
@@ -73,6 +103,9 @@ static void dp_resume_prepare(void)
 	armv7_init_nonsec();
 #ifdef CONFIG_U_QE
 	u_qe_resume();
+#endif
+#if defined(CONFIG_ARMV7_PSCI) && defined(CONFIG_ARCH_LS1021A)
+	ls1_psci_resume_fixup();
 #endif
 }
 

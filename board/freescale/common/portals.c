@@ -26,7 +26,7 @@ void setup_qbman_portals(void)
 	void __iomem *qpaddr = (void *)CONFIG_SYS_QMAN_CINH_BASE +
 				CONFIG_SYS_QMAN_SWP_ISDR_REG;
 #ifndef CONFIG_ARM
-	ccsr_qman_t *qman = (void *)CONFIG_SYS_FSL_QMAN_ADDR;
+	struct ccsr_qman *qman = (void *)CONFIG_SYS_FSL_QMAN_ADDR;
 
 	/* Set the Qman initiator BAR to match the LAW (for DQRR stashing) */
 #ifdef CONFIG_PHYS_64BIT
@@ -180,7 +180,7 @@ void fdt_fixup_qportals(void *blob)
 	int off, err;
 	unsigned int maj, min;
 	unsigned int ip_cfg;
-	ccsr_qman_t *qman = (void *)CONFIG_SYS_FSL_QMAN_ADDR;
+	struct ccsr_qman *qman = (void *)CONFIG_SYS_FSL_QMAN_ADDR;
 	u32 rev_1 = in_be32(&qman->ip_rev_1);
 	u32 rev_2 = in_be32(&qman->ip_rev_2);
 	char compat[64];
@@ -264,8 +264,8 @@ void fdt_fixup_qportals(void *blob)
 err:
 		if (err < 0) {
 			printf("ERROR: unable to create props for %s: %s\n",
-				fdt_get_name(blob, off, NULL),
-				fdt_strerror(err));
+			       fdt_get_name(blob, off, NULL),
+			       fdt_strerror(err));
 			return;
 		}
 
@@ -279,7 +279,7 @@ void fdt_fixup_bportals(void *blob)
 	int off, err;
 	unsigned int maj, min;
 	unsigned int ip_cfg;
-	ccsr_bman_t *bman = (void *)CONFIG_SYS_FSL_BMAN_ADDR;
+	struct ccsr_bman *bman = (void *)CONFIG_SYS_FSL_BMAN_ADDR;
 	u32 rev_1 = in_be32(&bman->ip_rev_1);
 	u32 rev_2 = in_be32(&bman->ip_rev_2);
 	char compat[64];
@@ -299,8 +299,8 @@ void fdt_fixup_bportals(void *blob)
 		err = fdt_setprop(blob, off, "compatible", compat, compat_len);
 		if (err < 0) {
 			printf("ERROR: unable to create props for %s: %s\n",
-				fdt_get_name(blob, off, NULL),
-						 fdt_strerror(err));
+			       fdt_get_name(blob, off, NULL),
+			       fdt_strerror(err));
 			return;
 		}
 

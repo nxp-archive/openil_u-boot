@@ -10,11 +10,6 @@
 #include <linux/sizes.h>
 
 /*
- *  CPU configuration
- */
-#define CONFIG_SYS_TIMER_RATE		CONFIG_SYS_CLK_FREQ
-
-/*
  * Memory configuration
  */
 #define CONFIG_SYS_MONITOR_BASE		CONFIG_SYS_TEXT_BASE
@@ -30,21 +25,19 @@
 #define CONFIG_SYS_BOOTM_LEN		SZ_32M
 #define CONFIG_SYS_LOAD_ADDR		0x82000000
 
-#define CONFIG_SYS_NO_FLASH
-
 /*
  * UART configuration
  *
  */
 #define CONFIG_ARC_SERIAL
 #define CONFIG_ARC_UART_BASE		0xC0FC1000
-#define CONFIG_BAUDRATE			115200
 
 /*
  * Command line configuration
  */
 #define CONFIG_AUTO_COMPLETE
 #define CONFIG_SYS_MAXARGS		16
+#define CONFIG_CMDLINE_EDITING
 
 /*
  * Environment settings

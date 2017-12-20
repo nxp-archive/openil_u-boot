@@ -73,7 +73,7 @@ struct kwb_header {
 /* Structure of the main header, version 1 (Armada 370, Armada XP) */
 struct main_hdr_v1 {
 	uint8_t  blockid;               /* 0 */
-	uint8_t  reserved1;             /* 1 */
+	uint8_t  flags;                 /* 1 */
 	uint16_t reserved2;             /* 2-3 */
 	uint32_t blocksize;             /* 4-7 */
 	uint8_t  version;               /* 8 */
@@ -82,7 +82,7 @@ struct main_hdr_v1 {
 	uint32_t srcaddr;               /* C-F */
 	uint32_t destaddr;              /* 10-13 */
 	uint32_t execaddr;              /* 14-17 */
-	uint8_t  reserved3;             /* 18 */
+	uint8_t  options;               /* 18 */
 	uint8_t  nandblocksize;         /* 19 */
 	uint8_t  nandbadblklocation;    /* 1A */
 	uint8_t  reserved4;             /* 1B */
@@ -92,6 +92,18 @@ struct main_hdr_v1 {
 };
 
 /*
+ * Main header options
+ */
+#define MAIN_HDR_V1_OPT_BAUD_DEFAULT	0
+#define MAIN_HDR_V1_OPT_BAUD_2400	0x1
+#define MAIN_HDR_V1_OPT_BAUD_4800	0x2
+#define MAIN_HDR_V1_OPT_BAUD_9600	0x3
+#define MAIN_HDR_V1_OPT_BAUD_19200	0x4
+#define MAIN_HDR_V1_OPT_BAUD_38400	0x5
+#define MAIN_HDR_V1_OPT_BAUD_57600	0x6
+#define MAIN_HDR_V1_OPT_BAUD_115200	0x7
+
+/*
  * Header for the optional headers, version 1 (Armada 370, Armada XP)
  */
 struct opt_hdr_v1 {
@@ -99,6 +111,43 @@ struct opt_hdr_v1 {
 	uint8_t  headersz_msb;
 	uint16_t headersz_lsb;
 	char     data[0];
+};
+
+/*
+ * Public Key data in DER format
+ */
+struct pubkey_der_v1 {
+	uint8_t key[524];
+};
+
+/*
+ * Signature (RSA 2048)
+ */
+struct sig_v1 {
+	uint8_t sig[256];
+};
+
+/*
+ * Structure of secure header (Armada 38x)
+ */
+struct secure_hdr_v1 {
+	uint8_t  headertype;		/* 0x0 */
+	uint8_t  headersz_msb;		/* 0x1 */
+	uint16_t headersz_lsb;		/* 0x2 - 0x3 */
+	uint32_t reserved1;		/* 0x4 - 0x7 */
+	struct pubkey_der_v1 kak;	/* 0x8 - 0x213 */
+	uint8_t  jtag_delay;		/* 0x214 */
+	uint8_t  reserved2;		/* 0x215 */
+	uint16_t reserved3;		/* 0x216 - 0x217 */
+	uint32_t boxid;			/* 0x218 - 0x21B */
+	uint32_t flashid;		/* 0x21C - 0x21F */
+	struct sig_v1 hdrsig;		/* 0x220 - 0x31F */
+	struct sig_v1 imgsig;		/* 0x320 - 0x41F */
+	struct pubkey_der_v1 csk[16];	/* 0x420 - 0x24DF */
+	struct sig_v1 csksig;		/* 0x24E0 - 0x25DF */
+	uint8_t  next;			/* 0x25E0 */
+	uint8_t  reserved4;		/* 0x25E1 */
+	uint16_t reserved5;		/* 0x25E2 - 0x25E3 */
 };
 
 /*

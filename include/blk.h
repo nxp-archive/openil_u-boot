@@ -253,12 +253,25 @@ unsigned long blk_derase(struct blk_desc *block_dev, lbaint_t start,
 			 lbaint_t blkcnt);
 
 /**
+ * blk_find_device() - Find a block device
+ *
+ * This function does not activate the device. The device will be returned
+ * whether or not it is activated.
+ *
+ * @if_type:	Interface type (enum if_type_t)
+ * @devnum:	Device number (specific to each interface type)
+ * @devp:	the device, if found
+ * @return 0 if found, -ENODEV if no device found, or other -ve error value
+ */
+int blk_find_device(int if_type, int devnum, struct udevice **devp);
+
+/**
  * blk_get_device() - Find and probe a block device ready for use
  *
  * @if_type:	Interface type (enum if_type_t)
  * @devnum:	Device number (specific to each interface type)
  * @devp:	the device, if found
- * @return - if found, -ENODEV if no device found, or other -ve error value
+ * @return 0 if found, -ENODEV if no device found, or other -ve error value
  */
 int blk_get_device(int if_type, int devnum, struct udevice **devp);
 
@@ -363,6 +376,13 @@ int blk_find_max_devnum(enum if_type if_type);
  * @return 0 if OK, -ve on error
  */
 int blk_select_hwpart(struct udevice *dev, int hwpart);
+
+/**
+ * blk_get_from_parent() - obtain a block device by looking up its parent
+ *
+ * All devices with
+ */
+int blk_get_from_parent(struct udevice *parent, struct udevice **devp);
 
 #else
 #include <errno.h>

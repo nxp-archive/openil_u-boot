@@ -172,6 +172,11 @@ ld-version = $(shell $(LD) --version | $(srctree)/scripts/ld-version.sh)
 # Usage:  $(call ld-ifversion, -ge, 22252, y)
 ld-ifversion = $(shell [ $(ld-version) $(1) $(2) ] && echo $(3) || echo $(4))
 
+# dtc-option
+# Usage:  DTC_FLAGS += $(call dtc-option,-Wno-unit_address_vs_reg)
+dtc-option = $(call try-run,\
+	echo '/dts-v1/; / {};' | $(DTC) $(1),$(1),$(2))
+
 ######
 
 ###
@@ -316,6 +321,12 @@ endif
 
 ifdef CONFIG_SPL_BUILD
 SPL_ := SPL_
+ifeq ($(CONFIG_TPL_BUILD),y)
+SPL_TPL_ := TPL_
+else
+SPL_TPL_ := SPL_
+endif
 else
 SPL_ :=
+SPL_TPL_ :=
 endif

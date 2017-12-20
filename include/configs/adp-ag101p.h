@@ -20,15 +20,13 @@
 
 #define CONFIG_SKIP_LOWLEVEL_INIT
 
-#define CONFIG_SYS_GENERIC_GLOBAL_DATA
+#define CONFIG_CMDLINE_EDITING
 
-/*
- * Definitions related to passing arguments to kernel.
- */
-#define CONFIG_CMDLINE_TAG			/* send commandline to Kernel */
-#define CONFIG_SETUP_MEMORY_TAGS	/* send memory definition to kernel */
-#define CONFIG_INITRD_TAG			/* send initrd params */
-#define CONFIG_NEEDS_MANUAL_RELOC
+#define CONFIG_SYS_ICACHE_OFF
+#define CONFIG_SYS_DCACHE_OFF
+
+#define CONFIG_BOOTP_SEND_HOSTNAME
+#define CONFIG_BOOTP_SERVERIP
 
 #ifndef CONFIG_SKIP_LOWLEVEL_INIT
 #define CONFIG_MEM_REMAP
@@ -36,6 +34,10 @@
 
 #ifdef CONFIG_SKIP_LOWLEVEL_INIT
 #define CONFIG_SYS_TEXT_BASE	0x00500000
+#ifdef CONFIG_OF_CONTROL
+#undef CONFIG_OF_SEPARATE
+#define CONFIG_OF_EMBED
+#endif
 #else
 #ifdef CONFIG_MEM_REMAP
 #define CONFIG_SYS_TEXT_BASE	0x80000000
@@ -85,33 +87,20 @@
  */
 
 /* FTUART is a high speed NS 16C550A compatible UART, addr: 0x99600000 */
-#define CONFIG_BAUDRATE			38400
 #define CONFIG_CONS_INDEX		1
 #define CONFIG_SYS_NS16550_SERIAL
 #define CONFIG_SYS_NS16550_COM1		CONFIG_FTUART010_02_BASE
+#ifndef CONFIG_DM_SERIAL
 #define CONFIG_SYS_NS16550_REG_SIZE	-4
+#endif
 #define CONFIG_SYS_NS16550_CLK		((18432000 * 20) / 25)	/* AG101P */
-
-/*
- * Ethernet
- */
-#define CONFIG_FTMAC100
-
 
 /*
  * SD (MMC) controller
  */
-#define CONFIG_MMC
-#define CONFIG_GENERIC_MMC
-#define CONFIG_DOS_PARTITION
 #define CONFIG_FTSDC010
 #define CONFIG_FTSDC010_NUMBER		1
 #define CONFIG_FTSDC010_SDIO
-
-/*
- * Command line configuration.
- */
-#define CONFIG_CMD_DATE
 
 /*
  * Miscellaneous configurable options
@@ -358,7 +347,9 @@
  * There are 4 banks supported for this Controller,
  * but we have only 1 bank connected to flash on board
  */
+#ifndef CONFIG_SYS_MAX_FLASH_BANKS_DETECT
 #define CONFIG_SYS_MAX_FLASH_BANKS	1
+#endif
 #define CONFIG_SYS_FLASH_BANKS_SIZES {0x4000000}
 
 /* max number of sectors on one chip */
@@ -371,5 +362,16 @@
 #define CONFIG_ENV_ADDR			(CONFIG_SYS_MONITOR_BASE + 0x140000)
 #define CONFIG_ENV_SIZE			8192
 #define CONFIG_ENV_OVERWRITE
+
+/*
+ * For booting Linux, the board info and command line data
+ * have to be in the first 16 MB of memory, since this is
+ * the maximum mapped by the Linux kernel during initialization.
+ */
+
+/* Initial Memory map for Linux*/
+#define CONFIG_SYS_BOOTMAPSZ	(64 << 20)
+/* Increase max gunzip size */
+#define CONFIG_SYS_BOOTM_LEN	(64 << 20)
 
 #endif	/* __CONFIG_H */

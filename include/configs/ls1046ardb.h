@@ -9,26 +9,6 @@
 
 #include "ls1046a_common.h"
 
-#if defined(CONFIG_FSL_LS_PPA)
-#define CONFIG_ARMV8_PSCI
-#define CONFIG_ARMV8_SEC_FIRMWARE_SUPPORT
-#define SEC_FIRMWARE_ERET_ADDR_REVERT
-
-#ifdef CONFIG_SD_BOOT
-#define CONFIG_SYS_LS_PPA_FW_IN_MMC
-#else
-#define CONFIG_SYS_LS_PPA_FW_IN_XIP
-#endif
-#ifdef CONFIG_SYS_LS_PPA_FW_IN_XIP
-#define	CONFIG_SYS_LS_PPA_FW_ADDR	0x40500000
-#elif defined(CONFIG_SYS_LS_PPA_FW_IN_MMC)
-#define	CONFIG_SYS_LS_PPA_FW_ADDR	0x500000
-#endif
-#endif
-
-#define CONFIG_DISPLAY_CPUINFO
-#define CONFIG_DISPLAY_BOARDINFO
-
 #ifdef CONFIG_SD_BOOT
 #define CONFIG_SYS_TEXT_BASE		0x82000000
 #else
@@ -54,7 +34,9 @@
 #define CONFIG_ECC_INIT_VIA_DDRCONTROLLER
 #define CONFIG_MEM_INIT_VALUE           0xdeadbeef
 #define CONFIG_FSL_DDR_BIST	/* enable built-in memory test */
+#ifndef CONFIG_SPL
 #define CONFIG_FSL_DDR_INTERACTIVE	/* Interactive debugging */
+#endif
 
 #ifdef CONFIG_RAMBOOT_PBL
 #define CONFIG_SYS_FSL_PBL_PBI board/freescale/ls1046ardb/ls1046ardb_pbi.cfg
@@ -69,16 +51,14 @@
 #endif
 #endif
 
-/* No NOR flash */
-#define CONFIG_SYS_NO_FLASH
-
+#ifndef SPL_NO_IFC
 /* IFC */
 #define CONFIG_FSL_IFC
-
 /*
  * NAND Flash Definitions
  */
 #define CONFIG_NAND_FSL_IFC
+#endif
 
 #define CONFIG_SYS_NAND_BASE		0x7e800000
 #define CONFIG_SYS_NAND_BASE_PHYS	CONFIG_SYS_NAND_BASE
@@ -182,31 +162,36 @@
 /*
  * Environment
  */
+#ifndef SPL_NO_ENV
 #define CONFIG_ENV_OVERWRITE
+#endif
 
 #if defined(CONFIG_SD_BOOT)
 #define CONFIG_ENV_IS_IN_MMC
 #define CONFIG_SYS_MMC_ENV_DEV		0
-#define CONFIG_ENV_OFFSET		(1024 * 1024)
+#define CONFIG_ENV_OFFSET		(3 * 1024 * 1024)
 #define CONFIG_ENV_SIZE			0x2000
 #else
 #define CONFIG_ENV_IS_IN_SPI_FLASH
 #define CONFIG_ENV_SIZE			0x2000		/* 8KB */
-#define CONFIG_ENV_OFFSET		0x200000	/* 2MB */
+#define CONFIG_ENV_OFFSET		0x300000	/* 3MB */
 #define CONFIG_ENV_SECT_SIZE		0x40000		/* 256KB */
 #endif
 
+#define AQR105_IRQ_MASK			0x80000000
 /* FMan */
+#ifndef SPL_NO_FMAN
+
+#ifdef CONFIG_NET
+#define CONFIG_PHYLIB
+#define CONFIG_PHY_GIGE		/* Include GbE speed/duplex detection */
+#define CONFIG_PHY_REALTEK
+#endif
+
 #ifdef CONFIG_SYS_DPAA_FMAN
 #define CONFIG_FMAN_ENET
-#define CONFIG_PHYLIB
-#define CONFIG_PHYLIB_10G
-#define CONFIG_PHY_GIGE		/* Include GbE speed/duplex detection */
-
-#define CONFIG_PHY_REALTEK
 #define CONFIG_PHY_AQUANTIA
-#define AQR105_IRQ_MASK			0x80000000
-
+#define CONFIG_PHYLIB_10G
 #define RGMII_PHY1_ADDR			0x1
 #define RGMII_PHY2_ADDR			0x2
 
@@ -218,34 +203,35 @@
 #define CONFIG_ETHPRIME			"FM1@DTSEC3"
 #endif
 
+#endif
+
 /* QSPI device */
+#ifndef SPL_NO_QSPI
 #ifdef CONFIG_FSL_QSPI
 #define CONFIG_SPI_FLASH_SPANSION
-#define FSL_QSPI_FLASH_SIZE		SZ_64M
+#define FSL_QSPI_FLASH_SIZE		(1 << 26)
 #define FSL_QSPI_FLASH_NUM		2
-#define CONFIG_SYS_FSL_ERRATUM_A009282
-#define CONFIG_QSPI_AHB_INIT
+#endif
 #endif
 
 /* USB */
+#ifndef SPL_NO_USB
 #define CONFIG_HAS_FSL_XHCI_USB
 #ifdef CONFIG_HAS_FSL_XHCI_USB
 #define CONFIG_USB_XHCI_HCD
 #define CONFIG_USB_XHCI_FSL
 #define CONFIG_USB_XHCI_DWC3
 #define CONFIG_USB_MAX_CONTROLLER_COUNT         3
-#define CONFIG_SYS_USB_XHCI_MAX_ROOT_PORTS      2
-#define CONFIG_CMD_USB
 #define CONFIG_USB_STORAGE
+#endif
 #endif
 
 /* SATA */
+#ifndef SPL_NO_SATA
 #define CONFIG_LIBATA
 #define CONFIG_SCSI_AHCI
 #define CONFIG_SCSI_AHCI_PLAT
 #define CONFIG_SCSI
-#define CONFIG_DOS_PARTITION
-#define CONFIG_BOARD_LATE_INIT
 
 #define CONFIG_SYS_SATA				AHCI_BASE_ADDR
 
@@ -253,18 +239,23 @@
 #define CONFIG_SYS_SCSI_MAX_LUN			1
 #define CONFIG_SYS_SCSI_MAX_DEVICE		(CONFIG_SYS_SCSI_MAX_SCSI_ID * \
 						CONFIG_SYS_SCSI_MAX_LUN)
-#define CONFIG_PARTITION_UUIDS
-#define CONFIG_EFI_PARTITION
-#define CONFIG_CMD_GPT
+#endif
 
-#define CONFIG_BOOTCOMMAND		"sf probe 0:0;sf read $kernel_load" \
-					"$kernel_start $kernel_size;" \
-					"bootm $kernel_load"
+#ifndef SPL_NO_MISC
+#undef CONFIG_BOOTCOMMAND
+#if defined(CONFIG_QSPI_BOOT)
+#define CONFIG_BOOTCOMMAND "run distro_bootcmd; run qspi_bootcmd; "     \
+			   "env exists secureboot && esbc_halt;"
+#elif defined(CONFIG_SD_BOOT)
+#define CONFIG_BOOTCOMMAND "run distro_bootcmd; run sd_bootcmd; "       \
+			   "env exists secureboot && esbc_halt;"
+#endif
 
 #define MTDPARTS_DEFAULT "mtdparts=1550000.quadspi:1m(rcw)," \
 			"15m(u-boot),48m(kernel.itb);" \
 			"7e800000.flash:16m(nand_uboot)," \
 			"48m(nand_kernel),448m(nand_free)"
+#endif
 
 #include <asm/fsl_secure_boot.h>
 

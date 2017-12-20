@@ -12,7 +12,6 @@
 #include <configs/exynos5-common.h>
 
 #undef CONFIG_ENV_IS_IN_SPI_FLASH
-#define CONFIG_IDENT_STRING		" for ODROID-XU3"
 
 #define CONFIG_BOARD_COMMON
 
@@ -42,12 +41,9 @@
 #define CONFIG_DEFAULT_CONSOLE		"console=ttySAC2,115200n8\0"
 
 /* USB */
-#define CONFIG_USB_EHCI
 #define CONFIG_USB_EHCI_EXYNOS
 
 /* DFU */
-#define CONFIG_USB_FUNCTION_DFU
-#define CONFIG_DFU_MMC
 #define CONFIG_SYS_DFU_DATA_BUF_SIZE	SZ_32M
 #define DFU_DEFAULT_POLL_TIMEOUT	300
 #define DFU_MANIFEST_POLL_TIMEOUT       25000
@@ -65,7 +61,6 @@
 
 /* FIXME: MUST BE REMOVED AFTER TMU IS TURNED ON */
 #undef CONFIG_EXYNOS_TMU
-#undef CONFIG_TMU_CMD_DTT
 
 #define CONFIG_DFU_ALT_SYSTEM               \
 	"uImage fat 0 1;"                   \

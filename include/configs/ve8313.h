@@ -13,8 +13,6 @@
 #ifndef __CONFIG_H
 #define __CONFIG_H
 
-#define CONFIG_DISPLAY_BOARDINFO
-
 /*
  * High Level Configuration Options
  */
@@ -27,11 +25,8 @@
 #define CONFIG_SYS_TEXT_BASE	0xfe000000
 #endif
 
-#define CONFIG_PCI		1
 #define CONFIG_PCI_INDIRECT_BRIDGE 1
 #define CONFIG_FSL_ELBC		1
-
-#define CONFIG_BOARD_EARLY_INIT_F	1
 
 /*
  * On-board devices
@@ -271,7 +266,6 @@
 #define CONFIG_SYS_PCI1_IO_PHYS		0xE2000000
 #define CONFIG_SYS_PCI1_IO_SIZE		0x00100000	/* 1M */
 
-#define CONFIG_PCI_PNP		/* do pci plug-and-play */
 #define CONFIG_SYS_PCI_SUBSYS_VENDORID 0x1957	/* Freescale */
 #endif
 
@@ -464,8 +458,6 @@
 
 #define CONFIG_HOSTNAME		ve8313
 #define CONFIG_UBOOTPATH	ve8313/u-boot.bin
-
-#define CONFIG_BAUDRATE		115200
 
 #define CONFIG_EXTRA_ENV_SETTINGS \
 	"netdev=" __stringify(CONFIG_NETDEV) "\0"			\

@@ -41,7 +41,7 @@ uint32_t secmem_set_cmd(uint32_t sec_mem_cmd)
 /*!
  * CAAM page allocation:
  * Allocates a partition from secure memory, with the id
- * equal to partion_num. This will de-allocate the page
+ * equal to partition_num. This will de-allocate the page
  * if it is already allocated. The partition will have
  * full access permissions. The permissions are set before,
  * running a job descriptor. A memory page of secure RAM
@@ -204,7 +204,7 @@ void inline_cnstr_jobdesc_hash(uint32_t *desc,
 	append_store(desc, dma_addr_out, storelen,
 		     LDST_CLASS_2_CCB | LDST_SRCDST_BYTE_CONTEXT);
 }
-
+#ifndef CONFIG_SPL_BUILD
 void inline_cnstr_jobdesc_blob_encap(uint32_t *desc, uint8_t *key_idnfr,
 				     uint8_t *plain_txt, uint8_t *enc_blob,
 				     uint32_t in_sz)
@@ -252,7 +252,7 @@ void inline_cnstr_jobdesc_blob_decap(uint32_t *desc, uint8_t *key_idnfr,
 
 	append_operation(desc, OP_TYPE_DECAP_PROTOCOL | OP_PCLID_BLOB);
 }
-
+#endif
 /*
  * Descriptor to instantiate RNG State Handle 0 in normal mode and
  * load the JDKEK, TDKEK and TDSK registers

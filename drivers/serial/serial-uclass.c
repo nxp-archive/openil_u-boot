@@ -74,7 +74,8 @@ static void serial_find_console_or_panic(void)
 		 * bind it anyway.
 		 */
 		if (node > 0 &&
-		    !lists_bind_fdt(gd->dm_root, blob, node, &dev)) {
+		    !lists_bind_fdt(gd->dm_root, offset_to_ofnode(node),
+				    &dev)) {
 			if (!device_probe(dev)) {
 				gd->cur_serial_dev = dev;
 				return;
@@ -211,27 +212,30 @@ void serial_stdio_init(void)
 {
 }
 
-#if defined(CONFIG_DM_STDIO) && CONFIG_IS_ENABLED(SERIAL_PRESENT)
+#if defined(CONFIG_DM_STDIO)
+
+#if CONFIG_IS_ENABLED(SERIAL_PRESENT)
 static void serial_stub_putc(struct stdio_dev *sdev, const char ch)
 {
 	_serial_putc(sdev->priv, ch);
 }
 #endif
 
-void serial_stub_puts(struct stdio_dev *sdev, const char *str)
+static void serial_stub_puts(struct stdio_dev *sdev, const char *str)
 {
 	_serial_puts(sdev->priv, str);
 }
 
-int serial_stub_getc(struct stdio_dev *sdev)
+static int serial_stub_getc(struct stdio_dev *sdev)
 {
 	return _serial_getc(sdev->priv);
 }
 
-int serial_stub_tstc(struct stdio_dev *sdev)
+static int serial_stub_tstc(struct stdio_dev *sdev)
 {
 	return _serial_tstc(sdev->priv);
 }
+#endif
 
 /**
  * on_baudrate() - Update the actual baudrate when the env var changes
@@ -346,10 +350,10 @@ static int serial_post_probe(struct udevice *dev)
 
 static int serial_pre_remove(struct udevice *dev)
 {
-#ifdef CONFIG_SYS_STDIO_DEREGISTER
+#if CONFIG_IS_ENABLED(SYS_STDIO_DEREGISTER)
 	struct serial_dev_priv *upriv = dev_get_uclass_priv(dev);
 
-	if (stdio_deregister_dev(upriv->sdev, 0))
+	if (stdio_deregister_dev(upriv->sdev, true))
 		return -EPERM;
 #endif
 

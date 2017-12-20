@@ -5,4 +5,3 @@
 #
 
 obj-y += ls1012ardb.o
-obj-y += eth.o

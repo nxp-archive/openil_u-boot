@@ -165,7 +165,7 @@ struct boot_params *load_zimage(char *image, unsigned long kernel_size,
 		 * A very old kernel MUST have its real-mode code
 		 * loaded at 0x90000
 		 */
-		if ((u32)setup_base != 0x90000) {
+		if ((ulong)setup_base != 0x90000) {
 			/* Copy the real-mode kernel */
 			memmove((void *)0x90000, setup_base, setup_size);
 
@@ -245,6 +245,10 @@ int setup_zimage(struct boot_params *setup_base, char *cmd_line, int auto_boot,
 
 			hdr->setup_move_size = 0x9100;
 		}
+
+#if defined(CONFIG_INTEL_MID)
+		hdr->hardware_subarch = X86_SUBARCH_INTEL_MID;
+#endif
 
 		/* build command line at COMMAND_LINE_OFFSET */
 		build_command_line(cmd_line, auto_boot);

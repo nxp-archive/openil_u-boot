@@ -35,6 +35,18 @@ else
 SPL_BIN := u-boot-spl
 endif
 
+ifdef CONFIG_SPL_BUILD
+SPL_ := SPL_
+ifeq ($(CONFIG_TPL_BUILD),y)
+SPL_TPL_ := TPL_
+else
+SPL_TPL_ := SPL_
+endif
+else
+SPL_ :=
+SPL_TPL_ :=
+endif
+
 include $(srctree)/config.mk
 include $(srctree)/arch/$(ARCH)/Makefile
 
@@ -54,12 +66,21 @@ libs-$(HAVE_VENDOR_COMMON_LIB) += board/$(VENDOR)/common/
 
 libs-$(CONFIG_SPL_FRAMEWORK) += common/spl/
 libs-y += common/init/
+
+# Special handling for a few options which support SPL/TPL
+ifeq ($(CONFIG_TPL_BUILD),y)
+libs-$(CONFIG_TPL_LIBCOMMON_SUPPORT) += common/ cmd/
+libs-$(CONFIG_TPL_LIBGENERIC_SUPPORT) += lib/
+else
 libs-$(CONFIG_SPL_LIBCOMMON_SUPPORT) += common/ cmd/
+libs-$(CONFIG_SPL_LIBGENERIC_SUPPORT) += lib/
+endif
+
 libs-$(CONFIG_SPL_LIBDISK_SUPPORT) += disk/
 libs-y += drivers/
+libs-$(CONFIG_SPL_USB_GADGET_SUPPORT) += drivers/usb/dwc3/
 libs-y += dts/
 libs-y += fs/
-libs-$(CONFIG_SPL_LIBGENERIC_SUPPORT) += lib/
 libs-$(CONFIG_SPL_POST_MEM_SUPPORT) += post/drivers/
 libs-$(CONFIG_SPL_NET_SUPPORT) += net/
 
@@ -110,9 +131,11 @@ LDPPFLAGS += \
 	$(shell $(LD) --version | \
 	  sed -ne 's/GNU ld version \([0-9][0-9]*\)\.\([0-9][0-9]*\).*/-DLD_MAJOR=\1 -DLD_MINOR=\2/p')
 
+MKIMAGEOUTPUT ?= /dev/null
+
 quiet_cmd_mkimage = MKIMAGE $@
 cmd_mkimage = $(objtree)/tools/mkimage $(MKIMAGEFLAGS_$(@F)) -d $< $@ \
-	$(if $(KBUILD_VERBOSE:1=), >/dev/null)
+	$(if $(KBUILD_VERBOSE:1=), >$(MKIMAGEOUTPUT))
 
 MKIMAGEFLAGS_MLO = -T omapimage -a $(CONFIG_SPL_TEXT_BASE)
 
@@ -134,17 +157,17 @@ boot.bin: $(obj)/u-boot-spl.bin FORCE
 	$(call if_changed,mkimage)
 else
 ifdef CONFIG_ARCH_ZYNQ
-MKIMAGEFLAGS_boot.bin = -T zynqimage
+MKIMAGEFLAGS_boot.bin = -T zynqimage -R $(srctree)/$(CONFIG_BOOT_INIT_FILE)
 endif
 ifdef CONFIG_ARCH_ZYNQMP
-MKIMAGEFLAGS_boot.bin = -T zynqmpimage
+MKIMAGEFLAGS_boot.bin = -T zynqmpimage -R $(srctree)/$(CONFIG_BOOT_INIT_FILE)
 endif
 
 spl/boot.bin: $(obj)/u-boot-spl.bin FORCE
 	$(call if_changed,mkimage)
 endif
 
-ALL-y	+= $(obj)/$(SPL_BIN).bin $(obj)/$(SPL_BIN).cfg
+ALL-y	+= $(obj)/$(SPL_BIN).bin
 
 ifdef CONFIG_SAMSUNG
 ALL-y	+= $(obj)/$(BOARD)-spl.bin
@@ -154,13 +177,19 @@ ifdef CONFIG_ARCH_SOCFPGA
 ALL-y	+= $(obj)/$(SPL_BIN).sfp
 endif
 
-ifdef CONFIG_SUNXI
+ifdef CONFIG_ARCH_SUNXI
 ALL-y	+= $(obj)/sunxi-spl.bin
+
+ifdef CONFIG_NAND_SUNXI
+ALL-y	+= $(obj)/sunxi-spl-with-ecc.bin
+endif
 endif
 
 ifeq ($(CONFIG_SYS_SOC),"at91")
 ALL-y	+= boot.bin
 endif
+
+ALL-$(CONFIG_SPL_X86_16BIT_INIT) += $(obj)/u-boot-x86-16bit-spl.bin
 
 ALL-$(CONFIG_ARCH_ZYNQ)		+= $(obj)/boot.bin
 ALL-$(CONFIG_ARCH_ZYNQMP)	+= $(obj)/boot.bin
@@ -174,7 +203,8 @@ quiet_cmd_copy = COPY    $@
       cmd_copy = cp $< $@
 
 ifeq ($(CONFIG_SPL_OF_CONTROL)$(CONFIG_OF_SEPARATE)$(CONFIG_SPL_OF_PLATDATA),yy)
-$(obj)/$(SPL_BIN)-dtb.bin: $(obj)/$(SPL_BIN)-nodtb.bin $(obj)/$(SPL_BIN)-pad.bin \
+$(obj)/$(SPL_BIN)-dtb.bin: $(obj)/$(SPL_BIN)-nodtb.bin \
+		$(if $(CONFIG_SPL_SEPARATE_BSS),,$(obj)/$(SPL_BIN)-pad.bin) \
 		$(obj)/$(SPL_BIN).dtb FORCE
 	$(call if_changed,cat)
 
@@ -195,21 +225,19 @@ $(obj)/$(SPL_BIN)-pad.bin: $(obj)/$(SPL_BIN)
 # 'u-boot,dm-pre-reloc' property and thus are not needed by SPL. The second
 # pass removes various unused properties from the remaining nodes.
 # The output is typically a much smaller device tree file.
+ifeq ($(CONFIG_TPL_BUILD),y)
+fdtgrep_props := -b u-boot,dm-pre-reloc -b u-boot,dm-tpl
+else
+fdtgrep_props := -b u-boot,dm-pre-reloc -b u-boot,dm-spl
+endif
 quiet_cmd_fdtgrep = FDTGREP $@
-      cmd_fdtgrep = $(objtree)/tools/fdtgrep -b u-boot,dm-pre-reloc -RT $< \
-		-n /chosen -O dtb | \
+      cmd_fdtgrep = $(objtree)/tools/fdtgrep $(fdtgrep_props) -RT $< \
+		-n /chosen -n /config -O dtb | \
 	$(objtree)/tools/fdtgrep -r -O dtb - -o $@ \
 		$(addprefix -P ,$(subst $\",,$(CONFIG_OF_SPL_REMOVE_PROPS)))
 
 $(obj)/$(SPL_BIN).dtb: dts/dt.dtb $(objtree)/tools/fdtgrep FORCE
 	$(call if_changed,fdtgrep)
-
-quiet_cmd_cpp_cfg = CFG     $@
-cmd_cpp_cfg = $(CPP) -Wp,-MD,$(depfile) $(cpp_flags) $(LDPPFLAGS) -ansi \
-	-DDO_DEPS_ONLY -D__ASSEMBLY__ -x assembler-with-cpp -P -dM -E -o $@ $<
-
-$(obj)/$(SPL_BIN).cfg:	include/config.h FORCE
-	$(call if_changed,cpp_cfg)
 
 pythonpath = PYTHONPATH=tools
 
@@ -229,13 +257,11 @@ PHONY += dts_dir
 dts_dir:
 	$(shell [ -d $(obj)/dts ] || mkdir -p $(obj)/dts)
 
-include/generated/dt-structs.h: $(obj)/$(SPL_BIN).dtb dts_dir dtoc
+include/generated/dt-structs.h: $(obj)/$(SPL_BIN).dtb dts_dir checkdtoc
 	$(call if_changed,dtoch)
 
-$(obj)/dts/dt-platdata.c: $(obj)/$(SPL_BIN).dtb dts_dir dtoc
+$(obj)/dts/dt-platdata.c: $(obj)/$(SPL_BIN).dtb dts_dir checkdtoc
 	$(call if_changed,dtocc)
-
-dtoc: #$(objtree)/tools/_libfdt.so
 
 ifdef CONFIG_SAMSUNG
 ifdef CONFIG_VAR_SIZE_SPL
@@ -252,12 +278,21 @@ endif
 quiet_cmd_objcopy = OBJCOPY $@
 cmd_objcopy = $(OBJCOPY) $(OBJCOPYFLAGS) $(OBJCOPYFLAGS_$(@F)) $< $@
 
-OBJCOPYFLAGS_$(SPL_BIN)-nodtb.bin = $(SPL_OBJCFLAGS) -O binary
+OBJCOPYFLAGS_$(SPL_BIN)-nodtb.bin = $(SPL_OBJCFLAGS) -O binary \
+		$(if $(CONFIG_SPL_X86_16BIT_INIT),-R .start16 -R .resetvec)
 
 $(obj)/$(SPL_BIN)-nodtb.bin: $(obj)/$(SPL_BIN) FORCE
 	$(call if_changed,objcopy)
 
+OBJCOPYFLAGS_u-boot-x86-16bit-spl.bin := -O binary -j .start16 -j .resetvec
+$(obj)/u-boot-x86-16bit-spl.bin: $(obj)/u-boot-spl FORCE
+	$(call if_changed,objcopy)
+
 LDFLAGS_$(SPL_BIN) += -T u-boot-spl.lds $(LDFLAGS_FINAL)
+
+# Avoid 'Not enough room for program headers' error on binutils 2.28 onwards.
+LDFLAGS_$(SPL_BIN) += $(call ld-option, --no-dynamic-linker)
+
 ifneq ($(CONFIG_SPL_TEXT_BASE),)
 LDFLAGS_$(SPL_BIN) += -Ttext $(CONFIG_SPL_TEXT_BASE)
 endif
@@ -267,9 +302,21 @@ $(obj)/$(SPL_BIN).sfp: $(obj)/$(SPL_BIN).bin FORCE
 	$(call if_changed,mkimage)
 
 quiet_cmd_mksunxiboot = MKSUNXI $@
-cmd_mksunxiboot = $(objtree)/tools/mksunxiboot $< $@
+cmd_mksunxiboot = $(objtree)/tools/mksunxiboot \
+			--default-dt $(CONFIG_DEFAULT_DEVICE_TREE) $< $@
 $(obj)/sunxi-spl.bin: $(obj)/$(SPL_BIN).bin FORCE
 	$(call if_changed,mksunxiboot)
+
+quiet_cmd_sunxi_spl_image_builder = SUNXI_SPL_IMAGE_BUILDER $@
+cmd_sunxi_spl_image_builder = $(objtree)/tools/sunxi-spl-image-builder \
+				-c $(CONFIG_NAND_SUNXI_SPL_ECC_STRENGTH)/$(CONFIG_NAND_SUNXI_SPL_ECC_SIZE) \
+				-p $(CONFIG_SYS_NAND_PAGE_SIZE) \
+				-o $(CONFIG_SYS_NAND_OOBSIZE) \
+				-u $(CONFIG_NAND_SUNXI_SPL_USABLE_PAGE_SIZE) \
+				-e $(CONFIG_SYS_NAND_BLOCK_SIZE) \
+				-s -b $< $@
+$(obj)/sunxi-spl-with-ecc.bin: $(obj)/sunxi-spl.bin
+	$(call if_changed,sunxi_spl_image_builder)
 
 # Rule to link u-boot-spl
 # May be overridden by arch/$(ARCH)/config.mk
@@ -307,6 +354,17 @@ ifneq ($(cmd_files),)
   $(cmd_files): ;	# Do not try to update included dependency files
   include $(cmd_files)
 endif
+
+checkdtoc: tools
+	@if ! ( echo 'import libfdt' | ( PYTHONPATH=tools python )); then \
+		echo '*** dtoc needs the Python libfdt library. Either '; \
+		echo '*** install it on your system, or try:'; \
+		echo '***'; \
+		echo '*** sudo apt-get install swig libpython-dev'; \
+		echo '***'; \
+		echo '*** to have U-Boot build its own version.'; \
+		false; \
+	fi
 
 PHONY += FORCE
 FORCE:

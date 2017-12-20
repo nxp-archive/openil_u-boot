@@ -19,16 +19,9 @@
 /* Size of malloc() pool */
 #define CONFIG_SYS_MALLOC_LEN		(10 * SZ_1M)
 
-#define CONFIG_BOARD_EARLY_INIT_F
-#define CONFIG_BOARD_LATE_INIT
-
 #define CONFIG_MXC_UART
 
 #ifdef CONFIG_SPL
-#define CONFIG_SPL_LIBCOMMON_SUPPORT
-#define CONFIG_SPL_MMC_SUPPORT
-#define CONFIG_SPL_SPI_SUPPORT
-#define CONFIG_SPL_SPI_FLASH_SUPPORT
 #define CONFIG_SYS_SPI_U_BOOT_OFFS	(64 * 1024)
 #define CONFIG_SPL_SPI_LOAD
 #include "imx6_spl.h"
@@ -62,12 +55,8 @@
 /* allow to overwrite serial and ethaddr */
 #define CONFIG_ENV_OVERWRITE
 #define CONFIG_MXC_UART_BASE	UART2_BASE
-#define CONFIG_BAUDRATE             115200
 
 /* Command definition */
-
-#define CONFIG_CMD_BMODE
-#define CONFIG_CMD_BOOTZ
 #undef CONFIG_CMD_IMLS
 
 #define CONFIG_BOARD_NAME	EL6Q
@@ -77,7 +66,7 @@
 	"board="__stringify(CONFIG_BOARD_NAME)"\0"                              \
 	"cma_size="__stringify(EL6Q_CMA_SIZE)"\0"                               \
 	"chp_size="__stringify(EL6Q_COHERENT_POOL_SIZE)"\0"                     \
-	"console=" CONFIG_CONSOLE_DEV "\0" 					\
+	"console=" CONSOLE_DEV "\0"					\
 	"fdtfile=undefined\0" \
 	"fdt_high=0xffffffff\0" \
 	"fdt_addr_r=0x18000000\0" \
@@ -108,8 +97,6 @@
 #define CONFIG_SYS_MEMTEST_END         0x10800000
 #define CONFIG_SYS_MEMTEST_SCRATCH     0x10800000
 
-#define CONFIG_STACKSIZE               (128 * 1024)
-
 /* Physical Memory Map */
 #define CONFIG_NR_DRAM_BANKS           1
 #define PHYS_SDRAM                     MMDC0_ARB_BASE_ADDR
@@ -123,8 +110,7 @@
 #define CONFIG_SYS_INIT_SP_ADDR \
 	(CONFIG_SYS_INIT_RAM_ADDR + CONFIG_SYS_INIT_SP_OFFSET)
 
-/* FLASH and environment organization */
-#define CONFIG_SYS_NO_FLASH
+/* environment organization */
 
 #define CONFIG_ENV_SIZE			(8 * 1024)
 

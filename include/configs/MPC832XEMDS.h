@@ -7,8 +7,6 @@
 #ifndef __CONFIG_H
 #define __CONFIG_H
 
-#define CONFIG_DISPLAY_BOARDINFO
-
 /*
  * High Level Configuration Options
  */
@@ -74,7 +72,6 @@
  */
 #define CONFIG_SYS_SICRL		0x00000000
 
-#define CONFIG_BOARD_EARLY_INIT_F	/* call board_pre_init */
 #define CONFIG_BOARD_EARLY_INIT_R
 
 /*
@@ -340,7 +337,6 @@
 #ifdef CONFIG_PCI
 #define CONFIG_PCI_INDIRECT_BRIDGE
 
-#define CONFIG_PCI_PNP		/* do pci plug-and-play */
 #define CONFIG_83XX_PCI_STREAMING
 
 #undef CONFIG_EEPRO100
@@ -389,7 +385,6 @@
 	#define CONFIG_ENV_SECT_SIZE	0x20000
 	#define CONFIG_ENV_SIZE		0x2000
 #else
-	#define CONFIG_SYS_NO_FLASH	1	/* Flash is not usable now */
 	#define CONFIG_ENV_IS_NOWHERE	1	/* Store ENV in memory only */
 	#define CONFIG_ENV_ADDR		(CONFIG_SYS_MONITOR_BASE - 0x1000)
 	#define CONFIG_ENV_SIZE		0x2000
@@ -565,8 +560,6 @@
 #define CONFIG_HAS_ETH0
 #define CONFIG_HAS_ETH1
 #endif
-
-#define CONFIG_BAUDRATE	115200
 
 #define CONFIG_LOADADDR	800000	/* default location for tftp and bootm */
 

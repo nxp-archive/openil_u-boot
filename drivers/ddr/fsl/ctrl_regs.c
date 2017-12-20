@@ -16,6 +16,10 @@
 #include <fsl_ddr.h>
 #include <fsl_immap.h>
 #include <asm/io.h>
+#if defined(CONFIG_FSL_LSCH2) || defined(CONFIG_FSL_LSCH3) || \
+	defined(CONFIG_ARM)
+#include <asm/arch/clock.h>
+#endif
 
 /*
  * Determine Rtt value.
@@ -1831,7 +1835,7 @@ static void set_ddr_sdram_clk_cntl(fsl_ddr_cfg_regs_t *ddr,
 	unsigned int clk_adjust;	/* Clock adjust */
 	unsigned int ss_en = 0;		/* Source synchronous enable */
 
-#if defined(CONFIG_MPC8541) || defined(CONFIG_MPC8555)
+#if defined(CONFIG_ARCH_MPC8541) || defined(CONFIG_ARCH_MPC8555)
 	/* Per FSL Application Note: AN2805 */
 	ss_en = 1;
 #endif
@@ -2305,10 +2309,39 @@ compute_fsl_memctl_config_regs(const unsigned int ctrl_num,
 	unsigned int wrlvl_en;
 	unsigned int ip_rev = 0;
 	unsigned int unq_mrs_en = 0;
+	int cs_en = 1;
 #ifdef CONFIG_SYS_FSL_ERRATUM_A009942
 	unsigned int ddr_freq;
 #endif
-	int cs_en = 1;
+#if (defined(CONFIG_SYS_FSL_ERRATUM_A008378) && \
+	defined(CONFIG_SYS_FSL_DDRC_GEN4)) || \
+	defined(CONFIG_SYS_FSL_ERRATUM_A009942)
+	struct ccsr_ddr __iomem *ddrc;
+
+	switch (ctrl_num) {
+	case 0:
+		ddrc = (void *)CONFIG_SYS_FSL_DDR_ADDR;
+		break;
+#if defined(CONFIG_SYS_FSL_DDR2_ADDR) && (CONFIG_SYS_NUM_DDR_CTLRS > 1)
+	case 1:
+		ddrc = (void *)CONFIG_SYS_FSL_DDR2_ADDR;
+		break;
+#endif
+#if defined(CONFIG_SYS_FSL_DDR3_ADDR) && (CONFIG_SYS_NUM_DDR_CTLRS > 2)
+	case 2:
+		ddrc = (void *)CONFIG_SYS_FSL_DDR3_ADDR;
+		break;
+#endif
+#if defined(CONFIG_SYS_FSL_DDR4_ADDR) && (CONFIG_SYS_NUM_DDR_CTLRS > 3)
+	case 3:
+		ddrc = (void *)CONFIG_SYS_FSL_DDR4_ADDR;
+		break;
+#endif
+	default:
+		printf("%s unexpected ctrl_num = %u\n", __func__, ctrl_num);
+		return 1;
+	}
+#endif
 
 	memset(ddr, 0, sizeof(fsl_ddr_cfg_regs_t));
 
@@ -2535,14 +2568,17 @@ compute_fsl_memctl_config_regs(const unsigned int ctrl_num,
 #define IS_DBI(v) ((((v) >> 12) & 0x3) == 0x2)
 	if (has_erratum_a008378()) {
 		if (IS_ACC_ECC_EN(ddr->ddr_sdram_cfg) ||
-		    IS_DBI(ddr->ddr_sdram_cfg_3))
+		    IS_DBI(ddr->ddr_sdram_cfg_3)) {
+			ddr->debug[28] = ddr_in32(&ddrc->debug[28]);
 			ddr->debug[28] |= (0x9 << 20);
+		}
 	}
 #endif
 
 #ifdef CONFIG_SYS_FSL_ERRATUM_A009942
-	/* the POR value of debug_29 register is zero */
 	ddr_freq = get_ddr_freq(ctrl_num) / 1000000;
+	ddr->debug[28] |= ddr_in32(&ddrc->debug[28]);
+	ddr->debug[28] &= 0xff0fff00;
 	if (ddr_freq <= 1333)
 		ddr->debug[28] |= 0x0080006a;
 	else if (ddr_freq <= 1600)

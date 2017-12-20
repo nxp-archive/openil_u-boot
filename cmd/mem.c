@@ -112,27 +112,6 @@ static int do_mem_md(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 		}
 	} while (nbytes > 0);
 #else
-
-# if defined(CONFIG_BLACKFIN)
-	/* See if we're trying to display L1 inst */
-	if (addr_bfin_on_chip_mem(addr)) {
-		char linebuf[DISP_LINE_LEN];
-		ulong linebytes, nbytes = length * size;
-		do {
-			linebytes = (nbytes > DISP_LINE_LEN) ? DISP_LINE_LEN : nbytes;
-			memcpy(linebuf, (void *)addr, linebytes);
-			print_buffer(addr, linebuf, size, linebytes/size, DISP_LINE_LEN/size);
-
-			nbytes -= linebytes;
-			addr += linebytes;
-			if (ctrlc()) {
-				rc = 1;
-				break;
-			}
-		} while (nbytes > 0);
-	} else
-# endif
-
 	{
 		ulong bytes = size * length;
 		const void *buf = map_sysmem(addr, bytes);
@@ -314,13 +293,6 @@ static int do_mem_cmp(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 	}
 #endif
 
-#ifdef CONFIG_BLACKFIN
-	if (addr_bfin_on_chip_mem(addr1) || addr_bfin_on_chip_mem(addr2)) {
-		puts ("Comparison with L1 instruction memory not supported.\n\r");
-		return 0;
-	}
-#endif
-
 	bytes = size * count;
 	base = buf1 = map_sysmem(addr1, bytes);
 	buf2 = map_sysmem(addr2, bytes);
@@ -372,10 +344,8 @@ static int do_mem_cmp(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 
 static int do_mem_cp(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 {
-	ulong	addr, dest, count, bytes;
+	ulong	addr, dest, count;
 	int	size;
-	const void *src;
-	void *buf;
 
 	if (argc != 4)
 		return CMD_RET_USAGE;
@@ -398,7 +368,7 @@ static int do_mem_cp(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 		return 1;
 	}
 
-#ifndef CONFIG_SYS_NO_FLASH
+#ifdef CONFIG_MTD_NOR_FLASH
 	/* check if we are copying to Flash */
 	if ( (addr2info(dest) != NULL)
 #ifdef CONFIG_HAS_DATAFLASH
@@ -438,7 +408,7 @@ static int do_mem_cp(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 
 	/* Check if we are copying from DataFlash to RAM */
 	if (addr_dataflash(addr) && !addr_dataflash(dest)
-#ifndef CONFIG_SYS_NO_FLASH
+#ifdef CONFIG_MTD_NOR_FLASH
 				 && (addr2info(dest) == NULL)
 #endif
 	   ){
@@ -457,37 +427,7 @@ static int do_mem_cp(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 	}
 #endif
 
-#ifdef CONFIG_BLACKFIN
-	/* See if we're copying to/from L1 inst */
-	if (addr_bfin_on_chip_mem(dest) || addr_bfin_on_chip_mem(addr)) {
-		memcpy((void *)dest, (void *)addr, count * size);
-		return 0;
-	}
-#endif
-
-	bytes = size * count;
-	buf = map_sysmem(dest, bytes);
-	src = map_sysmem(addr, bytes);
-	while (count-- > 0) {
-		if (size == 4)
-			*((u32 *)buf) = *((u32  *)src);
-#ifdef CONFIG_SYS_SUPPORT_64BIT_DATA
-		else if (size == 8)
-			*((u64 *)buf) = *((u64 *)src);
-#endif
-		else if (size == 2)
-			*((u16 *)buf) = *((u16 *)src);
-		else
-			*((u8 *)buf) = *((u8 *)src);
-		src += size;
-		buf += size;
-
-		/* reset watchdog from time to time */
-		if ((count % (64 << 10)) == 0)
-			WATCHDOG_RESET();
-	}
-	unmap_sysmem(buf);
-	unmap_sysmem(src);
+	memcpy((void *)dest, (void *)addr, count * size);
 
 	return 0;
 }
@@ -1139,13 +1079,6 @@ mod_mem(cmd_tbl_t *cmdtp, int incrflag, int flag, int argc, char * const argv[])
 	}
 #endif
 
-#ifdef CONFIG_BLACKFIN
-	if (addr_bfin_on_chip_mem(addr)) {
-		puts ("Can't modify L1 instruction in place. Use cp instead.\n\r");
-		return 0;
-	}
-#endif
-
 	/* Print the address, followed by value.  Then accept input for
 	 * the next value.  A non-converted value exits.
 	 */
@@ -1227,7 +1160,7 @@ static int do_mem_crc(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 
 	av = argv + 1;
 	ac = argc - 1;
-#ifdef CONFIG_HASH_VERIFY
+#ifdef CONFIG_CRC32_VERIFY
 	if (strcmp(*av, "-v") == 0) {
 		flags |= HASH_FLAG_VERIFY | HASH_FLAG_ENV;
 		av++;
@@ -1305,7 +1238,7 @@ U_BOOT_CMD(
 
 #ifdef CONFIG_CMD_CRC32
 
-#ifndef CONFIG_HASH_VERIFY
+#ifndef CONFIG_CRC32_VERIFY
 
 U_BOOT_CMD(
 	crc32,	4,	1,	do_mem_crc,
@@ -1313,7 +1246,7 @@ U_BOOT_CMD(
 	"address count [addr]\n    - compute CRC32 checksum [save at addr]"
 );
 
-#else	/* CONFIG_HASH_VERIFY */
+#else	/* CONFIG_CRC32_VERIFY */
 
 U_BOOT_CMD(
 	crc32,	5,	1,	do_mem_crc,
@@ -1322,7 +1255,7 @@ U_BOOT_CMD(
 	"-v address count crc\n    - verify crc of memory area"
 );
 
-#endif	/* CONFIG_HASH_VERIFY */
+#endif	/* CONFIG_CRC32_VERIFY */
 
 #endif
 

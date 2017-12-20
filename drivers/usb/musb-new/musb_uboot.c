@@ -4,7 +4,7 @@
 #ifdef CONFIG_ARCH_SUNXI
 #include <asm/arch/usb_phy.h>
 #endif
-#include <asm/errno.h>
+#include <linux/errno.h>
 #include <linux/usb/ch9.h>
 #include <linux/usb/gadget.h>
 
@@ -446,7 +446,7 @@ int musb_register(struct musb_hdrc_platform_data *plat, void *bdata,
 	}
 
 	*musbp = musb_init_controller(plat, (struct device *)bdata, ctl_regs);
-	if (!musbp) {
+	if (!*musbp) {
 		printf("Failed to init the controller\n");
 		return -EIO;
 	}

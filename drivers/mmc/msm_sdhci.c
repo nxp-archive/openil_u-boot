@@ -50,16 +50,16 @@ DECLARE_GLOBAL_DATA_PTR;
 
 static int msm_sdc_clk_init(struct udevice *dev)
 {
-	uint clk_rate = fdtdec_get_uint(gd->fdt_blob, dev->of_offset,
-					"clock-frequency", 400000);
+	int node = dev_of_offset(dev);
+	uint clk_rate = fdtdec_get_uint(gd->fdt_blob, node, "clock-frequency",
+					400000);
 	uint clkd[2]; /* clk_id and clk_no */
 	int clk_offset;
 	struct udevice *clk_dev;
 	struct clk clk;
 	int ret;
 
-	ret = fdtdec_get_int_array(gd->fdt_blob, dev->of_offset, "clock", clkd,
-				   2);
+	ret = fdtdec_get_int_array(gd->fdt_blob, node, "clock", clkd, 2);
 	if (ret)
 		return ret;
 
@@ -95,6 +95,8 @@ static int msm_sdc_probe(struct udevice *dev)
 	int ret;
 
 	host->quirks = SDHCI_QUIRK_WAIT_SEND_CMD | SDHCI_QUIRK_BROKEN_R1B;
+
+	host->max_clk = 0;
 
 	/* Init clocks */
 	ret = msm_sdc_clk_init(dev);
@@ -140,9 +142,6 @@ static int msm_sdc_probe(struct udevice *dev)
 		writel(caps, host->ioaddr + SDHCI_VENDOR_SPEC_CAPABILITIES0);
 	}
 
-	/* Set host controller version */
-	host->version = sdhci_readw(host, SDHCI_HOST_VERSION);
-
 	ret = sdhci_setup_cfg(&plat->cfg, host, 0, 0);
 	host->mmc = &plat->mmc;
 	if (ret)
@@ -169,17 +168,14 @@ static int msm_ofdata_to_platdata(struct udevice *dev)
 	struct udevice *parent = dev->parent;
 	struct msm_sdhc *priv = dev_get_priv(dev);
 	struct sdhci_host *host = &priv->host;
+	int node = dev_of_offset(dev);
 
 	host->name = strdup(dev->name);
-	host->ioaddr = (void *)dev_get_addr(dev);
-	host->bus_width = fdtdec_get_int(gd->fdt_blob, dev->of_offset,
-					 "bus-width", 4);
-	host->index = fdtdec_get_uint(gd->fdt_blob, dev->of_offset, "index", 0);
+	host->ioaddr = (void *)devfdt_get_addr(dev);
+	host->bus_width = fdtdec_get_int(gd->fdt_blob, node, "bus-width", 4);
+	host->index = fdtdec_get_uint(gd->fdt_blob, node, "index", 0);
 	priv->base = (void *)fdtdec_get_addr_size_auto_parent(gd->fdt_blob,
-							      parent->of_offset,
-							      dev->of_offset,
-							      "reg", 1, NULL,
-							      false);
+			dev_of_offset(parent), node, "reg", 1, NULL, false);
 	if (priv->base == (void *)FDT_ADDR_T_NONE ||
 	    host->ioaddr == (void *)FDT_ADDR_T_NONE)
 		return -EINVAL;
@@ -190,13 +186,8 @@ static int msm_ofdata_to_platdata(struct udevice *dev)
 static int msm_sdc_bind(struct udevice *dev)
 {
 	struct msm_sdhc_plat *plat = dev_get_platdata(dev);
-	int ret;
 
-	ret = sdhci_bind(dev, &plat->mmc, &plat->cfg);
-	if (ret)
-		return ret;
-
-	return 0;
+	return sdhci_bind(dev, &plat->mmc, &plat->cfg);
 }
 
 static const struct udevice_id msm_mmc_ids[] = {

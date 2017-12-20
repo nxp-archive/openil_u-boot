@@ -64,36 +64,52 @@ struct omap_i2c {
 
 static int omap24_i2c_findpsc(u32 *pscl, u32 *psch, uint speed)
 {
-	unsigned int sampleclk, prescaler;
-	int fsscll, fssclh;
+	unsigned long internal_clk = 0, fclk;
+	unsigned int prescaler;
 
-	speed <<= 1;
-	prescaler = 0;
 	/*
-	 * some divisors may cause a precission loss, but shouldn't
-	 * be a big thing, because i2c_clk is then allready very slow.
+	 * This method is only called for Standard and Fast Mode speeds
+	 *
+	 * For some TI SoCs it is explicitly written in TRM (e,g, SPRUHZ6G,
+	 * page 5685, Table 24-7)
+	 * that the internal I2C clock (after prescaler) should be between
+	 * 7-12 MHz (at least for Fast Mode (FS)).
+	 *
+	 * Such approach is used in v4.9 Linux kernel in:
+	 * ./drivers/i2c/busses/i2c-omap.c (omap_i2c_init function).
 	 */
-	while (prescaler <= 0xFF) {
-		sampleclk = I2C_IP_CLK / (prescaler+1);
 
-		fsscll = sampleclk / speed;
-		fssclh = fsscll;
-		fsscll -= I2C_FASTSPEED_SCLL_TRIM;
-		fssclh -= I2C_FASTSPEED_SCLH_TRIM;
+	speed /= 1000; /* convert speed to kHz */
 
-		if (((fsscll > 0) && (fssclh > 0)) &&
-		    ((fsscll <= (255-I2C_FASTSPEED_SCLL_TRIM)) &&
-		    (fssclh <= (255-I2C_FASTSPEED_SCLH_TRIM)))) {
-			if (pscl)
-				*pscl = fsscll;
-			if (psch)
-				*psch = fssclh;
+	if (speed > 100)
+		internal_clk = 9600;
+	else
+		internal_clk = 4000;
 
-			return prescaler;
-		}
-		prescaler++;
+	fclk = I2C_IP_CLK / 1000;
+	prescaler = fclk / internal_clk;
+	prescaler = prescaler - 1;
+
+	if (speed > 100) {
+		unsigned long scl;
+
+		/* Fast mode */
+		scl = internal_clk / speed;
+		*pscl = scl - (scl / 3) - I2C_FASTSPEED_SCLL_TRIM;
+		*psch = (scl / 3) - I2C_FASTSPEED_SCLH_TRIM;
+	} else {
+		/* Standard mode */
+		*pscl = internal_clk / (speed * 2) - I2C_FASTSPEED_SCLL_TRIM;
+		*psch = internal_clk / (speed * 2) - I2C_FASTSPEED_SCLH_TRIM;
 	}
-	return -1;
+
+	debug("%s: speed [kHz]: %d psc: 0x%x sscl: 0x%x ssch: 0x%x\n",
+	      __func__, speed, prescaler, *pscl, *psch);
+
+	if (*pscl <= 0 || *psch <= 0 || prescaler <= 0)
+		return -EINVAL;
+
+	return prescaler;
 }
 
 /*
@@ -106,7 +122,7 @@ static int wait_for_bb(struct i2c *i2c_base, int waitdelay)
 	u16 stat;
 
 	writew(0xFFFF, &i2c_base->stat);	/* clear current interrupts...*/
-#if defined(CONFIG_OMAP243X) || defined(CONFIG_OMAP34XX)
+#if defined(CONFIG_OMAP34XX)
 	while ((stat = readw(&i2c_base->stat) & I2C_STAT_BB) && timeout--) {
 #else
 	/* Read RAW status */
@@ -137,7 +153,7 @@ static u16 wait_for_event(struct i2c *i2c_base, int waitdelay)
 
 	do {
 		udelay(waitdelay);
-#if defined(CONFIG_OMAP243X) || defined(CONFIG_OMAP34XX)
+#if defined(CONFIG_OMAP34XX)
 		status = readw(&i2c_base->stat);
 #else
 		/* Read RAW status */
@@ -322,7 +338,7 @@ retry:
 	/* own address */
 	writew(slaveadd, &i2c_base->oa);
 
-#if defined(CONFIG_OMAP243X) || defined(CONFIG_OMAP34XX)
+#if defined(CONFIG_OMAP34XX)
 	/*
 	 * Have to enable interrupts for OMAP2/3, these IPs don't have
 	 * an 'irqstatus_raw' register and we shall have to poll 'stat'
@@ -880,7 +896,7 @@ static int omap_i2c_ofdata_to_platdata(struct udevice *bus)
 {
 	struct omap_i2c *priv = dev_get_priv(bus);
 
-	priv->regs = map_physmem(dev_get_addr(bus), sizeof(void *),
+	priv->regs = map_physmem(devfdt_get_addr(bus), sizeof(void *),
 				 MAP_NOCACHE);
 	priv->speed = CONFIG_SYS_OMAP24_I2C_SPEED;
 
@@ -894,6 +910,7 @@ static const struct dm_i2c_ops omap_i2c_ops = {
 };
 
 static const struct udevice_id omap_i2c_ids[] = {
+	{ .compatible = "ti,omap3-i2c" },
 	{ .compatible = "ti,omap4-i2c" },
 	{ }
 };

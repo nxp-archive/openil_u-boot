@@ -181,7 +181,7 @@ int eth_get_dev_index(void)
 
 static int eth_write_hwaddr(struct udevice *dev)
 {
-	struct eth_pdata *pdata = dev->platdata;
+	struct eth_pdata *pdata;
 	int ret = 0;
 
 	if (!dev || !device_active(dev))
@@ -189,6 +189,7 @@ static int eth_write_hwaddr(struct udevice *dev)
 
 	/* seq is valid since the device is active */
 	if (eth_get_ops(dev)->write_hwaddr && !eth_mac_skip(dev->seq)) {
+		pdata = dev->platdata;
 		if (!is_valid_ethaddr(pdata->enetaddr)) {
 			printf("\nError: %s address %pM illegal value\n",
 			       dev->name, pdata->enetaddr);
@@ -227,9 +228,10 @@ static int on_ethaddr(const char *name, const char *value, enum env_op op,
 		case env_op_create:
 		case env_op_overwrite:
 			eth_parse_enetaddr(value, pdata->enetaddr);
+			eth_write_hwaddr(dev);
 			break;
 		case env_op_delete:
-			memset(pdata->enetaddr, 0, 6);
+			memset(pdata->enetaddr, 0, ARP_HLEN);
 		}
 	}
 
@@ -457,7 +459,7 @@ static int eth_post_probe(struct udevice *dev)
 {
 	struct eth_device_priv *priv = dev->uclass_priv;
 	struct eth_pdata *pdata = dev->platdata;
-	unsigned char env_enetaddr[6];
+	unsigned char env_enetaddr[ARP_HLEN];
 
 #if defined(CONFIG_NEEDS_MANUAL_RELOC)
 	struct eth_ops *ops = eth_get_ops(dev);
@@ -496,22 +498,23 @@ static int eth_post_probe(struct udevice *dev)
 	eth_getenv_enetaddr_by_index("eth", dev->seq, env_enetaddr);
 	if (!is_zero_ethaddr(env_enetaddr)) {
 		if (!is_zero_ethaddr(pdata->enetaddr) &&
-		    memcmp(pdata->enetaddr, env_enetaddr, 6)) {
+		    memcmp(pdata->enetaddr, env_enetaddr, ARP_HLEN)) {
 			printf("\nWarning: %s MAC addresses don't match:\n",
 			       dev->name);
-			printf("Address in SROM is         %pM\n",
+			printf("Address in ROM is          %pM\n",
 			       pdata->enetaddr);
 			printf("Address in environment is  %pM\n",
 			       env_enetaddr);
 		}
 
 		/* Override the ROM MAC address */
-		memcpy(pdata->enetaddr, env_enetaddr, 6);
+		memcpy(pdata->enetaddr, env_enetaddr, ARP_HLEN);
 	} else if (is_valid_ethaddr(pdata->enetaddr)) {
 		eth_setenv_enetaddr_by_index("eth", dev->seq, pdata->enetaddr);
 		printf("\nWarning: %s using MAC address from ROM\n",
 		       dev->name);
-	} else if (is_zero_ethaddr(pdata->enetaddr)) {
+	} else if (is_zero_ethaddr(pdata->enetaddr) ||
+		   !is_valid_ethaddr(pdata->enetaddr)) {
 #ifdef CONFIG_NET_RANDOM_ETHADDR
 		net_random_ethaddr(pdata->enetaddr);
 		printf("\nWarning: %s (eth%d) using random MAC address - %pM\n",
@@ -533,7 +536,7 @@ static int eth_pre_remove(struct udevice *dev)
 	eth_get_ops(dev)->stop(dev);
 
 	/* clear the MAC address */
-	memset(pdata->enetaddr, 0, 6);
+	memset(pdata->enetaddr, 0, ARP_HLEN);
 
 	return 0;
 }

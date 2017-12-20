@@ -32,10 +32,6 @@
 #ifdef CONFIG_USB_EHCI_TEGRA
 #include <usb.h>
 #endif
-#ifdef CONFIG_TEGRA_MMC
-#include <asm/arch-tegra/tegra_mmc.h>
-#include <asm/arch-tegra/mmc.h>
-#endif
 #include <asm/arch-tegra/xusb-padctl.h>
 #include <power/as3722.h>
 #include <i2c.h>
@@ -54,6 +50,7 @@ U_BOOT_DEVICE(tegra_gpios) = {
 __weak void pinmux_init(void) {}
 __weak void pin_mux_usb(void) {}
 __weak void pin_mux_spi(void) {}
+__weak void pin_mux_mmc(void) {}
 __weak void gpio_early_init_uart(void) {}
 __weak void pin_mux_display(void) {}
 __weak void start_cpu_fan(void) {}
@@ -128,6 +125,10 @@ int board_init(void)
 	pin_mux_spi();
 #endif
 
+#ifdef CONFIG_MMC_SDHCI_TEGRA
+	pin_mux_mmc();
+#endif
+
 	/* Init is handled automatically in the driver-model case */
 #if defined(CONFIG_DM_VIDEO)
 	pin_mux_display();
@@ -147,7 +148,7 @@ int board_init(void)
 		debug("Memory controller init failed: %d\n", err);
 #  endif
 # endif /* CONFIG_TEGRA_PMU */
-#ifdef CONFIG_AS3722_POWER
+#ifdef CONFIG_PMIC_AS3722
 	err = as3722_init(NULL);
 	if (err && err != -ENODEV)
 		return err;
@@ -190,6 +191,9 @@ void gpio_early_init(void) __attribute__((weak, alias("__gpio_early_init")));
 
 int board_early_init_f(void)
 {
+	if (!clock_early_init_done())
+		clock_early_init();
+
 #if defined(CONFIG_TEGRA_DISCONNECT_UDC_ON_BOOT)
 #define USBCMD_FS2 (1 << 15)
 	{
@@ -229,54 +233,6 @@ int board_late_init(void)
 
 	return 0;
 }
-
-#if defined(CONFIG_TEGRA_MMC)
-__weak void pin_mux_mmc(void)
-{
-}
-
-/* this is a weak define that we are overriding */
-int board_mmc_init(bd_t *bd)
-{
-	debug("%s called\n", __func__);
-
-	/* Enable muxes, etc. for SDMMC controllers */
-	pin_mux_mmc();
-
-	debug("%s: init MMC\n", __func__);
-	tegra_mmc_init();
-
-	return 0;
-}
-
-void pad_init_mmc(struct mmc_host *host)
-{
-#if defined(CONFIG_TEGRA30)
-	enum periph_id id = host->mmc_id;
-	u32 val;
-
-	debug("%s: sdmmc address = %08x, id = %d\n", __func__,
-		(unsigned int)host->reg, id);
-
-	/* Set the pad drive strength for SDMMC1 or 3 only */
-	if (id != PERIPH_ID_SDMMC1 && id != PERIPH_ID_SDMMC3) {
-		debug("%s: settings are only valid for SDMMC1/SDMMC3!\n",
-			__func__);
-		return;
-	}
-
-	val = readl(&host->reg->sdmemcmppadctl);
-	val &= 0xFFFFFFF0;
-	val |= MEMCOMP_PADCTRL_VREF;
-	writel(val, &host->reg->sdmemcmppadctl);
-
-	val = readl(&host->reg->autocalcfg);
-	val &= 0xFFFF0000;
-	val |= AUTO_CAL_PU_OFFSET | AUTO_CAL_PD_OFFSET | AUTO_CAL_ENABLED;
-	writel(val, &host->reg->autocalcfg);
-#endif	/* T30 */
-}
-#endif	/* MMC */
 
 /*
  * In some SW environments, a memory carve-out exists to house a secure
@@ -362,7 +318,7 @@ static ulong usable_ram_size_below_4g(void)
  * start address of that bank cannot be represented in the 32-bit .size
  * field.
  */
-void dram_init_banksize(void)
+int dram_init_banksize(void)
 {
 	gd->bd->bi_dram[0].start = CONFIG_SYS_SDRAM_BASE;
 	gd->bd->bi_dram[0].size = usable_ram_size_below_4g();
@@ -381,6 +337,8 @@ void dram_init_banksize(void)
 		gd->bd->bi_dram[1].start = 0;
 		gd->bd->bi_dram[1].size = 0;
 	}
+
+	return 0;
 }
 
 /*

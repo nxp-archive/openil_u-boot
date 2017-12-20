@@ -11,13 +11,9 @@
 
 /* System configuration */
 #define CONFIG_MX28				/* i.MX28 SoC */
-#define MACH_TYPE_SC_SPS_1	4172
 #define CONFIG_MACH_TYPE	MACH_TYPE_SC_SPS_1
 
 /* U-Boot Commands */
-#define CONFIG_SYS_NO_FLASH
-#define CONFIG_DISPLAY_CPUINFO
-#define CONFIG_DOS_PARTITION
 
 /* Memory configuration */
 #define CONFIG_NR_DRAM_BANKS		1		/* 1 bank of DRAM */

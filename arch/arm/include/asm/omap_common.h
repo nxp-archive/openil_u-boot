@@ -484,6 +484,7 @@ struct omap_sys_ctrl_regs {
 	u32 ctrl_core_sma_sw_1;
 };
 
+#if defined(CONFIG_OMAP44XX) || defined(CONFIG_OMAP54XX)
 struct dpll_params {
 	u32 m;
 	u32 n;
@@ -516,6 +517,7 @@ struct dpll_regs {
 	u32 cm_div_h23_dpll;
 	u32 cm_div_h24_dpll;
 };
+#endif /* CONFIG_OMAP44XX || CONFIG_OMAP54XX */
 
 struct dplls {
 	const struct dpll_params *mpu;
@@ -539,23 +541,42 @@ struct pmic_data {
 	int (*pmic_write)(u8 sa, u8 reg_addr, u8 reg_data);
 };
 
+#if defined(CONFIG_OMAP44XX) || defined(CONFIG_OMAP54XX)
+enum {
+	OPP_LOW,
+	OPP_NOM,
+	OPP_OD,
+	OPP_HIGH,
+	NUM_OPPS,
+};
+
 /**
  * struct volts_efuse_data - efuse definition for voltage
  * @reg:	register address for efuse
  * @reg_bits:	Number of bits in a register address, mandatory.
  */
 struct volts_efuse_data {
-	u32 reg;
+	u32 reg[NUM_OPPS];
 	u8 reg_bits;
 };
 
 struct volts {
-	u32 value;
+	u32 value[NUM_OPPS];
 	u32 addr;
 	struct volts_efuse_data efuse;
 	struct pmic_data *pmic;
 
 	u32 abb_tx_done_mask;
+};
+
+enum {
+	VOLT_MPU,
+	VOLT_CORE,
+	VOLT_MM,
+	VOLT_GPU,
+	VOLT_EVE,
+	VOLT_IVA,
+	NUM_VOLT_RAILS,
 };
 
 struct vcores_data {
@@ -566,6 +587,7 @@ struct vcores_data {
 	struct volts eve;
 	struct volts iva;
 };
+#endif /* CONFIG_OMAP44XX || CONFIG_OMAP54XX */
 
 extern struct prcm_regs const **prcm;
 extern struct prcm_regs const omap5_es1_prcm;
@@ -577,11 +599,14 @@ extern struct dplls dra7xx_dplls;
 extern struct vcores_data const **omap_vcores;
 extern const u32 sys_clk_array[8];
 extern struct omap_sys_ctrl_regs const **ctrl;
+extern struct omap_sys_ctrl_regs const am33xx_ctrl;
+extern struct omap_sys_ctrl_regs const omap3_ctrl;
 extern struct omap_sys_ctrl_regs const omap4_ctrl;
 extern struct omap_sys_ctrl_regs const omap5_ctrl;
 extern struct omap_sys_ctrl_regs const dra7xx_ctrl;
 
 extern struct pmic_data tps659038;
+extern struct pmic_data lp8733;
 
 void hw_data_init(void);
 
@@ -592,6 +617,7 @@ const struct dpll_params *get_iva_dpll_params(struct dplls const *);
 const struct dpll_params *get_usb_dpll_params(struct dplls const *);
 const struct dpll_params *get_abe_dpll_params(struct dplls const *);
 
+#if defined(CONFIG_OMAP44XX) || defined(CONFIG_OMAP54XX)
 void do_enable_clocks(u32 const *clk_domains,
 		      u32 const *clk_modules_hw_auto,
 		      u32 const *clk_modules_explicit_en,
@@ -600,6 +626,7 @@ void do_enable_clocks(u32 const *clk_domains,
 void do_disable_clocks(u32 const *clk_domains,
 		       u32 const *clk_modules_disable,
 		       u8 wait_for_disable);
+#endif /* CONFIG_OMAP44XX || CONFIG_OMAP54XX */
 
 void setup_post_dividers(u32 const base,
 			const struct dpll_params *params);
@@ -611,17 +638,28 @@ void enable_basic_uboot_clocks(void);
 void enable_usb_clocks(int index);
 void disable_usb_clocks(int index);
 
+#if defined(CONFIG_OMAP44XX) || defined(CONFIG_OMAP54XX)
 void scale_vcores(struct vcores_data const *);
+#endif /* CONFIG_OMAP44XX || CONFIG_OMAP54XX */
+int get_voltrail_opp(int rail_offset);
 u32 get_offset_code(u32 volt_offset, struct pmic_data *pmic);
 void do_scale_vcore(u32 vcore_reg, u32 volt_mv, struct pmic_data *pmic);
 void abb_setup(u32 fuse, u32 ldovbb, u32 setup, u32 control,
 	       u32 txdone, u32 txdone_mask, u32 opp);
 s8 abb_setup_ldovbb(u32 fuse, u32 ldovbb);
 
+struct tag_serialnr;
+
 void omap_die_id_serial(void);
 void omap_die_id_get_board_serial(struct tag_serialnr *serialnr);
 void omap_die_id_usbethaddr(void);
 void omap_die_id_display(void);
+
+#ifdef CONFIG_FASTBOOT_FLASH
+void omap_set_fastboot_vars(void);
+#else
+static inline void omap_set_fastboot_vars(void) { }
+#endif
 
 void recalibrate_iodelay(void);
 
@@ -632,6 +670,7 @@ void omap_smc1(u32 service, u32 val);
  * security (HS) device variants by doing a specially-formed smc entry.
  */
 u32 omap_smc_sec(u32 service, u32 proc_id, u32 flag, u32 *params);
+u32 omap_smc_sec_cpu1(u32 service, u32 proc_id, u32 flag, u32 *params);
 
 void enable_edma3_clocks(void);
 void disable_edma3_clocks(void);
@@ -727,7 +766,6 @@ static inline u8 is_dra72x(void)
  * silicon device type
  * Moving to common from cpu.h, since it is shared by various omap devices
  */
-#define DEVICE_MASK         (BIT(8) | BIT(9) | BIT(10))
 #define TST_DEVICE          0x0
 #define EMU_DEVICE          0x1
 #define HS_DEVICE           0x2
@@ -746,9 +784,11 @@ static inline u8 is_dra72x(void)
 #define OMAP_SRAM_SCRATCH_VCORES_PTR    (SRAM_SCRATCH_SPACE_ADDR + 0x1C)
 #define OMAP_SRAM_SCRATCH_SYS_CTRL	(SRAM_SCRATCH_SPACE_ADDR + 0x20)
 #define OMAP_SRAM_SCRATCH_BOOT_PARAMS	(SRAM_SCRATCH_SPACE_ADDR + 0x24)
-#define OMAP_SRAM_SCRATCH_BOARD_EEPROM_START (SRAM_SCRATCH_SPACE_ADDR + 0x28)
-#define OMAP_SRAM_SCRATCH_BOARD_EEPROM_END (SRAM_SCRATCH_SPACE_ADDR + 0x200)
-#define OMAP_SRAM_SCRATCH_SPACE_END	(OMAP_SRAM_SCRATCH_BOARD_EEPROM_END)
+#ifndef TI_SRAM_SCRATCH_BOARD_EEPROM_START
+#define TI_SRAM_SCRATCH_BOARD_EEPROM_START (SRAM_SCRATCH_SPACE_ADDR + 0x28)
+#define TI_SRAM_SCRATCH_BOARD_EEPROM_END (SRAM_SCRATCH_SPACE_ADDR + 0x200)
+#endif
+#define OMAP_SRAM_SCRATCH_SPACE_END	(TI_SRAM_SCRATCH_BOARD_EEPROM_END)
 
 /* Boot parameters */
 #define DEVICE_DATA_OFFSET	0x18

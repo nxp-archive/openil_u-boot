@@ -10,6 +10,7 @@
  * SPDX-License-Identifier:	GPL-2.0+
  */
 #include <common.h>
+#include <dm.h>
 #include <environment.h>
 #include <malloc.h>
 #include <spi.h>
@@ -19,16 +20,16 @@
 #include <dm/device-internal.h>
 
 #ifndef CONFIG_ENV_SPI_BUS
-# define CONFIG_ENV_SPI_BUS	0
+# define CONFIG_ENV_SPI_BUS	CONFIG_SF_DEFAULT_BUS
 #endif
 #ifndef CONFIG_ENV_SPI_CS
-# define CONFIG_ENV_SPI_CS	0
+# define CONFIG_ENV_SPI_CS	CONFIG_SF_DEFAULT_CS
 #endif
 #ifndef CONFIG_ENV_SPI_MAX_HZ
-# define CONFIG_ENV_SPI_MAX_HZ	1000000
+# define CONFIG_ENV_SPI_MAX_HZ	CONFIG_SF_DEFAULT_SPEED
 #endif
 #ifndef CONFIG_ENV_SPI_MODE
-# define CONFIG_ENV_SPI_MODE	SPI_MODE_3
+# define CONFIG_ENV_SPI_MODE	CONFIG_SF_DEFAULT_MODE
 #endif
 
 #ifdef CONFIG_ENV_OFFSET_REDUND
@@ -45,15 +46,11 @@ char *env_name_spec = "SPI Flash";
 
 static struct spi_flash *env_flash;
 
-#if defined(CONFIG_ENV_OFFSET_REDUND)
-int saveenv(void)
+static int setup_flash_device(void)
 {
-	env_t	env_new;
-	char	*saved_buffer = NULL, flag = OBSOLETE_FLAG;
-	u32	saved_size, saved_offset, sector = 1;
-	int	ret;
 #ifdef CONFIG_DM_SPI_FLASH
 	struct udevice *new;
+	int	ret;
 
 	/* speed and mode will be read from DT */
 	ret = spi_flash_probe_bus_cs(CONFIG_ENV_SPI_BUS, CONFIG_ENV_SPI_CS,
@@ -76,6 +73,20 @@ int saveenv(void)
 		}
 	}
 #endif
+	return 0;
+}
+
+#if defined(CONFIG_ENV_OFFSET_REDUND)
+int saveenv(void)
+{
+	env_t	env_new;
+	char	*saved_buffer = NULL, flag = OBSOLETE_FLAG;
+	u32	saved_size, saved_offset, sector;
+	int	ret;
+
+	ret = setup_flash_device();
+	if (ret)
+		return ret;
 
 	ret = env_export(&env_new);
 	if (ret)
@@ -105,11 +116,7 @@ int saveenv(void)
 			goto done;
 	}
 
-	if (CONFIG_ENV_SIZE > CONFIG_ENV_SECT_SIZE) {
-		sector = CONFIG_ENV_SIZE / CONFIG_ENV_SECT_SIZE;
-		if (CONFIG_ENV_SIZE % CONFIG_ENV_SECT_SIZE)
-			sector++;
-	}
+	sector = DIV_ROUND_UP(CONFIG_ENV_SIZE, CONFIG_ENV_SECT_SIZE);
 
 	puts("Erasing SPI flash...");
 	ret = spi_flash_erase(env_flash, env_new_offset,
@@ -166,12 +173,9 @@ void env_relocate_spec(void)
 		goto out;
 	}
 
-	env_flash = spi_flash_probe(CONFIG_ENV_SPI_BUS, CONFIG_ENV_SPI_CS,
-			CONFIG_ENV_SPI_MAX_HZ, CONFIG_ENV_SPI_MODE);
-	if (!env_flash) {
-		set_default_env("!spi_flash_probe() failed");
+	ret = setup_flash_device();
+	if (ret)
 		goto out;
-	}
 
 	ret = spi_flash_read(env_flash, CONFIG_ENV_OFFSET,
 				CONFIG_ENV_SIZE, tmp_env1);
@@ -238,34 +242,14 @@ out:
 #else
 int saveenv(void)
 {
-	u32	saved_size, saved_offset, sector = 1;
+	u32	saved_size, saved_offset, sector;
 	char	*saved_buffer = NULL;
 	int	ret = 1;
 	env_t	env_new;
-#ifdef CONFIG_DM_SPI_FLASH
-	struct udevice *new;
 
-	/* speed and mode will be read from DT */
-	ret = spi_flash_probe_bus_cs(CONFIG_ENV_SPI_BUS, CONFIG_ENV_SPI_CS,
-				     0, 0, &new);
-	if (ret) {
-		set_default_env("!spi_flash_probe_bus_cs() failed");
-		return 1;
-	}
-
-	env_flash = dev_get_uclass_priv(new);
-#else
-
-	if (!env_flash) {
-		env_flash = spi_flash_probe(CONFIG_ENV_SPI_BUS,
-			CONFIG_ENV_SPI_CS,
-			CONFIG_ENV_SPI_MAX_HZ, CONFIG_ENV_SPI_MODE);
-		if (!env_flash) {
-			set_default_env("!spi_flash_probe() failed");
-			return 1;
-		}
-	}
-#endif
+	ret = setup_flash_device();
+	if (ret)
+		return ret;
 
 	/* Is the sector larger than the env (i.e. embedded) */
 	if (CONFIG_ENV_SECT_SIZE > CONFIG_ENV_SIZE) {
@@ -281,15 +265,11 @@ int saveenv(void)
 			goto done;
 	}
 
-	if (CONFIG_ENV_SIZE > CONFIG_ENV_SECT_SIZE) {
-		sector = CONFIG_ENV_SIZE / CONFIG_ENV_SECT_SIZE;
-		if (CONFIG_ENV_SIZE % CONFIG_ENV_SECT_SIZE)
-			sector++;
-	}
-
 	ret = env_export(&env_new);
 	if (ret)
 		goto done;
+
+	sector = DIV_ROUND_UP(CONFIG_ENV_SIZE, CONFIG_ENV_SECT_SIZE);
 
 	puts("Erasing SPI flash...");
 	ret = spi_flash_erase(env_flash, CONFIG_ENV_OFFSET,
@@ -326,30 +306,31 @@ void env_relocate_spec(void)
 	char *buf = NULL;
 
 	buf = (char *)memalign(ARCH_DMA_MINALIGN, CONFIG_ENV_SIZE);
-	env_flash = spi_flash_probe(CONFIG_ENV_SPI_BUS, CONFIG_ENV_SPI_CS,
-			CONFIG_ENV_SPI_MAX_HZ, CONFIG_ENV_SPI_MODE);
-	if (!env_flash) {
-		set_default_env("!spi_flash_probe() failed");
-		if (buf)
-			free(buf);
+	if (!buf) {
+		set_default_env("!malloc() failed");
 		return;
 	}
+
+	ret = setup_flash_device();
+	if (ret)
+		goto out;
 
 	ret = spi_flash_read(env_flash,
 		CONFIG_ENV_OFFSET, CONFIG_ENV_SIZE, buf);
 	if (ret) {
 		set_default_env("!spi_flash_read() failed");
-		goto out;
+		goto err_read;
 	}
 
 	ret = env_import(buf, 1);
 	if (ret)
 		gd->env_valid = 1;
-out:
+
+err_read:
 	spi_flash_free(env_flash);
-	if (buf)
-		free(buf);
 	env_flash = NULL;
+out:
+	free(buf);
 }
 #endif
 

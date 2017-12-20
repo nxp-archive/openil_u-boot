@@ -10,21 +10,21 @@
 #include <asm/io.h>
 #include <asm/arch/clock.h>
 #include <asm/arch/fsl_serdes.h>
+#ifdef CONFIG_FSL_LS_PPA
+#include <asm/arch/ppa.h>
+#endif
 #include <asm/arch/fdt.h>
+#include <asm/arch/mmu.h>
 #include <asm/arch/soc.h>
 #include <ahci.h>
 #include <hwconfig.h>
 #include <mmc.h>
 #include <scsi.h>
 #include <fm_eth.h>
-#include <fsl_csu.h>
 #include <fsl_esdhc.h>
 #include <fsl_mmdc.h>
 #include <spl.h>
 #include <netdev.h>
-#ifdef CONFIG_FSL_LS_PPA
-#include <asm/arch/ppa.h>
-#endif
 
 #include "../common/qixis.h"
 #include "ls1012aqds_qixis.h"
@@ -77,6 +77,10 @@ int dram_init(void)
 	mmdc_init(&mparam);
 
 	gd->ram_size = CONFIG_SYS_SDRAM_SIZE;
+#if !defined(CONFIG_SPL) || defined(CONFIG_SPL_BUILD)
+	/* This will break-before-make MMU for DDR */
+	update_early_mmu_table();
+#endif
 
 	return 0;
 }
@@ -102,25 +106,31 @@ int misc_init_r(void)
 
 int board_init(void)
 {
-	struct ccsr_cci400 *cci = (struct ccsr_cci400 *)
-				   CONFIG_SYS_CCI400_ADDR;
+	struct ccsr_cci400 *cci = (struct ccsr_cci400 *)(CONFIG_SYS_IMMR +
+				   CONFIG_SYS_CCI400_OFFSET);
 
 	/* Set CCI-400 control override register to enable barrier
 	 * transaction */
 	out_le32(&cci->ctrl_ord,
 		 CCI400_CTRLORD_EN_BARRIER);
 
-#ifdef CONFIG_LAYERSCAPE_NS_ACCESS
-	enable_layerscape_ns_access();
+#ifdef CONFIG_SYS_FSL_ERRATUM_A010315
+	erratum_a010315();
 #endif
 
 #ifdef CONFIG_ENV_IS_NOWHERE
 	gd->env_addr = (ulong)&default_environment[0];
 #endif
+
 #ifdef CONFIG_FSL_LS_PPA
 	ppa_init();
 #endif
 	return 0;
+}
+
+int board_eth_init(bd_t *bis)
+{
+	return pci_eth_init(bis);
 }
 
 int esdhc_status_fixup(void *blob, const char *compat)
@@ -161,32 +171,3 @@ int ft_board_setup(void *blob, bd_t *bd)
 	return 0;
 }
 #endif
-
-void dram_init_banksize(void)
-{
-	/*
-	 * gd->arch.secure_ram tracks the location of secure memory.
-	 * It was set as if the memory starts from 0.
-	 * The address needs to add the offset of its bank.
-	 */
-	gd->bd->bi_dram[0].start = CONFIG_SYS_SDRAM_BASE;
-	if (gd->ram_size > CONFIG_SYS_DDR_BLOCK1_SIZE) {
-		gd->bd->bi_dram[0].size = CONFIG_SYS_DDR_BLOCK1_SIZE;
-		gd->bd->bi_dram[1].start = CONFIG_SYS_DDR_BLOCK2_BASE;
-		gd->bd->bi_dram[1].size = gd->ram_size -
-			CONFIG_SYS_DDR_BLOCK1_SIZE;
-#ifdef CONFIG_SYS_MEM_RESERVE_SECURE
-		gd->arch.secure_ram = gd->bd->bi_dram[1].start +
-			gd->arch.secure_ram -
-			CONFIG_SYS_DDR_BLOCK1_SIZE;
-		gd->arch.secure_ram |= MEM_RESERVE_SECURE_MAINTAINED;
-#endif
-	} else {
-		gd->bd->bi_dram[0].size = gd->ram_size;
-#ifdef CONFIG_SYS_MEM_RESERVE_SECURE
-		gd->arch.secure_ram = gd->bd->bi_dram[0].start +
-			gd->arch.secure_ram;
-		gd->arch.secure_ram |= MEM_RESERVE_SECURE_MAINTAINED;
-#endif
-	}
-}

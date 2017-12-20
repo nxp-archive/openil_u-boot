@@ -15,6 +15,7 @@
 #ifndef _EFI_H
 #define _EFI_H
 
+#include <linux/linkage.h>
 #include <linux/string.h>
 #include <linux/types.h>
 
@@ -22,15 +23,18 @@
 /* EFI uses the Microsoft ABI which is not the default for GCC */
 #define EFIAPI __attribute__((ms_abi))
 #else
-#define EFIAPI
+#define EFIAPI asmlinkage
 #endif
 
 struct efi_device_path;
 
 #define EFI_BITS_PER_LONG	BITS_PER_LONG
 
-/* With 64-bit EFI stub, EFI_BITS_PER_LONG has to be 64 */
-#ifdef CONFIG_EFI_STUB_64BIT
+/*
+ * With 64-bit EFI stub, EFI_BITS_PER_LONG has to be 64. EFI_STUB is set
+ * in lib/efi/Makefile, when building the stub.
+ */
+#if defined(CONFIG_EFI_STUB_64BIT) && defined(EFI_STUB)
 #undef EFI_BITS_PER_LONG
 #define EFI_BITS_PER_LONG	64
 #endif

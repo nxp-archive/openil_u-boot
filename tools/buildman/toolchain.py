@@ -120,29 +120,48 @@ class Toolchain:
             Priority of toolchain, PRIORITY_CALC=highest, 20=lowest.
         """
         priority_list = ['-elf', '-unknown-linux-gnu', '-linux',
-            '-none-linux-gnueabi', '-uclinux', '-none-eabi',
-            '-gentoo-linux-gnu', '-linux-gnueabi', '-le-linux', '-uclinux']
+            '-none-linux-gnueabi', '-none-linux-gnueabihf', '-uclinux',
+            '-none-eabi', '-gentoo-linux-gnu', '-linux-gnueabi',
+            '-linux-gnueabihf', '-le-linux', '-uclinux']
         for prio in range(len(priority_list)):
             if priority_list[prio] in fname:
                 return PRIORITY_CALC + prio
         return PRIORITY_CALC + prio
 
+    def GetWrapper(self, show_warning=True):
+        """Get toolchain wrapper from the setting file.
+        """
+	value = ''
+	for name, value in bsettings.GetItems('toolchain-wrapper'):
+            if not value:
+                print "Warning: Wrapper not found"
+        if value:
+            value = value + ' '
+
+        return value
+
     def MakeEnvironment(self, full_path):
         """Returns an environment for using the toolchain.
 
         Thie takes the current environment and adds CROSS_COMPILE so that
-        the tool chain will operate correctly.
+        the tool chain will operate correctly. This also disables localized
+        output and possibly unicode encoded output of all build tools by
+        adding LC_ALL=C.
 
         Args:
             full_path: Return the full path in CROSS_COMPILE and don't set
                 PATH
         """
         env = dict(os.environ)
+        wrapper = self.GetWrapper()
+
         if full_path:
-            env['CROSS_COMPILE'] = os.path.join(self.path, self.cross)
+            env['CROSS_COMPILE'] = wrapper + os.path.join(self.path, self.cross)
         else:
-            env['CROSS_COMPILE'] = self.cross
+            env['CROSS_COMPILE'] = wrapper + self.cross
             env['PATH'] = self.path + ':' + env['PATH']
+
+        env['LC_ALL'] = 'C'
 
         return env
 

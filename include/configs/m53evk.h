@@ -1,5 +1,5 @@
 /*
- * DENX M53 configuration
+ * Aries M53 configuration
  * Copyright (C) 2012-2013 Marek Vasut <marex@denx.de>
  *
  * SPDX-License-Identifier:	GPL-2.0+
@@ -8,15 +8,11 @@
 #ifndef __M53EVK_CONFIG_H__
 #define __M53EVK_CONFIG_H__
 
-#define CONFIG_MX53
 #define CONFIG_MXC_GPIO
 
 #include <asm/arch/imx-regs.h>
 
-#define CONFIG_DISPLAY_CPUINFO
-#define CONFIG_BOARD_EARLY_INIT_F
 #define CONFIG_REVISION_TAG
-#define CONFIG_SYS_NO_FLASH
 #define CONFIG_SYS_FSL_CLK
 
 #define CONFIG_TIMESTAMP		/* Print image info with timestamp */
@@ -24,16 +20,9 @@
 /*
  * U-Boot Commands
  */
-#define CONFIG_DISPLAY_BOARDINFO
-#define CONFIG_DOS_PARTITION
-#define CONFIG_FAT_WRITE
-
-#define CONFIG_CMD_BMP
-#define CONFIG_CMD_DATE
 #define CONFIG_CMD_NAND
 #define CONFIG_CMD_NAND_TRIMFFS
 #define CONFIG_CMD_SATA
-#define CONFIG_VIDEO
 
 /*
  * Memory configurations
@@ -79,14 +68,11 @@
 #define CONFIG_MXC_UART
 #define CONFIG_MXC_UART_BASE		UART2_BASE
 #define CONFIG_CONS_INDEX		1
-#define CONFIG_BAUDRATE			115200
 
 /*
  * MMC Driver
  */
 #ifdef CONFIG_CMD_MMC
-#define CONFIG_MMC
-#define CONFIG_GENERIC_MMC
 #define CONFIG_FSL_ESDHC
 #define CONFIG_SYS_FSL_ESDHC_ADDR	0
 #define CONFIG_SYS_FSL_ESDHC_NUM	1
@@ -115,7 +101,6 @@
 #define CONFIG_ENV_OFFSET_REDUND	\
 		(CONFIG_ENV_OFFSET + CONFIG_ENV_RANGE)
 
-#define CONFIG_CMD_UBI
 #define CONFIG_CMD_UBIFS
 #define CONFIG_CMD_MTDPARTS
 #define CONFIG_RBTREE
@@ -175,7 +160,6 @@
  * USB
  */
 #ifdef CONFIG_CMD_USB
-#define CONFIG_USB_EHCI
 #define CONFIG_USB_EHCI_MX5
 #define CONFIG_USB_HOST_ETHER
 #define CONFIG_USB_ETHER_ASIX
@@ -203,9 +187,6 @@
  */
 #ifdef CONFIG_VIDEO
 #define CONFIG_VIDEO_IPUV3
-#define CONFIG_CFB_CONSOLE
-#define CONFIG_VGA_AS_SINGLE_DEVICE
-#define CONFIG_SYS_CONSOLE_IS_IN_ENV
 #define CONFIG_VIDEO_BMP_RLE8
 #define CONFIG_VIDEO_BMP_GZIP
 #define CONFIG_SPLASH_SCREEN
@@ -235,15 +216,9 @@
  */
 #define CONFIG_SPL_FRAMEWORK
 #define CONFIG_SPL_TARGET		"u-boot-with-nand-spl.imx"
-#define CONFIG_SPL_BOARD_INIT
 #define CONFIG_SPL_TEXT_BASE		0x70008000
 #define CONFIG_SPL_PAD_TO		0x8000
 #define CONFIG_SPL_STACK		0x70004000
-#define CONFIG_SPL_GPIO_SUPPORT
-#define CONFIG_SPL_LIBCOMMON_SUPPORT
-#define CONFIG_SPL_LIBGENERIC_SUPPORT
-#define CONFIG_SPL_NAND_SUPPORT
-#define CONFIG_SPL_SERIAL_SUPPORT
 
 #define CONFIG_SYS_NAND_U_BOOT_OFFS	CONFIG_SPL_PAD_TO
 #define CONFIG_SYS_NAND_PAGE_SIZE	2048

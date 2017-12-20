@@ -5,7 +5,7 @@
  */
 
 #include <common.h>
-#include <dm/device.h>
+#include <dm.h>
 #include <dm/pinctrl.h>
 #include <fdt_support.h>
 #include <linux/err.h>
@@ -122,7 +122,7 @@ static fdt_addr_t parse_address(int offset, const char *name, int na, int ns)
 	int index, len = 0;
 	const fdt32_t *reg;
 
-	index = fdt_find_string(gd->fdt_blob, offset, "reg-names", name);
+	index = fdt_stringlist_search(gd->fdt_blob, offset, "reg-names", name);
 	if (index < 0)
 		return FDT_ADDR_T_NONE;
 
@@ -142,19 +142,19 @@ int meson_pinctrl_probe(struct udevice *dev)
 	int node, gpio = -1, len;
 	int na, ns;
 
-	na = fdt_address_cells(gd->fdt_blob, dev->parent->of_offset);
+	na = fdt_address_cells(gd->fdt_blob, dev_of_offset(dev->parent));
 	if (na < 1) {
 		debug("bad #address-cells\n");
 		return -EINVAL;
 	}
 
-	ns = fdt_size_cells(gd->fdt_blob, dev->parent->of_offset);
+	ns = fdt_size_cells(gd->fdt_blob, dev_of_offset(dev->parent));
 	if (ns < 1) {
 		debug("bad #size-cells\n");
 		return -EINVAL;
 	}
 
-	fdt_for_each_subnode(gd->fdt_blob, node, dev->of_offset) {
+	fdt_for_each_subnode(node, gd->fdt_blob, dev_of_offset(dev)) {
 		if (fdt_getprop(gd->fdt_blob, node, "gpio-controller", &len)) {
 			gpio = node;
 			break;

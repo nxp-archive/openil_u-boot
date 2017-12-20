@@ -38,14 +38,7 @@
 
 /* select serial console configuration */
 #define CONFIG_SERIAL2
-#define CONFIG_BAUDRATE			115200
 
-/* Console configuration */
-#define CONFIG_SYS_CONSOLE_INFO_QUIET
-#define CONFIG_SYS_CONSOLE_IS_IN_ENV
-
-/* MACH_TYPE_TRATS macro will be removed once added to mach-types */
-#define MACH_TYPE_TRATS			3928
 #define CONFIG_MACH_TYPE		MACH_TYPE_TRATS
 
 #define CONFIG_BOOTARGS			"Please use defined boot"
@@ -180,36 +173,6 @@
 /* GPT */
 #define CONFIG_RANDOM_UUID
 
-/* I2C */
-#include <asm/arch/gpio.h>
-
-#define CONFIG_SYS_I2C
-#define CONFIG_SYS_I2C_S3C24X0
-#define CONFIG_SYS_I2C_S3C24X0_SPEED	100000
-#define CONFIG_SYS_I2C_S3C24X0_SLAVE	0xFE
-#define CONFIG_MAX_I2C_NUM		8
-#define CONFIG_SYS_I2C_SOFT		/* I2C bit-banged */
-#define CONFIG_SYS_I2C_SOFT_SPEED	50000
-#define CONFIG_SYS_I2C_SOFT_SLAVE	0x7F
-#define CONFIG_SOFT_I2C_READ_REPEATED_START
-#define CONFIG_SYS_I2C_INIT_BOARD
-
-/* I2C FG */
-#define CONFIG_SOFT_I2C_GPIO_SCL EXYNOS4_GPIO_Y41
-#define CONFIG_SOFT_I2C_GPIO_SDA EXYNOS4_GPIO_Y40
-
-/* POWER */
-#define CONFIG_POWER
-#define CONFIG_POWER_I2C
-#define CONFIG_POWER_MAX8997
-
-#define CONFIG_POWER_FG
-#define CONFIG_POWER_FG_MAX17042
-#define CONFIG_POWER_MUIC
-#define CONFIG_POWER_MUIC_MAX8997
-#define CONFIG_POWER_BATTERY
-#define CONFIG_POWER_BATTERY_TRATS
-
 /* Security subsystem - enable hw_rand() */
 #define CONFIG_EXYNOS_ACE_SHA
 #define CONFIG_LIB_HW_RAND
@@ -225,7 +188,6 @@
 
 /* Download menu - definitions for check keys */
 #ifndef __ASSEMBLY__
-#include <power/max8997_pmic.h>
 
 #define KEY_PWR_PMIC_NAME		"MAX8997_PMIC"
 #define KEY_PWR_STATUS_REG		MAX8997_REG_STATUS1
@@ -239,7 +201,6 @@
 
 /* LCD console */
 #define LCD_BPP			LCD_COLOR16
-#define CONFIG_SYS_WHITE_ON_BLACK
 
 /* LCD */
 #define CONFIG_BMP_16BPP

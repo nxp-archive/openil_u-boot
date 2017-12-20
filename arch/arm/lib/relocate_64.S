@@ -10,6 +10,7 @@
 
 #include <asm-offsets.h>
 #include <config.h>
+#include <elf.h>
 #include <linux/linkage.h>
 #include <asm/macro.h>
 
@@ -47,7 +48,7 @@ fixloop:
 	ldp	x0, x1, [x2], #16	/* (x0,x1) <- (SRC location, fixup) */
 	ldr	x4, [x2], #8		/* x4 <- addend */
 	and	x1, x1, #0xffffffff
-	cmp	x1, #1027		/* relative fixup? */
+	cmp	x1, #R_AARCH64_RELATIVE
 	bne	fixnext
 
 	/* relative fix: store addend plus offset at dest location */
@@ -67,7 +68,7 @@ relocate_done:
 	b	0f
 1:	mrs	x0, sctlr_el1
 0:	tbz	w0, #2, 5f	/* skip flushing cache if disabled */
-	tbz	w0, #12, 4f	/* invalide i-cache is enabled */
+	tbz	w0, #12, 4f	/* skip invalidating i-cache if disabled */
 	ic	iallu		/* i-cache invalidate all */
 	isb	sy
 4:	ldp	x0, x1, [sp, #16]

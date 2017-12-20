@@ -16,7 +16,6 @@
 #define __CONFIG_H
 
 /* High Level Configuration Options */
-#define CONFIG_OMAP3_DEVKIT8000	1	/* working with DevKit8000 */
 #define CONFIG_MACH_TYPE	MACH_TYPE_DEVKIT8000
 
 /*
@@ -39,10 +38,6 @@
 #define CONFIG_NR_DRAM_BANKS		2 /* CS1 may or may not be populated */
 
 #include <configs/ti_omap3_common.h>
-
-/* Display CPU and Board information */
-#define CONFIG_DISPLAY_CPUINFO		1
-#define CONFIG_DISPLAY_BOARDINFO	1
 
 #define CONFIG_MISC_INIT_R
 
@@ -96,11 +91,9 @@
 							/* partition */
 
 /* commands to include */
-#define CONFIG_CMD_JFFS2		/* JFFS2 Support		*/
 #define CONFIG_CMD_NAND_LOCK_UNLOCK	/* nand (un)lock commands	*/
 
 #undef CONFIG_SUPPORT_RAW_INITRD
-#undef CONFIG_FAT_WRITE
 
 /* BOOTP/DHCP options */
 #define CONFIG_BOOTP_SUBNETMASK
@@ -199,7 +192,6 @@
 #define CONFIG_SYS_SRAM_SIZE               0x10000
 
 /* Defines for SPL */
-#undef CONFIG_SPL_MTD_SUPPORT
 
 #undef CONFIG_SPL_TEXT_BASE
 #define CONFIG_SPL_TEXT_BASE		0x40200000 /*CONFIG_SYS_SRAM_START*/

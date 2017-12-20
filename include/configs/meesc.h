@@ -29,14 +29,6 @@
  */
 #define CONFIG_SYS_TEXT_BASE		0x21F00000
 
-/*
- * since a number of boards are not being listed in linux
- * arch/arm/tools/mach-types any more, the mach-types have to be
- * defined here
- */
-#define MACH_TYPE_MEESC			2165
-#define MACH_TYPE_ETHERCAN2		2407
-
 /* ARM asynchronous clock */
 #define CONFIG_SYS_AT91_SLOW_CLOCK	32768	/* 32.768 kHz crystal */
 #define CONFIG_SYS_AT91_MAIN_CLOCK	16000000/* 16.0 MHz crystal */
@@ -44,7 +36,6 @@
 /* Misc CPU related */
 #define CONFIG_SKIP_LOWLEVEL_INIT
 #define CONFIG_ARCH_CPU_INIT
-#define CONFIG_BOARD_EARLY_INIT_F		/* call board_early_init_f() */
 #define CONFIG_SETUP_MEMORY_TAGS
 #define CONFIG_INITRD_TAG
 #define CONFIG_SERIAL_TAG
@@ -52,8 +43,6 @@
 #define CONFIG_CMDLINE_TAG			/* enable passing of ATAGs */
 #define CONFIG_MISC_INIT_R			/* Call misc_init_r */
 
-#define CONFIG_DISPLAY_BOARDINFO		/* call checkboard() */
-#define CONFIG_DISPLAY_CPUINFO			/* display cpu info and speed */
 #define CONFIG_PREBOOT				/* enable preboot variable */
 
 /*
@@ -67,7 +56,6 @@
 #define CONFIG_ATMEL_USART
 #define CONFIG_USART_BASE		ATMEL_BASE_DBGU
 #define CONFIG_USART_ID			ATMEL_ID_SYS
-#define CONFIG_BAUDRATE			115200
 
 /*
  * BOOTP options
@@ -121,9 +109,6 @@
 # define DATAFLASH_TCSS				(0x1a << 16)
 # define DATAFLASH_TCHS				(0x1 << 24)
 #endif
-
-/* NOR flash is not populated, disable it */
-#define CONFIG_SYS_NO_FLASH
 
 /* NAND flash */
 #ifdef CONFIG_CMD_NAND

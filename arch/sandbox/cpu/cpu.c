@@ -4,6 +4,7 @@
  */
 #define DEBUG
 #include <common.h>
+#include <dm.h>
 #include <errno.h>
 #include <libfdt.h>
 #include <os.h>
@@ -137,4 +138,15 @@ done:
 	gd->fdt_blob = blob;
 
 	return 0;
+}
+
+ulong timer_get_boot_us(void)
+{
+	static uint64_t base_count;
+	uint64_t count = os_get_nsec();
+
+	if (!base_count)
+		base_count = count;
+
+	return (count - base_count) / 1000;
 }

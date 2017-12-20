@@ -14,10 +14,6 @@
 #ifndef __CONFIG_SIEMENS_AM33X_COMMON_H
 #define __CONFIG_SIEMENS_AM33X_COMMON_H
 
-#define CONFIG_AM33XX
-#define CONFIG_OMAP
-#define CONFIG_OMAP_COMMON
-
 #include <asm/arch/omap.h>
 
 #define CONFIG_DMA_COHERENT
@@ -26,8 +22,6 @@
 #define CONFIG_ENV_SIZE			(0x2000)
 #define CONFIG_SYS_MALLOC_LEN		(16 * 1024 * 1024)
 #define CONFIG_SYS_LONGHELP		/* undef to save memory */
-#define CONFIG_BOARD_LATE_INIT
-#define CONFIG_SYS_NO_FLASH
 #ifdef CONFIG_SIEMENS_MACH_TYPE
 #define CONFIG_MACH_TYPE		CONFIG_SIEMENS_MACH_TYPE
 #endif
@@ -78,11 +72,6 @@
 
 #define CONFIG_SYS_LOAD_ADDR		0x81000000 /* Default load address */
 
-#define CONFIG_MMC
-#define CONFIG_GENERIC_MMC
-#define CONFIG_OMAP_HSMMC
-#define CONFIG_DOS_PARTITION
-
 #define CONFIG_SPI
 #define CONFIG_OMAP3_SPI
 #define CONFIG_MTD_DEVICE
@@ -108,9 +97,6 @@
 #define CONFIG_SYS_NS16550_COM1		0x44e09000
 #define CONFIG_SYS_NS16550_COM4		0x481a6000
 
-#define CONFIG_BAUDRATE		115200
-
-#define CONFIG_SYS_CONSOLE_INFO_QUIET
 #define CONFIG_SERIAL1                  1
 #define CONFIG_CONS_INDEX               1
 
@@ -130,33 +116,15 @@
 #define CONFIG_SPL_BSS_START_ADDR	0x80000000
 #define CONFIG_SPL_BSS_MAX_SIZE		0x80000		/* 512 KB */
 
-#define CONFIG_SYS_MMCSD_RAW_MODE_U_BOOT_SECTOR	0x300 /* address 0x60000 */
 #define CONFIG_SYS_MMCSD_FS_BOOT_PARTITION	1
 #define CONFIG_SPL_FS_LOAD_PAYLOAD_NAME	"u-boot.img"
-#define CONFIG_SPL_MMC_SUPPORT
-#define CONFIG_SPL_FAT_SUPPORT
-#define CONFIG_FS_FAT
-#define CONFIG_SPL_I2C_SUPPORT
 
-#define CONFIG_SPL_LIBCOMMON_SUPPORT
-#define CONFIG_SPL_LIBDISK_SUPPORT
-#define CONFIG_SPL_LIBGENERIC_SUPPORT
-#define CONFIG_SPL_SERIAL_SUPPORT
-#define CONFIG_SPL_YMODEM_SUPPORT
-
-#define CONFIG_SPL_GPIO_SUPPORT
-#define CONFIG_SPL_WATCHDOG_SUPPORT
-
-#define CONFIG_SPL_SPI_SUPPORT
-#define CONFIG_SPL_SPI_FLASH_SUPPORT
 #define CONFIG_SPL_SPI_LOAD
 #define CONFIG_SYS_SPI_U_BOOT_OFFS	0x20000
 
-#define CONFIG_SPL_LDSCRIPT		"$(CPUDIR)/am33xx/u-boot-spl.lds"
+#define CONFIG_SPL_LDSCRIPT		"arch/arm/mach-omap2/u-boot-spl.lds"
 
-#define CONFIG_SPL_BOARD_INIT
 #define CONFIG_SPL_NAND_AM33XX_BCH
-#define CONFIG_SPL_NAND_SUPPORT
 #define CONFIG_SPL_NAND_BASE
 #define CONFIG_SPL_NAND_DRIVERS
 #define CONFIG_SPL_NAND_ECC
@@ -211,7 +179,6 @@
  * USB configuration
  */
 #define CONFIG_USB_MUSB_DSPS
-#define CONFIG_ARCH_MISC_INIT
 #define CONFIG_USB_MUSB_PIO_ONLY
 #define CONFIG_USB_MUSB_DISABLE_BULK_COMBINE_SPLIT
 #undef CONFIG_USB_GADGET_DUALSPEED
@@ -231,8 +198,6 @@
 #define CONFIG_USBD_HS
 
 /* USB Device Firmware Update support */
-#define CONFIG_USB_FUNCTION_DFU
-#define CONFIG_DFU_NAND
 #define CONFIG_SYS_DFU_DATA_BUF_SIZE	(1 << 20)
 #define DFU_MANIFEST_POLL_TIMEOUT	25000
 
@@ -258,9 +223,6 @@
 # define CONFIG_ENV_SECT_SIZE		(4 << 10) /* 4 KB sectors */
 #endif /* SPI support */
 
-/* Unsupported features */
-#undef CONFIG_USE_IRQ
-
 #define CONFIG_DRIVER_TI_CPSW
 #define CONFIG_MII
 #define CONFIG_PHY_GIGE
@@ -285,10 +247,7 @@
 #define CONFIG_MTD_DEVICE
 #define CONFIG_RBTREE
 #define CONFIG_LZO
-#define CONFIG_CMD_UBI
 #define CONFIG_CMD_UBIFS
-#define CONFIG_MTD_UBI_FASTMAP
-#define CONFIG_MTD_UBI_FASTMAP_AUTOCONVERT      1
 #endif
 
 /* Commen environment */
@@ -583,13 +542,6 @@
 #define CONFIG_SYS_ENV_SECT_SIZE	(128 << 10)	/* 128 KiB */
 #endif
 #endif
-
-#define CONFIG_OMAP_GPIO
-
-/* Gpio cmd support */
-
-/* Watchdog */
-#define CONFIG_HW_WATCHDOG
 
 /* Reboot after 60 sec if bootcmd fails */
 #define CONFIG_RESET_TO_RETRY

@@ -14,21 +14,14 @@
 /*
  * High Level Configuration Options
  */
-#define CONFIG_BOOKE		1	/* BOOKE */
-#define CONFIG_E500		1	/* BOOKE e500 family */
-#define CONFIG_MPC8572		1
-#define CONFIG_XPEDITE5370	1
 #define CONFIG_SYS_BOARD_NAME	"XPedite5370"
 #define CONFIG_SYS_FORM_3U_VPX	1
 #define CONFIG_BOARD_EARLY_INIT_R	/* Call board_pre_init */
-#define CONFIG_DISPLAY_BOARDINFO
 
 #ifndef CONFIG_SYS_TEXT_BASE
 #define CONFIG_SYS_TEXT_BASE	0xfff80000
 #endif
 
-#define CONFIG_PCI		1	/* Enable PCI/PCIE */
-#define CONFIG_PCI_PNP		1	/* do pci plug-and-play */
 #define CONFIG_PCI_SCAN_SHOW	1	/* show pci devices on startup */
 #define CONFIG_PCIE1		1	/* PCIE controller 1 */
 #define CONFIG_PCIE2		1	/* PCIE controller 2 */
@@ -36,8 +29,6 @@
 #define CONFIG_PCI_INDIRECT_BRIDGE 1	/* indirect PCI bridge support */
 #define CONFIG_SYS_PCI_64BIT	1	/* enable 64-bit PCI resources */
 #define CONFIG_FSL_PCIE_RESET	1	/* need PCIe reset errata */
-#define CONFIG_FSL_LAW		1	/* Use common FSL init code */
-#define CONFIG_FSL_ELBC		1
 
 /*
  * Multicore config
@@ -49,7 +40,6 @@
 /*
  * DDR config
  */
-#define CONFIG_SYS_FSL_DDR2
 #undef CONFIG_FSL_DDR_INTERACTIVE
 #define CONFIG_SPD_EEPROM		/* Use SPD EEPROM for DDR setup */
 #define CONFIG_DDR_SPD
@@ -57,7 +47,6 @@
 #define SPD_EEPROM_ADDRESS1		0x54	/* Both channels use the */
 #define SPD_EEPROM_ADDRESS2		0x54	/* same SPD data         */
 #define SPD_EEPROM_OFFSET		0x200	/* OFFSET of SPD in EEPROM */
-#define CONFIG_NUM_DDR_CONTROLLERS	2
 #define CONFIG_DIMM_SLOTS_PER_CTLR	1
 #define CONFIG_CHIP_SELECTS_PER_CTRL	1
 #define CONFIG_DDR_ECC
@@ -92,16 +81,6 @@ extern unsigned long get_board_ddr_clk(unsigned long dummy);
 #define CONFIG_SYS_MEMTEST_END		0x20000000
 #define CONFIG_POST			(CONFIG_SYS_POST_MEMORY | \
 					 CONFIG_SYS_POST_I2C)
-#define I2C_ADDR_LIST			{CONFIG_SYS_I2C_DS1621_ADDR,	\
-					 CONFIG_SYS_I2C_DS4510_ADDR,	\
-					 CONFIG_SYS_I2C_EEPROM_ADDR,	\
-					 CONFIG_SYS_I2C_LM90_ADDR,	\
-					 CONFIG_SYS_I2C_PCA953X_ADDR0,	\
-					 CONFIG_SYS_I2C_PCA953X_ADDR1,	\
-					 CONFIG_SYS_I2C_PCA953X_ADDR2,	\
-					 CONFIG_SYS_I2C_PCA953X_ADDR3,	\
-					 CONFIG_SYS_I2C_PEX8518_ADDR,	\
-					 CONFIG_SYS_I2C_RTC_ADDR}
 /* The XPedite5370 can host an XMC which has an EEPROM at address 0x50 */
 #define I2C_ADDR_IGNORE_LIST		{0x50}
 
@@ -220,7 +199,6 @@ extern unsigned long get_board_ddr_clk(unsigned long dummy);
 #define CONFIG_SYS_NS16550_COM2	(CONFIG_SYS_CCSRBAR+0x4600)
 #define CONFIG_SYS_BAUDRATE_TABLE	\
 	{300, 600, 1200, 2400, 4800, 9600, 19200, 38400, 115200}
-#define CONFIG_BAUDRATE			115200
 #define CONFIG_LOADS_ECHO		1	/* echo on for serial download */
 #define CONFIG_SYS_LOADS_BAUD_CHANGE	1	/* allow baudrate change */
 
@@ -241,9 +219,6 @@ extern unsigned long get_board_ddr_clk(unsigned long dummy);
 #define CONFIG_SYS_I2C_PEX8518_ADDR	0x70
 
 /* I2C DS1631 temperature sensor */
-#define CONFIG_SYS_I2C_DS1621_ADDR	0x48
-#define CONFIG_DTT_DS1621
-#define CONFIG_DTT_SENSORS		{ 0 }
 #define CONFIG_SYS_I2C_LM90_ADDR	0x4c
 
 /* I2C EEPROM - AT24C128B */
@@ -256,10 +231,6 @@ extern unsigned long get_board_ddr_clk(unsigned long dummy);
 #define CONFIG_RTC_M41T11		1
 #define CONFIG_SYS_I2C_RTC_ADDR		0x68
 #define CONFIG_SYS_M41T11_BASE_YEAR	2000
-
-/* GPIO/EEPROM/SRAM */
-#define CONFIG_DS4510
-#define CONFIG_SYS_I2C_DS4510_ADDR	0x51
 
 /* GPIO */
 #define CONFIG_PCA953X
@@ -366,12 +337,6 @@ extern unsigned long get_board_ddr_clk(unsigned long dummy);
 /*
  * Command configuration.
  */
-#define CONFIG_CMD_DATE
-#define CONFIG_CMD_DS4510
-#define CONFIG_CMD_DS4510_INFO
-#define CONFIG_CMD_DTT
-#define CONFIG_CMD_EEPROM
-#define CONFIG_CMD_JFFS2
 #define CONFIG_CMD_NAND
 #define CONFIG_CMD_PCA953X
 #define CONFIG_CMD_PCA953X_INFO

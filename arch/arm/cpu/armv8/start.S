@@ -19,8 +19,6 @@
 
 .globl	_start
 _start:
-	b	reset
-
 #ifdef CONFIG_ENABLE_ARM_SOC_BOOT0_HOOK
 /*
  * Various SoCs need something special and SoC-specific up front in
@@ -28,7 +26,8 @@ _start:
  * use it here.
  */
 #include <asm/arch/boot0.h>
-ARM_SOC_BOOT0_HOOK
+#else
+	b	reset
 #endif
 
 	.align 3
@@ -87,14 +86,17 @@ save_boot_params_ret:
 0:
 
 	/*
-	 * Enalbe SMPEN bit for coherency.
+	 * Enable SMPEN bit for coherency.
 	 * This register is not architectural but at the moment
 	 * this bit should be set for A53/A57/A72.
 	 */
 #ifdef CONFIG_ARMV8_SET_SMPEN
-	mrs     x0, S3_1_c15_c2_1               /* cpuactlr_el1 */
+	switch_el x1, 3f, 1f, 1f
+3:
+	mrs     x0, S3_1_c15_c2_1               /* cpuectlr_el1 */
 	orr     x0, x0, #0x40
 	msr     S3_1_c15_c2_1, x0
+1:
 #endif
 
 	/* Apply ARM core specific erratas */
@@ -110,7 +112,7 @@ save_boot_params_ret:
 	/* Processor specific initialization */
 	bl	lowlevel_init
 
-#if CONFIG_IS_ENABLED(ARMV8_SPIN_TABLE)
+#if defined(CONFIG_ARMV8_SPIN_TABLE) && !defined(CONFIG_SPL_BUILD)
 	branch_if_master x0, x1, master_cpu
 	b	spin_table_secondary_jump
 	/* never return */
@@ -168,13 +170,31 @@ reset_sctrl:
 WEAK(apply_core_errata)
 
 	mov	x29, lr			/* Save LR */
-	/* For now, we support Cortex-A57 specific errata only */
+	/* For now, we support Cortex-A53, Cortex-A57 specific errata */
+
+	/* Check if we are running on a Cortex-A53 core */
+	branch_if_a53_core x0, apply_a53_core_errata
 
 	/* Check if we are running on a Cortex-A57 core */
 	branch_if_a57_core x0, apply_a57_core_errata
 0:
 	mov	lr, x29			/* Restore LR */
 	ret
+
+apply_a53_core_errata:
+
+#ifdef CONFIG_ARM_ERRATA_855873
+	mrs	x0, midr_el1
+	and	x0, x0, #0xf
+	cmp	x0, #3
+	b.lt	0b
+
+	mrs	x0, S3_1_c15_c2_0	/* cpuactlr_el1 */
+	/* Enable data cache clean as data cache clean/invalidate */
+	orr	x0, x0, #1 << 44
+	msr	S3_1_c15_c2_0, x0	/* cpuactlr_el1 */
+#endif
+	b 0b
 
 apply_a57_core_errata:
 
@@ -262,14 +282,14 @@ WEAK(lowlevel_init)
 	/*
 	 * All slaves will enter EL2 and optionally EL1.
 	 */
-	adr	x3, lowlevel_in_el2
-	ldr	x4, =ES_TO_AARCH64
+	adr	x4, lowlevel_in_el2
+	ldr	x5, =ES_TO_AARCH64
 	bl	armv8_switch_to_el2
 
 lowlevel_in_el2:
 #ifdef CONFIG_ARMV8_SWITCH_TO_EL1
-	adr	x3, lowlevel_in_el1
-	ldr	x4, =ES_TO_AARCH64
+	adr	x4, lowlevel_in_el1
+	ldr	x5, =ES_TO_AARCH64
 	bl	armv8_switch_to_el1
 
 lowlevel_in_el1:

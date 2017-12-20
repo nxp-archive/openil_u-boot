@@ -8,14 +8,6 @@
 #ifndef _ASM_ARMV8_MMU_H_
 #define _ASM_ARMV8_MMU_H_
 
-#ifdef __ASSEMBLY__
-#define _AC(X, Y)	X
-#else
-#define _AC(X, Y)	(X##Y)
-#endif
-
-#define UL(x)		_AC(x, UL)
-
 /***************************************************************/
 /*
  * The following definitions are related each other, shoud be
@@ -61,6 +53,7 @@
 #define PTE_TYPE_FAULT		(0 << 0)
 #define PTE_TYPE_TABLE		(3 << 0)
 #define PTE_TYPE_BLOCK		(1 << 0)
+#define PTE_TYPE_VALID		(1 << 0)
 
 #define PTE_TABLE_PXN		(1UL << 59)
 #define PTE_TABLE_XN		(1UL << 60)
@@ -85,6 +78,10 @@
  */
 #define PMD_ATTRINDX(t)		((t) << 2)
 #define PMD_ATTRINDX_MASK	(7 << 2)
+#define PMD_ATTRMASK		(PTE_BLOCK_PXN		| \
+				 PTE_BLOCK_UXN		| \
+				 PMD_ATTRINDX_MASK	| \
+				 PTE_TYPE_VALID)
 
 /*
  * TCR flags.

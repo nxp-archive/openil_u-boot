@@ -18,16 +18,15 @@
  * Command line configuration.
  */
 #define CONFIG_CMD_SDRAM
-#define CONFIG_CMD_ENV
 
 #define CONFIG_BOOTARGS         "console=ttySC0,115200 root=1f01"
 #define CONFIG_ENV_OVERWRITE    1
 
+#define CONFIG_DISPLAY_BOARDINFO
 #undef  CONFIG_SHOW_BOOT_PROGRESS
 
 /* SCIF */
 #define CONFIG_SCIF_CONSOLE		1
-#define CONFIG_BAUDRATE         115200
 #define CONFIG_CONS_SCIF0		1
 
 #define CONFIG_SYS_TEXT_BASE	0x8FFC0000
