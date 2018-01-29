@@ -676,20 +676,35 @@ static void qspi_op_write(struct fsl_qspi_priv *priv, u8 *txbuf, u32 len)
 	tx_size = (len > TX_BUFFER_SIZE) ?
 		TX_BUFFER_SIZE : len;
 
-	size = tx_size / 16;
-	/*
-	 * There must be atleast 128bit data
-	 * available in TX FIFO for any pop operation
-	 */
-	if (tx_size % 16)
-		size++;
-	for (i = 0; i < size * 4; i++) {
+	size = tx_size / 4;
+	for (i = 0; i < size; i++) {
 		memcpy(&data, txbuf, 4);
 		data = qspi_endian_xchg(data);
 		qspi_write32(priv->flags, &regs->tbdr, data);
 		txbuf += 4;
 	}
-
+#if defined(CONFIG_FSL_SPI_ALIGNED_TXFIFO)
+	/*
+	 * There must be at least 16 bytes of data
+	 * available in TX FIFO for any POP operation
+	 */
+	size = (((tx_size/16) + 1) * 4) - size;
+	for (i = 0; i < size; i++) {
+		data = 0;
+		memcpy(&data, txbuf, 4);
+		data = qspi_endian_xchg(data);
+		qspi_write32(priv->flags, &regs->tbdr, data);
+		txbuf += 4;
+	}
+#else
+	size = tx_size % 4;
+	if (size) {
+		data = 0;
+		memcpy(&data, txbuf, size);
+		data = qspi_endian_xchg(data);
+		qspi_write32(priv->flags, &regs->tbdr, data);
+	}
+#endif
 	qspi_write32(priv->flags, &regs->ipcr,
 		     (seqid << QSPI_IPCR_SEQID_SHIFT) | tx_size);
 	while (qspi_read32(priv->flags, &regs->sr) & QSPI_SR_BUSY_MASK)
