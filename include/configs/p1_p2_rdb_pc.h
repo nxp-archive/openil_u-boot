@@ -841,6 +841,7 @@ i2c mw 18 3 __SW_BOOT_MASK 1; reset
 #endif
 
 #define	CONFIG_EXTRA_ENV_SETTINGS	\
+"initrd_high=0xffffffff\0"		\
 "netdev=eth0\0"	\
 "uboot=" __stringify(CONFIG_UBOOTPATH) "\0"	\
 "loadaddr=1000000\0"	\

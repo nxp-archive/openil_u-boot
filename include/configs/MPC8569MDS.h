@@ -483,6 +483,7 @@ extern unsigned long get_clock_freq(void);
 #define CONFIG_LOADADDR  200000   /*default location for tftp and bootm*/
 
 #define	CONFIG_EXTRA_ENV_SETTINGS					\
+	"initrd_high=0xffffffff\0"					\
 	"netdev=eth0\0"							\
 	"consoledev=ttyS0\0"						\
 	"ramdiskaddr=600000\0"						\

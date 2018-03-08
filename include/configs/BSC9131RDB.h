@@ -332,6 +332,7 @@ extern unsigned long get_sdram_size(void);
 #define CONFIG_UBOOTPATH	"u-boot.bin" /* U-Boot image on TFTP server */
 
 #define	CONFIG_EXTRA_ENV_SETTINGS				\
+	"initrd_high=0xffffffff\0"				\
 	"netdev=eth0\0"						\
 	"uboot=" CONFIG_UBOOTPATH "\0"				\
 	"loadaddr=1000000\0"			\

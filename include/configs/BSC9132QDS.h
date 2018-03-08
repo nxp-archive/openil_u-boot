@@ -545,6 +545,7 @@ combinations. this should be removed later
 #endif
 
 #define	CONFIG_EXTRA_ENV_SETTINGS				\
+	"initrd_high=0xffffffff\0"				\
 	"netdev=eth0\0"						\
 	"uboot=" CONFIG_UBOOTPATH "\0"				\
 	"loadaddr=1000000\0"			\

@@ -732,6 +732,7 @@ unsigned long get_board_ddr_clk(void);
 #endif
 
 #define	CONFIG_EXTRA_ENV_SETTINGS				\
+	"initrd_high=0xffffffff\0"				\
 	HWCONFIG						\
 	"usb1:dr_mode=host,phy_type=" __stringify(__USB_PHY_TYPE) "\0"\
 	"netdev=eth0\0"						\

@@ -404,6 +404,7 @@ extern unsigned long get_board_sys_clk(unsigned long dummy);
 #define CONFIG_LOADADDR	1000000
 
 #define	CONFIG_EXTRA_ENV_SETTINGS	\
+"initrd_high=0xffffffff\0"		\
 "netdev=eth0\0"	\
 "uboot=" __stringify(CONFIG_UBOOTPATH) "\0"	\
 "loadaddr=1000000\0"	\
