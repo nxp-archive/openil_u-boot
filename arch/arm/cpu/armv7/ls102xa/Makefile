@@ -10,6 +10,7 @@ obj-y	+= timer.o
 obj-y	+= fsl_epu.o
 obj-y	+= soc.o
 
+obj-$(CONFIG_MP) += mp.o
 obj-$(CONFIG_SCSI_AHCI_PLAT) += ls102xa_sata.o
 obj-$(CONFIG_OF_LIBFDT) += fdt.o
 obj-$(CONFIG_SYS_HAS_SERDES) += fsl_ls1_serdes.o ls102xa_serdes.o
