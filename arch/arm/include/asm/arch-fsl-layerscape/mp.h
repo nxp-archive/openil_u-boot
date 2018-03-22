@@ -41,6 +41,8 @@ phys_addr_t determine_mp_bootpg(void);
 void secondary_boot_func(void);
 int is_core_online(u64 cpu_id);
 u32 cpu_pos_mask(void);
+int get_core_id(void);
+int is_core_valid(unsigned int core);
 #endif
 
 #define IH_ARCH_ARM		2	/* ARM */
