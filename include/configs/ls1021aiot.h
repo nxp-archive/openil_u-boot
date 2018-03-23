@@ -8,9 +8,13 @@
 #ifndef __CONFIG_H
 #define __CONFIG_H
 
+#include "ls1021aiot_config.h"
+
 #define CONFIG_ARMV7_SECURE_BASE OCRAM_BASE_S_ADDR
 
 #define CONFIG_SYS_FSL_CLK
+
+#define CONFIG_MP
 
 #ifdef CONFIG_ARMV7_TEE
 #define SYS_TEE_RAM_SIZE	0x04000000
@@ -26,7 +30,6 @@
 /*
  * Size of malloc() pool
  */
-#define CONFIG_SYS_MALLOC_LEN	(CONFIG_ENV_SIZE + 16 * 1024 * 1024)
 
 #define CONFIG_SYS_INIT_RAM_ADDR	OCRAM_BASE_ADDR
 #define CONFIG_SYS_INIT_RAM_SIZE	OCRAM_SIZE
@@ -101,6 +104,12 @@
 #define CONFIG_SYS_DDR_SDRAM_BASE	0x80000000UL
 #define CONFIG_SYS_SDRAM_BASE		CONFIG_SYS_DDR_SDRAM_BASE
 
+#define CONFIG_MASTER_CORE			0
+
+#define CONFIG_SYS_DDR_SDRAM_SHARE_BASE \
+	(CONFIG_SYS_DDR_SDRAM_BASE + CONFIG_SYS_DDR_SDRAM_MASTER_SIZE \
+	+ CONFIG_SYS_DDR_SDRAM_SLAVE_SIZE * (CONFIG_MAX_CPUS - 1))
+
 /*
  * Serial Port
  */
@@ -115,9 +124,6 @@
 #define CONFIG_CMD_I2C
 #define CONFIG_SYS_I2C
 #define CONFIG_SYS_I2C_MXC
-#define CONFIG_SYS_I2C_MXC_I2C1		/* enable I2C bus 1 */
-#define CONFIG_SYS_I2C_MXC_I2C2		/* enable I2C bus 2 */
-#define CONFIG_SYS_I2C_MXC_I2C3		/* enable I2C bus 3 */
 
 /* EEPROM */
 #define CONFIG_ID_EEPROM
@@ -126,12 +132,7 @@
 #define CONFIG_SYS_I2C_EEPROM_ADDR		0x51
 #define CONFIG_SYS_I2C_EEPROM_ADDR_LEN	2
 
-/*
- * MMC
- */
-#define CONFIG_CMD_MMC
-#define CONFIG_FSL_ESDHC
-
+#if 0
 /* SATA */
 #define CONFIG_SCSI_AHCI_PLAT
 #ifndef PCI_DEVICE_ID_FREESCALE_AHCI
@@ -144,6 +145,7 @@
 #define CONFIG_SYS_SCSI_MAX_LUN		1
 #define CONFIG_SYS_SCSI_MAX_DEVICE	(CONFIG_SYS_SCSI_MAX_SCSI_ID * \
 		CONFIG_SYS_SCSI_MAX_LUN)
+#endif
 
 /* SPI */
 #if defined(CONFIG_QSPI_BOOT) || defined(CONFIG_SD_BOOT_QSPI)
@@ -163,6 +165,7 @@
 #define CONFIG_DM_SPI_FLASH
 #endif
 
+#if 0
 /*
  * eTSEC
  */
@@ -205,6 +208,7 @@
 #endif
 
 #define CONFIG_CMD_MII
+#endif
 
 #define CONFIG_CMDLINE_TAG
 
