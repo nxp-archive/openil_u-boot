@@ -3,6 +3,8 @@
  * Freescale ls1021a IOT board device tree source
  *
  * Copyright 2016 Freescale Semiconductor, Inc.
+ *
+ * Copyright 2018-2021 NXP
  */
 
 
@@ -53,6 +55,10 @@
 };
 
 &i2c1 {
+	status = "okay";
+};
+
+&gpio2 {
 	status = "okay";
 };
 

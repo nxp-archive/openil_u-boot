@@ -3,6 +3,8 @@
  * Freescale ls1021a SOC common device tree source
  *
  * Copyright 2013-2015 Freescale Semiconductor, Inc.
+ *
+ * Copyright 2018-2021 NXP
  */
 
 #include "skeleton.dtsi"
@@ -296,6 +298,54 @@
 			interrupts = <GIC_SPI 85 IRQ_TYPE_LEVEL_HIGH>;
 			clocks = <&platform_clk 1>;
 			clock-names = "ipg";
+			status = "disabled";
+		};
+
+		gpio0: gpio@2300000 {
+			compatible = "fsl,pq3-gpio";
+			reg = <0x2300000 0x1000>;
+			interrupts = <GIC_SPI 98 IRQ_TYPE_LEVEL_HIGH>;
+			gpio-controller;
+			ngpios = <32>;
+			#gpio-cells = <2>;
+			interrupt-controller;
+			#interrupt-cells = <2>;
+			status = "disabled";
+		};
+
+		gpio1: gpio@2310000 {
+			compatible = "fsl,pq3-gpio";
+			reg = <0x2310000 0x1000>;
+			interrupts = <GIC_SPI 99 IRQ_TYPE_LEVEL_HIGH>;
+			gpio-controller;
+			ngpios = <32>;
+			#gpio-cells = <2>;
+			interrupt-controller;
+			#interrupt-cells = <2>;
+			status = "disabled";
+		};
+
+		gpio2: gpio@2320000 {
+			compatible = "fsl,pq3-gpio";
+			reg = <0x2320000 0x1000>;
+			interrupts = <GIC_SPI 100 IRQ_TYPE_LEVEL_HIGH>;
+			gpio-controller;
+			ngpios = <32>;
+			#gpio-cells = <2>;
+			interrupt-controller;
+			#interrupt-cells = <2>;
+			status = "disabled";
+		};
+
+		gpio3: gpio@2330000 {
+			compatible = "fsl,pq3-gpio";
+			reg = <0x2330000 0x1000>;
+			interrupts = <GIC_SPI 166 IRQ_TYPE_LEVEL_HIGH>;
+			gpio-controller;
+			ngpios = <32>;
+			#gpio-cells = <2>;
+			interrupt-controller;
+			#interrupt-cells = <2>;
 			status = "disabled";
 		};
 

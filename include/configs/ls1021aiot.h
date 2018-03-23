@@ -104,6 +104,12 @@
 #define CONFIG_SYS_NS16550_CLK		get_serial_clock()
 
 /*
+ * GPIO
+ */
+#define CONFIG_MPC8XXX_GPIO
+#define CONFIG_DM_GPIO
+
+/*
  * I2C
  */
 #define CONFIG_CMD_I2C
