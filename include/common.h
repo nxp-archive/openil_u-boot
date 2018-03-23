@@ -387,6 +387,9 @@ unsigned long timer_get_us(void);
 void	enable_interrupts  (void);
 int	disable_interrupts (void);
 
+/* $(CPU)/inter-core-comm.c */
+int icc_init(void);
+
 /* $(CPU)/.../commproc.c */
 int	dpram_init (void);
 uint	dpram_base(void);

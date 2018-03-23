@@ -969,6 +969,7 @@ init_fnc_t init_sequence_r_slave[] = {
 	initr_enable_interrupts,
 #endif
 	initr_gic_init,
+	icc_init,
 #ifdef CONFIG_CMD_NET
 	initr_ethaddr,
 #endif
