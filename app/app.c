@@ -10,9 +10,13 @@
 #include <malloc.h>
 #include <environment.h>
 #include <linux/types.h>
+#include "test.h"
 
 void core1_main(void)
 {
+	test_i2c();
+	test_irq_init();
+	test_gpio();
 	return;
 }
 
