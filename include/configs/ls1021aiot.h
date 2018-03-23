@@ -18,6 +18,7 @@
 #define CONFIG_SYS_FSL_CLK
 
 #define CONFIG_MP
+#define CONFIG_ICC
 
 #ifdef CONFIG_ARMV7_TEE
 #define SYS_TEE_RAM_SIZE	0x04000000
