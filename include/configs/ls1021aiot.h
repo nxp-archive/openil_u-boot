@@ -9,6 +9,10 @@
 
 #include "ls1021aiot_config.h"
 
+#define CONFIG_USE_IRQ
+#define CONFIG_STACKSIZE_IRQ  (4*1024)
+#define CONFIG_STACKSIZE_FIQ  (4*1024)
+
 #define CONFIG_ARMV7_SECURE_BASE OCRAM_BASE_S_ADDR
 
 #define CONFIG_SYS_FSL_CLK
