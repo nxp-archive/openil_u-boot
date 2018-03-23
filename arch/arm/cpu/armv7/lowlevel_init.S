@@ -47,6 +47,15 @@ WEAK(lowlevel_init)
 	mov	r9, sp
 #endif
 #endif
+
+	mrc p15, 0, r0, c0, c0, 5
+	and r0, r0, #3
+	cmp r0, #0
+	beq skip_second_func
+
+	bl secondary_main_entry
+
+skip_second_func:
 	/*
 	 * Save the old lr(passed in ip) and the current lr to stack
 	 */
