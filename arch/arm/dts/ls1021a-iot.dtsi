@@ -57,6 +57,10 @@
 	status = "okay";
 };
 
+&gpio2 {
+	status = "okay";
+};
+
 &ifc {
 	#address-cells = <2>;
 	#size-cells = <1>;
