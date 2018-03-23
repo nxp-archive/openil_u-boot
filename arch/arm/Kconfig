@@ -14,6 +14,22 @@ config BAREMETAL
 	default y
 
 if BAREMETAL
+config GPIO_COREID_SET
+	bool "Enable GPIO for baremetal"
+
+if GPIO_COREID_SET
+config GPIO_GPIO0_COREID
+	int "The core GPIO0 assigned"
+	default 0
+
+config GPIO_GPIO1_COREID
+	int "The core GPIO1 assigned"
+	default 0
+
+config GPIO_GPIO2_COREID
+	int "The core GPIO2 assigned"
+	default 0
+endif
 
 endif
 
