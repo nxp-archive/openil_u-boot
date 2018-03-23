@@ -13,6 +13,7 @@
 #include <dm.h>
 #include <asm/gpio.h>
 #include <mapmem.h>
+#include <asm/io.h>
 
 DECLARE_GLOBAL_DATA_PTR;
 
@@ -23,6 +24,12 @@ struct ccsr_gpio {
 	u32	gpier;
 	u32	gpimr;
 	u32	gpicr;
+};
+
+struct mpc85xx_gpio_plat {
+	ulong addr;
+	unsigned long size;
+	uint ngpios;
 };
 
 struct mpc85xx_gpio_data {
@@ -191,7 +198,7 @@ static int mpc85xx_gpio_platdata_to_priv(struct udevice *dev)
 		size = 0x100;
 
 	priv->addr = plat->addr;
-	priv->base = map_sysmem(CONFIG_SYS_IMMR + plat->addr, size);
+	priv->base = map_sysmem(plat->addr, size);
 
 	if (!priv->base)
 		return -ENOMEM;
