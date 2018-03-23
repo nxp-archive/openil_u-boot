@@ -166,6 +166,10 @@ int board_early_init_f(void)
 
 #endif
 
+#ifdef CONFIG_FSL_IFC
+	init_early_memctl_regs();
+#endif
+
 	arch_soc_init();
 
 	return 0;
