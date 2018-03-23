@@ -9,6 +9,8 @@
  * Sysgo Real-Time Solutions, GmbH <www.elinos.com>
  * Marius Groeger <mgroeger@sysgo.de>
  *
+ * Copyright 2018-2019 NXP
+ *
  * SPDX-License-Identifier:	GPL-2.0+
  */
 #include <common.h>
@@ -29,6 +31,13 @@ int arch_reserve_stacks(void)
 	gd->start_addr_sp -= 16;
 # endif
 #endif
+#  ifdef CONFIG_USE_IRQ
+	gd->start_addr_sp -= (CONFIG_STACKSIZE_IRQ + CONFIG_STACKSIZE_FIQ);
+	debug("Reserving %zu Bytes for IRQ stack at: %08lx\n",
+	      CONFIG_STACKSIZE_IRQ + CONFIG_STACKSIZE_FIQ, gd->start_addr_sp);
+	/* 8-byte alignment for ARM ABI compliance */
+	gd->start_addr_sp &= ~0x07;
+#  endif
 
 	return 0;
 }
