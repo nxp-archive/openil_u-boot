@@ -2,6 +2,7 @@
  * Freescale ls1021a IOT board device tree source
  *
  * Copyright 2016 Freescale Semiconductor, Inc.
+ * Copyright 2018-2019 NXP
  *
  * SPDX-License-Identifier:	GPL-2.0+
  */
@@ -54,6 +55,10 @@
 };
 
 &i2c1 {
+	status = "okay";
+};
+
+&gpio2 {
 	status = "okay";
 };
 
