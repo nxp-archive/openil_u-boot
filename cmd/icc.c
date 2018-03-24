@@ -7,6 +7,7 @@
 #include <common.h>
 #include <command.h>
 #include <asm/inter-core-comm.h>
+#include <div64.h>
 
 static void do_icc_show(void)
 {
@@ -121,11 +122,10 @@ static void do_icc_perf(unsigned long core_mask, unsigned long counts)
 	}
 
 	end = get_ticks();
-	utime = (end - start)*(1000000/freq);
+	utime = lldiv(1000000 * (end - start), freq);
 
-	printf(
-		"ICC performance: %ld bytes to 0x%x cores in %lld us with %lld KB/s\n",
-		counts, dest_core, utime, (counts * 1000)/utime);
+	printf("ICC performance: %ld bytes to 0x%x cores in %lld us with %lld KB/s\n",
+			counts, dest_core, utime, lldiv((((unsigned long long)counts) * 1000), utime));
 
 	printf("\n");
 	icc_show();
