@@ -5,6 +5,7 @@
  */
 #include <asm/io.h>
 #include <fsl_qe.h>	/* For struct qe_firmware */
+#include <libfdt.h>
 
 #ifdef CONFIG_SYS_DPAA_FMAN
 /**

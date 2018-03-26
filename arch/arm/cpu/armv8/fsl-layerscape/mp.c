@@ -126,7 +126,7 @@ int fsl_layerscape_wake_seconday_cores(void)
 					wake_secondary_core_n(i, j,
 							      cluster_cores);
 			}
-		i++;
+			i++;
 		} while ((cluster & TP_CLUSTER_EOC) != TP_CLUSTER_EOC);
 	}
 #elif defined(CONFIG_FSL_LSCH2)
@@ -165,6 +165,65 @@ int fsl_layerscape_wake_seconday_cores(void)
 		return 1;
 	}
 	printf("All (%d) cores are up.\n", hweight32(cores));
+
+	return 0;
+}
+
+
+int fsl_layerscape_wakeup_fixed_core(u32 coreid, u64 addr)
+{
+	struct ccsr_gur __iomem *gur = (void *)(CONFIG_SYS_FSL_GUTS_ADDR);
+#ifdef CONFIG_FSL_LSCH3
+	struct ccsr_reset __iomem *rst = (void *)(CONFIG_SYS_FSL_RST_ADDR);
+#elif defined(CONFIG_FSL_LSCH2)
+	struct ccsr_scfg __iomem *scfg = (void *)(CONFIG_SYS_FSL_SCFG_ADDR);
+#endif
+	u32 core_mask;
+	u64 *table = get_spin_tbl_addr();
+	unsigned long relocaddr = addr;
+
+#ifdef COUNTER_FREQUENCY_REAL
+	/* update for secondary cores */
+	__real_cntfrq = COUNTER_FREQUENCY_REAL;
+	flush_dcache_range((unsigned long)&__real_cntfrq,
+			   (unsigned long)&__real_cntfrq + 8);
+#endif
+
+	/* CR3 CR2 CR1 CR0 */
+	core_mask = 1 << coreid;
+
+	/* Clear spin table so that secondary processors
+	 * observe the correct value after waking up from wfe.
+	 */
+	memset(table, 0, CONFIG_MAX_CPUS*SPIN_TABLE_ELEM_SIZE);
+	flush_dcache_range((unsigned long)table,
+			   (unsigned long)table +
+			   (CONFIG_MAX_CPUS*SPIN_TABLE_ELEM_SIZE));
+
+#ifdef CONFIG_FSL_LSCH3
+	gur_out32(&gur->bootlocptrh, (u32)(relocaddr >> 32));
+	gur_out32(&gur->bootlocptrl, (u32)relocaddr);
+	gur_out32(&gur->scratchrw[6], 1);
+	asm volatile("dsb st" : : : "memory");
+	rst->brrl = core_mask;
+	asm volatile("dsb st" : : : "memory");
+#elif defined(CONFIG_FSL_LSCH2)
+	scfg_out32(&scfg->scratchrw[0], (u32)(relocaddr >> 32));
+	scfg_out32(&scfg->scratchrw[1], (u32)relocaddr);
+	asm volatile("dsb st" : : : "memory");
+	gur_out32(&gur->brrl, core_mask);
+	asm volatile("dsb st" : : : "memory");
+
+	/* Bootup online cores */
+	scfg_out32(&scfg->corebcr, core_mask);
+#endif
+	/* This is needed as a precautionary measure.
+	 * If some code before this has accidentally  released the secondary
+	 * cores then the pre-bootloader code will trap them in a "wfe" unless
+	 * the scratchrw[6] is set. In this case we need a sev here to get these
+	 * cores moving again.
+	 */
+	asm volatile("sev");
 
 	return 0;
 }
@@ -278,4 +337,16 @@ int cpu_release(int nr, int argc, char * const argv[])
 	asm volatile("sev");
 
 	return 0;
+}
+
+int get_core_id(void)
+{
+	unsigned long aff;
+
+	asm volatile("mrs %0, mpidr_el1\n"
+			     : "=r" (aff)
+			     :
+			     : "memory");
+
+	return aff & 0xFF;
 }
