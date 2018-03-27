@@ -126,7 +126,7 @@ static void do_icc_perf(unsigned long core_mask, unsigned long counts)
 
 
 	printf("ICC performance: %ld bytes to 0x%x cores in %lld us with %lld KB/s\n",
-		counts, dest_core, utime, lldiv((counts * 1000), utime));
+		counts, dest_core, utime, lldiv((((unsigned long long)counts) * 1000), utime));
 
 	printf("\n");
 	icc_show();
