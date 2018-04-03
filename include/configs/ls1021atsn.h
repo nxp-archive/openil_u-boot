@@ -24,6 +24,17 @@
 #define CONFIG_SILENT_CONSOLE
 #endif
 
+
+#ifdef CONFIG_ARMV7_TEE
+#define CONFIG_TEE_RAM_SIZE		0x04000000
+#define CONFIG_SYS_MEM_TOP_HIDE		CONFIG_TEE_RAM_SIZE
+#define CONFIG_OPTEE_ENTRY		0xBC000000
+#define OPTEE_HEADER_START		0x82060000
+#define	OPTEE_IMAGE_START		0x82100000
+#define OPTEE_IMAGE_SIZE		0x100000
+#endif
+
+
 /*
  * Size of malloc() pool
  */
@@ -152,9 +163,9 @@
  * size increases then increase this size in case of secure boot as
  * it uses raw u-boot image instead of fit image.
  */
-#define CONFIG_SYS_MONITOR_LEN		(0x80000 + CONFIG_U_BOOT_HDR_SIZE)
+#define CONFIG_SYS_MONITOR_LEN		(0x100000 + CONFIG_U_BOOT_HDR_SIZE)
 #else
-#define CONFIG_SYS_MONITOR_LEN		0x80000
+#define CONFIG_SYS_MONITOR_LEN		0x100000
 #endif /* ifdef CONFIG_U_BOOT_HDR_SIZE */
 #endif
 
