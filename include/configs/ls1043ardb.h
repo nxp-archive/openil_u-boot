@@ -294,6 +294,12 @@
 #endif
 #endif
 
+/*
+ * GPIO
+ */
+#define CONFIG_MPC8XXX_GPIO
+#define CONFIG_DM_GPIO
+
 /* SATA */
 #ifndef SPL_NO_SATA
 #ifndef CONFIG_CMD_EXT2
