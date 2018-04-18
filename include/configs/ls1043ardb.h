@@ -301,6 +301,12 @@
 #endif
 #endif
 
+/*
+ * GPIO
+ */
+#define CONFIG_MPC85XX_GPIO
+#define CONFIG_DM_GPIO
+
 /* USB */
 #ifndef SPL_NO_USB
 #define CONFIG_HAS_FSL_XHCI_USB
