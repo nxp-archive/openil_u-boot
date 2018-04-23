@@ -48,6 +48,8 @@
 #define CONFIG_SYS_FSL_PBL_RCW board/freescale/ls1043ardb/ls1043ardb_rcw_sd.cfg
 #endif
 
+#define CONFIG_LAST_STAGE_INIT
+
 /*
  * NOR Flash Definitions
  */

@@ -349,7 +349,6 @@ void autoboot_command(const char *s)
 #endif
 
 		run_command_list(s, -1, 0);
-		writew( 0x3420, WDOG1_BASE_ADDR);   /* enable watchdog and set timeout to 17s */
 
 #if defined(CONFIG_AUTOBOOT_KEYED) && !defined(CONFIG_AUTOBOOT_KEYED_CTRLC)
 		disable_ctrlc(prev);	/* restore Control C checking */

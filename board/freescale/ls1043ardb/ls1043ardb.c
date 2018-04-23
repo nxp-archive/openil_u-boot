@@ -116,6 +116,60 @@ int board_init(void)
 	return 0;
 }
 
+struct sdversion_t{
+	unsigned char   updateflag;
+	unsigned char   updatepart;
+	unsigned char   data[0x200 - 2];
+};
+
+int check_SDenv_version(void)
+{
+	struct mmc *mmc;
+	uint blk_start, blk_cnt;
+	unsigned long offset, size;
+	struct sdversion_t sdversion_env;
+	int dev = 0;
+
+	offset	= 0x1FE000;
+	size	= 0x200;
+	mmc = find_mmc_device(dev);
+	struct blk_desc *desc = mmc_get_blk_desc(mmc);
+	blk_start   = ALIGN(offset, mmc->read_bl_len) / mmc->read_bl_len;
+	blk_cnt     = ALIGN(size, mmc->read_bl_len) / mmc->read_bl_len;
+	blk_dread(desc, blk_start, blk_cnt, (uchar *)&sdversion_env);
+	if(sdversion_env.updateflag == '1')
+	{
+		printf("system is updating\n");
+		sdversion_env.updateflag = '2';
+		blk_dwrite(desc, blk_start, blk_cnt, (uchar *)&sdversion_env);
+		return 0;
+	}
+	else if(sdversion_env.updateflag == '2')
+	{
+		sdversion_env.updateflag = '3';
+		blk_dwrite(desc, blk_start, blk_cnt, (uchar *)&sdversion_env);
+		if(sdversion_env.updatepart == '3')
+		{
+			setenv("bootfile", getenv("bootfile_old"));
+			return 0;
+		}
+		else
+			return 1;
+	}
+	else
+		return 0;
+}
+
+int last_stage_init(void)
+{
+	if(check_SDenv_version())
+		    setenv("bootcmd","run rollbackboot");
+	
+	/* enable watchdog and set timeout to 17s */
+	writew( 0x3420, WDOG1_BASE_ADDR); 
+	return 0;
+}
+
 int config_board_mux(void)
 {
 	struct ccsr_scfg *scfg = (struct ccsr_scfg *)CONFIG_SYS_FSL_SCFG_ADDR;

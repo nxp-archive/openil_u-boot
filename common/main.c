@@ -42,50 +42,6 @@ static void run_preboot_environment_command(void)
 #endif /* CONFIG_PREBOOT */
 }
 
-struct sdversion_t{
-	unsigned char   updateflag;
-	unsigned char   updatepart;
-	unsigned char   data[0x200 - 2];
-};
-
-int check_SDenv_version(void)
-{
-	struct mmc *mmc;
-	uint blk_start, blk_cnt;
-	unsigned long offset, size;
-	struct sdversion_t sdversion_env;
-	int dev = 0;
-
-	offset	= 0x1FE000;
-	size	= 0x200;
-	mmc = find_mmc_device(dev);
-	struct blk_desc *desc = mmc_get_blk_desc(mmc);
-	blk_start   = ALIGN(offset, mmc->read_bl_len) / mmc->read_bl_len;
-	blk_cnt     = ALIGN(size, mmc->read_bl_len) / mmc->read_bl_len;
-	blk_dread(desc, blk_start, blk_cnt, (uchar *)&sdversion_env);
-	if(sdversion_env.updateflag == '1')
-	{
-		printf("system is updating\n");
-		sdversion_env.updateflag = '2';
-		blk_dwrite(desc, blk_start, blk_cnt, (uchar *)&sdversion_env);
-		return 0;
-	}
-	else if(sdversion_env.updateflag == '2')
-	{
-		sdversion_env.updateflag = '3';
-		blk_dwrite(desc, blk_start, blk_cnt, (uchar *)&sdversion_env);
-		if(sdversion_env.updatepart == '3')
-		{
-			setenv("bootfile", getenv("bootfile_old"));
-			return 0;
-		}
-		else
-			return 1;
-	}
-	else
-		return 0;
-}
-
 /* We come here after U-Boot is initialised and ready to process commands */
 void main_loop(void)
 {
@@ -97,8 +53,6 @@ void main_loop(void)
 	setenv("ver", version_string);  /* set version variable */
 #endif /* CONFIG_VERSION_VARIABLE */
 
-	if(check_SDenv_version())
-		setenv("bootcmd","run rollbackboot");
 	cli_init();
 
 	run_preboot_environment_command();
