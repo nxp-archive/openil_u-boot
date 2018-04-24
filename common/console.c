@@ -460,6 +460,7 @@ static inline void pre_console_puts(const char *s) {}
 static inline void print_pre_console_buffer(int flushpoint) {}
 #endif
 
+char printbuffer[2048];
 void putc(const char c)
 {
 #ifdef CONFIG_SANDBOX
@@ -538,14 +539,30 @@ void puts(const char *s)
 	if (!gd->have_console)
 		return pre_console_puts(s);
 
+#ifdef CONFIG_ENABLE_COREID_DEBUG
+	char channel = '0';
+	int outbool = 0;
+	int coreid = get_core_id();
+	channel += coreid;
+	if (strlen(s) == 1 || (s[0] == '=' && s[1] == '>'))
+		outbool = 1;
+	if (!outbool && printbuffer[0] == 0)
+		sprintf(printbuffer, "%c:", channel);
+	sprintf(printbuffer, "%s%s", printbuffer, s);
+	if (!outbool && s[strlen(s) - 1] != '\n')
+		return;
+#else
+	sprintf(printbuffer, "%s", s);
+#endif
 	if (gd->flags & GD_FLG_DEVINIT) {
 		/* Send to the standard output */
-		fputs(stdout, s);
+		fputs(stdout, printbuffer);
 	} else {
 		/* Send directly to the handler */
-		pre_console_puts(s);
-		serial_puts(s);
+		pre_console_puts(printbuffer);
+		serial_puts(printbuffer);
 	}
+	memset(printbuffer, 0, sizeof(printbuffer));
 }
 
 #ifdef CONFIG_CONSOLE_RECORD
@@ -707,6 +724,8 @@ int console_init_f(void)
 	console_update_silent();
 
 	print_pre_console_buffer(PRE_CONSOLE_FLUSHPOINT1_SERIAL);
+
+	memset(printbuffer, 0, sizeof(printbuffer));
 
 	return 0;
 }
