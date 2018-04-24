@@ -318,6 +318,9 @@
 
 #endif
 
+#define CONFIG_ENABLE_COREID_DEBUG
+#define CONFIG_ENABLE_WRITE_LOCK
+
 #include <asm/fsl_secure_boot.h>
 
 #endif /* __LS1043ARDB_H__ */
