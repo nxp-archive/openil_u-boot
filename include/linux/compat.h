@@ -231,6 +231,94 @@ typedef int	wait_queue_head_t;
 #define spin_lock_irqsave(lock, flags) do { debug("%lu\n", flags); } while (0)
 #define spin_unlock_irqrestore(lock, flags) do { flags = 0; } while (0)
 
+typedef struct {
+	u32 lock;
+	u32 owner;
+} arch_rwlock_t;
+
+# if defined(CONFIG_ARM64)
+static inline void arch_write_lock_init(arch_rwlock_t *rw)
+{
+	asm volatile(
+	"	stlr	%w1, %0\n"
+	: "=Q" (rw->lock) : "r" (0) : "memory");
+
+	rw->owner = 0xFFFFFFFF;
+}
+
+
+static inline void arch_write_lock(arch_rwlock_t *rw)
+{
+	unsigned int tmp;
+
+	asm volatile(
+	"	sevl\n"
+	"1:	wfe\n"
+	"2:	ldaxr	%w0, %1\n"
+	"	cbnz	%w0, 1b\n"
+	"	stxr	%w0, %w2, %1\n"
+	"	cbnz	%w0, 2b\n"
+	: "=&r" (tmp), "+Q" (rw->lock)
+	: "r" (0x80000000)
+	: "memory");
+}
+
+static inline void arch_write_unlock(arch_rwlock_t *rw)
+{
+	asm volatile(
+	"	stlr	%w1, %0\n"
+	: "=Q" (rw->lock) : "r" (0) : "memory");
+}
+#else
+# if defined(CONFIG_ARM)
+static inline void arch_write_lock_init(arch_rwlock_t *rw)
+{
+	asm volatile("dmb");
+	__asm__ __volatile__("str	%1, [%0]\n"
+			:
+			: "r" (&rw->lock), "r" (0)
+			: "cc");
+
+	rw->owner = 0xFFFFFFFF;
+	asm volatile("dsb ishst");
+	asm volatile("sev");
+}
+
+static inline void arch_write_lock(arch_rwlock_t *rw)
+{
+	unsigned int tmp;
+
+	asm volatile(
+		"1: ldrex   %0, [%1]\n"
+		"   teq %0, #0\n"
+		"	beq	2f\n"
+		"	wfe\n"
+		"2: strexeq %0, %2, [%1]\n"
+		"   teq %0, #0\n"
+		"   bne 1b"
+		: "=&r" (tmp)
+		: "r" (&rw->lock), "r" (0x80000000)
+		: "cc");
+	asm volatile("dmb");
+	puts("after write lock\n");
+}
+
+static inline void arch_write_unlock(arch_rwlock_t *rw)
+{
+	asm volatile("dmb");
+	__asm__ __volatile__("str	%1, [%0]\n"
+			:
+			: "r" (&rw->lock), "r" (0)
+			: "cc");
+
+	rw->owner = 0xFFFFFFFF;
+	asm volatile("dsb ishst");
+	asm volatile("sev");
+}
+#endif
+#endif
+#define arch_write_can_lock(x)		((x)->lock == 0)
+
 #define DEFINE_MUTEX(...)
 #define mutex_init(...)
 #define mutex_lock(...)

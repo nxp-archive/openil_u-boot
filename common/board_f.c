@@ -55,6 +55,8 @@ DECLARE_GLOBAL_DATA_PTR = (gd_t *) (CONFIG_SYS_INIT_GD_ADDR);
 DECLARE_GLOBAL_DATA_PTR;
 #endif
 
+sgd_t *sgd = (sgd_t *)((u32 *)CONFIG_SYS_DDR_SDRAM_SHARE_RESERVE_BASE);
+
 /*
  * TODO(sjg@chromium.org): IMO this code should be
  * refactored to a single function, something like:
@@ -121,6 +123,18 @@ static int init_baud_rate(void)
 	gd->baudrate = getenv_ulong("baudrate", 10, CONFIG_BAUDRATE);
 	return 0;
 }
+
+static int core_share_global_data_init(void)
+{
+	memset(sgd, 0, sizeof(sgd_t));
+
+	arch_write_lock_init(&sgd->consol_lock_putc);
+	arch_write_lock_init(&sgd->consol_lock_puts);
+	arch_write_lock_init(&sgd->consol_lock_getc);
+	sgd->stream_channel = 0xFFFF;
+	return 0;
+}
+
 
 static int display_text_info(void)
 {
@@ -1029,6 +1043,9 @@ static const init_fnc_t init_sequence_f_slave[] = {
 #endif
 	env_init,		/* initialize environment */
 	init_baud_rate,		/* initialze baudrate settings */
+#ifdef CONFIG_ENABLE_WRITE_LOCK
+	core_share_global_data_init,
+#endif
 	serial_init,		/* serial communications setup */
 	console_init_f,		/* stage 1 init of console */
 	display_options,	/* say that we are here */

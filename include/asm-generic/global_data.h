@@ -142,4 +142,17 @@ typedef struct global_data {
 #define GD_FLG_ENV_DEFAULT	0x02000 /* Default variable flag	   */
 #define GD_FLG_SPL_EARLY_INIT	0x04000 /* Early SPL init is done	   */
 
+#include <linux/compat.h>
+/*
+ * Shared global data for slave cores
+ */
+typedef struct share_global_data {
+	arch_rwlock_t consol_lock_putc;	/* spin lock for putc */
+	arch_rwlock_t consol_lock_puts;	/* spin lock for puts */
+	arch_rwlock_t consol_lock_getc;	/* spin lock for getc */
+	u32 stream_channel;		/* mux stream channel */
+	/* core reset status, online or offline */
+	u32 core_reset_status[CONFIG_MAX_CPUS];
+} sgd_t;
+
 #endif /* __ASM_GENERIC_GBL_DATA_H */
