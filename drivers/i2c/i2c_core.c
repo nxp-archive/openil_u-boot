@@ -240,6 +240,13 @@ int i2c_set_bus_num(unsigned int bus)
 
 	if ((bus == I2C_BUS) && (I2C_ADAP->init_done > 0))
 		return 0;
+#ifdef CONFIG_I2C_BUS_CORE_ID_SET
+	if (get_core_id() != I2C_ADAP_NR(bus)->coreid) {
+		printf("Error, i2c bus[%d] is not assigned in this core",
+		       bus);
+		return -1;
+	}
+#endif
 
 #ifndef CONFIG_SYS_I2C_DIRECT_BUS
 	if (bus >= CONFIG_SYS_NUM_I2C_BUSES)
