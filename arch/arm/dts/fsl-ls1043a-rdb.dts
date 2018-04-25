@@ -94,6 +94,10 @@
 		};
 };
 
+&gpio2 {
+	status = "okay";
+};
+
 &duart0 {
 	status = "okay";
 };

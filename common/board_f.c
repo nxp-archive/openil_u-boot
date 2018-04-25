@@ -136,6 +136,7 @@ static int core_share_global_data_init(void)
 	arch_write_lock_init(&sgd->consol_lock_putc);
 	arch_write_lock_init(&sgd->consol_lock_puts);
 	arch_write_lock_init(&sgd->consol_lock_getc);
+	arch_write_lock_init(&sgd->lock_sgd);
 #endif
 	sgd->stream_channel = 0xFFFF;
 	return 0;

@@ -307,6 +307,7 @@
  */
 #define CONFIG_MPC85XX_GPIO
 #define CONFIG_DM_GPIO
+#define SHARED_GPIO_REQUEST_INFO
 
 /* USB */
 #ifndef SPL_NO_USB
