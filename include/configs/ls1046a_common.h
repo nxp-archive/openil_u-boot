@@ -56,6 +56,7 @@
 #define CONFIG_SYS_MALLOC_LEN		(CONFIG_ENV_SIZE + 1024 * 1024)
 
 /* Serial Port */
+#define CONFIG_CONS_INDEX      2
 #define CONFIG_SYS_NS16550_SERIAL
 #define CONFIG_SYS_NS16550_REG_SIZE	1
 #define CONFIG_SYS_NS16550_CLK          (get_serial_clock())
@@ -131,6 +132,11 @@
 
 /* I2C */
 #define CONFIG_SYS_I2C
+#define	CONFIG_I2C_BUS_CORE_ID_SET
+#define CONFIG_SYS_I2C_MXC_I2C0_COREID  2
+#define CONFIG_SYS_I2C_MXC_I2C1_COREID  2
+#define CONFIG_SYS_I2C_MXC_I2C2_COREID  3
+#define CONFIG_SYS_I2C_MXC_I2C3_COREID  1
 
 /* PCIe */
 #define CONFIG_PCIE1		/* PCIE controller 1 */
