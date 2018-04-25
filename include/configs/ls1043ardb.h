@@ -318,6 +318,7 @@
  */
 #define CONFIG_MPC85XX_GPIO
 #define CONFIG_DM_GPIO
+#define SHARED_GPIO_REQUEST_INFO
 
 /* SATA */
 #ifndef SPL_NO_SATA
