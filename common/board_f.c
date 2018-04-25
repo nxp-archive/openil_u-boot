@@ -126,11 +126,17 @@ static int init_baud_rate(void)
 
 static int core_share_global_data_init(void)
 {
-	memset(sgd, 0, sizeof(sgd_t));
+	int coreid = get_core_id();
 
+	if (coreid != CONFIG_SLAVE_FIRST_CORE)
+		return 0;
+
+	memset(sgd, 0, sizeof(sgd_t));
+#ifdef CONFIG_ENABLE_WRITE_LOCK
 	arch_write_lock_init(&sgd->consol_lock_putc);
 	arch_write_lock_init(&sgd->consol_lock_puts);
 	arch_write_lock_init(&sgd->consol_lock_getc);
+#endif
 	sgd->stream_channel = 0xFFFF;
 	return 0;
 }
@@ -1043,9 +1049,7 @@ static const init_fnc_t init_sequence_f_slave[] = {
 #endif
 	env_init,		/* initialize environment */
 	init_baud_rate,		/* initialze baudrate settings */
-#ifdef CONFIG_ENABLE_WRITE_LOCK
 	core_share_global_data_init,
-#endif
 	serial_init,		/* serial communications setup */
 	console_init_f,		/* stage 1 init of console */
 	display_options,	/* say that we are here */
