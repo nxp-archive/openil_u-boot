@@ -205,24 +205,39 @@ void board_ft_fman_fixup_port(void *fdt, char *compat, phys_addr_t addr,
 		fdt_setprop_string(fdt, offset, "phy-connection-type",
 				   "rgmii");
 	} else if (fm_info_get_enet_if(port) == PHY_INTERFACE_MODE_QSGMII) {
+		printf("qsmii mdio mux: %d\n", mdio_mux[port]);
+
+		/* 2.5G SGMII interface */
+		f_link.phy_id = cpu_to_fdt32(port);
+		f_link.duplex = cpu_to_fdt32(1);
+		f_link.link_speed = cpu_to_fdt32(1000);
+		f_link.pause = 0;
+		f_link.asym_pause = 0;
+
+		/* no PHY for 2.5G SGMII */
+		fdt_delprop(fdt, offset, "phy-handle");
+		fdt_setprop(fdt, offset, "fixed-link", &f_link, sizeof(f_link));
+		fdt_setprop_string(fdt, offset, "phy-connection-type",
+				   "qsgmii");
+#if 0
 		switch (mdio_mux[port]) {
 		case EMI1_SLOT1:
 			switch (port) {
 			case FM1_DTSEC1:
 				fdt_set_phy_handle(fdt, compat, addr,
-						   "qsgmii_s1_p1");
+						   "qsgmii_phy1");
 				break;
 			case FM1_DTSEC2:
 				fdt_set_phy_handle(fdt, compat, addr,
-						   "qsgmii_s1_p2");
+						   "qsgmii_phy2");
 				break;
 			case FM1_DTSEC5:
 				fdt_set_phy_handle(fdt, compat, addr,
-						   "qsgmii_s1_p3");
+						   "qsgmii_phy3");
 				break;
 			case FM1_DTSEC6:
 				fdt_set_phy_handle(fdt, compat, addr,
-						   "qsgmii_s1_p4");
+						   "qsgmii_phy4");
 				break;
 			default:
 				break;
@@ -232,19 +247,19 @@ void board_ft_fman_fixup_port(void *fdt, char *compat, phys_addr_t addr,
 			switch (port) {
 			case FM1_DTSEC1:
 				fdt_set_phy_handle(fdt, compat, addr,
-						   "qsgmii_s2_p1");
+						   "qsgmii_phy1");
 				break;
 			case FM1_DTSEC2:
 				fdt_set_phy_handle(fdt, compat, addr,
-						   "qsgmii_s2_p2");
+						   "qsgmii_phy2");
 				break;
 			case FM1_DTSEC5:
 				fdt_set_phy_handle(fdt, compat, addr,
-						   "qsgmii_s2_p3");
+						   "qsgmii_phy3");
 				break;
 			case FM1_DTSEC6:
 				fdt_set_phy_handle(fdt, compat, addr,
-						   "qsgmii_s2_p4");
+						   "qsgmii_phy4");
 				break;
 			default:
 				break;
@@ -256,6 +271,7 @@ void board_ft_fman_fixup_port(void *fdt, char *compat, phys_addr_t addr,
 		fdt_delprop(fdt, offset, "phy-connection-type");
 		fdt_setprop_string(fdt, offset, "phy-connection-type",
 				   "qsgmii");
+#endif
 	} else if (fm_info_get_enet_if(port) == PHY_INTERFACE_MODE_XGMII &&
 		   port == FM1_10GEC1) {
 		/* XFI interface */
