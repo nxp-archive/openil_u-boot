@@ -12,6 +12,20 @@ config SYS_SOC
 config SYS_CONFIG_NAME
 	default "ls1088aqds"
 
+if SYS_LS_PPA_FW_IN_XIP
+
+config SYS_LS_PPA_FW_ADDR
+	hex "PPA Firmware Addr"
+	default 0x20400000
+endif
+
+if (SYS_LS_PPA_FW_IN_MMC || SYS_LS_PPA_FW_IN_NAND)
+
+config SYS_LS_PPA_FW_ADDR
+	hex "PPA Firmware Addr"
+	default 0x400000
+endif
+
 source "board/freescale/common/Kconfig"
 endif
 
@@ -28,6 +42,20 @@ config SYS_SOC
 
 config SYS_CONFIG_NAME
 	default "ls1088ardb"
+
+if SYS_LS_PPA_FW_IN_XIP
+
+config SYS_LS_PPA_FW_ADDR
+	hex "PPA Firmware Addr"
+	default 0x20400000
+endif
+
+if (SYS_LS_PPA_FW_IN_MMC || SYS_LS_PPA_FW_IN_NAND)
+
+config SYS_LS_PPA_FW_ADDR
+	hex "PPA Firmware Addr"
+	default 0x400000
+endif
 
 source "board/freescale/common/Kconfig"
 endif
