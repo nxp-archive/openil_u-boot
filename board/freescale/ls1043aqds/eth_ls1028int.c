@@ -164,19 +164,15 @@ void board_ft_fman_fixup_port(void *fdt, char *compat, phys_addr_t addr,
 	printf("fixup for port: %d\n", fm_info_get_enet_if(port));
 
 	if (fm_info_get_enet_if(port) == PHY_INTERFACE_MODE_SGMII) {
-		if (port == FM1_DTSEC9) {
-			fdt_set_phy_handle(fdt, compat, addr,
-					   "sgmii_riser_s1_p1");
-		} else if (port == FM1_DTSEC2) {
-			fdt_set_phy_handle(fdt, compat, addr,
-					   "sgmii_riser_s2_p1");
-		} else if (port == FM1_DTSEC5) {
-			fdt_set_phy_handle(fdt, compat, addr,
-					   "sgmii_riser_s3_p1");
-		} else if (port == FM1_DTSEC6) {
-			fdt_set_phy_handle(fdt, compat, addr,
-					   "sgmii_riser_s4_p1");
-		}
+		f_link.phy_id = cpu_to_fdt32(port);
+		f_link.duplex = cpu_to_fdt32(1);
+		f_link.link_speed = cpu_to_fdt32(1000);
+		f_link.pause = 0;
+		f_link.asym_pause = 0;
+		fdt_delprop(fdt, offset, "phy-handle");
+		fdt_setprop(fdt, offset, "fixed-link", &f_link, sizeof(f_link));
+		fdt_setprop_string(fdt, offset, "phy-connection-type",
+				   "sgmii");
 	} else if (fm_info_get_enet_if(port) ==
 		   PHY_INTERFACE_MODE_SGMII_2500) {
 		/* 2.5G SGMII interface */
@@ -193,13 +189,11 @@ void board_ft_fman_fixup_port(void *fdt, char *compat, phys_addr_t addr,
 	} else if (fm_info_get_enet_if(port) ==
 		   PHY_INTERFACE_MODE_RGMII || (fm_info_get_enet_if(port) ==
 						                   PHY_INTERFACE_MODE_RGMII_TXID)) {
-		/* 2.5G SGMII interface */
 		f_link.phy_id = cpu_to_fdt32(port);
 		f_link.duplex = cpu_to_fdt32(1);
 		f_link.link_speed = cpu_to_fdt32(1000);
 		f_link.pause = 0;
 		f_link.asym_pause = 0;
-		/* no PHY for 2.5G SGMII */
 		fdt_delprop(fdt, offset, "phy-handle");
 		fdt_setprop(fdt, offset, "fixed-link", &f_link, sizeof(f_link));
 		fdt_setprop_string(fdt, offset, "phy-connection-type",
@@ -207,14 +201,12 @@ void board_ft_fman_fixup_port(void *fdt, char *compat, phys_addr_t addr,
 	} else if (fm_info_get_enet_if(port) == PHY_INTERFACE_MODE_QSGMII) {
 		printf("qsmii mdio mux: %d\n", mdio_mux[port]);
 
-		/* 2.5G SGMII interface */
 		f_link.phy_id = cpu_to_fdt32(port);
 		f_link.duplex = cpu_to_fdt32(1);
 		f_link.link_speed = cpu_to_fdt32(1000);
 		f_link.pause = 0;
 		f_link.asym_pause = 0;
 
-		/* no PHY for 2.5G SGMII */
 		fdt_delprop(fdt, offset, "phy-handle");
 		fdt_setprop(fdt, offset, "fixed-link", &f_link, sizeof(f_link));
 		fdt_setprop_string(fdt, offset, "phy-connection-type",
@@ -299,7 +291,6 @@ void initialize_mac_to_slot(void)
 	switch (serdes1_prtcl) {
 		case 0x2555:
 		break;
-	case 0x4555:
 	case 0x4558:
 		break;
 	case 0x1355:
@@ -333,6 +324,7 @@ void initialize_mac_to_slot(void)
 			lane_to_slot[3] = EMI1_SLOT2 - 3;
 		break;
 	case 0x3455:
+	case 0x4555:
 			lane_to_slot[0] = EMI1_SLOT2 - 3;
 			lane_to_slot[1] = EMI1_SLOT2 - 3;
 			lane_to_slot[2] = EMI1_SLOT2 - 3;
@@ -471,7 +463,6 @@ int board_eth_init(bd_t *bis)
 	switch (srds_s1) {
 	case 0x2555:
 		break;
-	case 0x4555:
 	case 0x4558:
 		break;
 	case 0x1355:
@@ -479,7 +470,7 @@ int board_eth_init(bd_t *bis)
 	case 0x2355:
 		break;
 	case 0x2460:
-		fm_info_set_phy_address(FM1_DTSEC9, QSGMII_CARD_PORT1_PHY_ADDR_S2);
+		fm_info_set_phy_address(FM1_DTSEC1, QSGMII_CARD_PORT1_PHY_ADDR_S2);
 		fm_info_set_phy_address(FM1_DTSEC2, QSGMII_CARD_PORT2_PHY_ADDR_S2);
 		fm_info_set_phy_address(FM1_DTSEC5, QSGMII_CARD_PORT3_PHY_ADDR_S2);
 		fm_info_set_phy_address(FM1_DTSEC6, QSGMII_CARD_PORT4_PHY_ADDR_S2);
@@ -539,12 +530,21 @@ int board_eth_init(bd_t *bis)
 
 #endif
 		break;
+
 	case 0x3455:
 		fm_info_set_phy_address(FM1_DTSEC6, QSGMII_CARD_PORT1_PHY_ADDR_S1);
 		fm_info_set_phy_address(FM1_DTSEC5, QSGMII_CARD_PORT2_PHY_ADDR_S1);
 		fm_info_set_phy_address(FM1_DTSEC9, QSGMII_CARD_PORT3_PHY_ADDR_S1);
 		fm_info_set_phy_address(FM1_DTSEC2, QSGMII_CARD_PORT4_PHY_ADDR_S1);
 		break;
+
+	case 0x4555:
+		fm_info_set_phy_address(FM1_DTSEC1, QSGMII_CARD_PORT1_PHY_ADDR_S2);
+		fm_info_set_phy_address(FM1_DTSEC2, QSGMII_CARD_PORT2_PHY_ADDR_S2);
+		fm_info_set_phy_address(FM1_DTSEC5, QSGMII_CARD_PORT3_PHY_ADDR_S2);
+		fm_info_set_phy_address(FM1_DTSEC6, QSGMII_CARD_PORT4_PHY_ADDR_S2);
+		break;
+#
 	default:
 		printf("Invalid SerDes protocol 0x%x for LS1028AQDS\n",
 		       srds_s1);
