@@ -17,16 +17,22 @@ void core1_main(void)
 	test_i2c();
 	test_irq_init();
 	test_gpio();
+	test_icc_func_init();
+
 	return;
 }
 
 
 void core2_main(void)
 {
+	test_icc_func_init();
+
 	return;
 }
 
 void core3_main(void)
 {
+	test_icc_func_init();
+
 	return;
 }
