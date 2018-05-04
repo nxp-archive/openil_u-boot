@@ -18,6 +18,12 @@ if SYS_LS_PPA_FW_IN_XIP
 config SYS_LS_PPA_FW_ADDR
 	hex "PPA Firmware Addr"
 	default 0x580400000
+
+if CHAIN_OF_TRUST
+config SYS_LS_PPA_ESBC_ADDR
+	hex "PPA Firmware HDR Addr"
+	default 0x580680000
+endif
 endif
 
 if (SYS_LS_PPA_FW_IN_XIP && QSPI_BOOT)
@@ -25,6 +31,12 @@ if (SYS_LS_PPA_FW_IN_XIP && QSPI_BOOT)
 config SYS_LS_PPA_FW_ADDR
 	hex "PPA Firmware Addr"
 	default 0x20400000
+
+if CHAIN_OF_TRUST
+config SYS_LS_PPA_ESBC_ADDR
+	hex "PPA Firmware HDR Addr"
+	default 0x20680000
+endif
 endif
 
 if (SYS_LS_PPA_FW_IN_MMC || SYS_LS_PPA_FW_IN_NAND)
@@ -32,6 +44,12 @@ if (SYS_LS_PPA_FW_IN_MMC || SYS_LS_PPA_FW_IN_NAND)
 config SYS_LS_PPA_FW_ADDR
 	hex "PPA Firmware Addr"
 	default 0x400000
+
+if CHAIN_OF_TRUST
+config SYS_LS_PPA_ESBC_ADDR
+	hex "PPA Firmware HDR Addr"
+	default 0x680000
+endif
 endif
 
 source "board/freescale/common/Kconfig"
