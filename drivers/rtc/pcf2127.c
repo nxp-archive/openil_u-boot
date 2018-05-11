@@ -24,11 +24,28 @@
 #define PCF2127_REG_MO		0x08
 #define PCF2127_REG_YR		0x09
 
+int __weak select_i2c_ch_pca9547(u8 channel)
+{
+	return 0;
+}
+
 int rtc_set(struct rtc_time *tm)
 {
 	uchar buf[8];
-	int i = 0, err;
+	int i = 0, ret = 0;
+#ifdef CONFIG_SYS_RTC_BUS_NUM
+	unsigned int bus;
 
+	bus = i2c_get_bus_num();
+	ret = i2c_set_bus_num(CONFIG_SYS_RTC_BUS_NUM);
+	if (ret != 0)
+		goto fail;
+#ifdef I2C_MUX_CH_RTC
+	ret = select_i2c_ch_pca9547(I2C_MUX_CH_RTC);
+	if (ret != 0)
+		goto fail;
+#endif
+#endif
 	/* start register address */
 	buf[i++] = PCF2127_REG_SC;
 
@@ -46,25 +63,46 @@ int rtc_set(struct rtc_time *tm)
 	buf[i++] = bin2bcd(tm->tm_year % 100);
 
 	/* write register's data */
-	err = i2c_write(CONFIG_SYS_I2C_RTC_ADDR,
+	ret =  i2c_write(CONFIG_SYS_I2C_RTC_ADDR,
 			PCF2127_REG_CTRL1, 0, buf, sizeof(buf));
-
-	return err;
+	if (ret != 0)
+		goto fail;
+fail:
+#ifdef CONFIG_SYS_RTC_BUS_NUM
+	ret = i2c_set_bus_num(bus);
+	if (ret != 0)
+		return ret;
+	ret = select_i2c_ch_pca9547(I2C_MUX_CH_DEFAULT);
+#endif
+	return ret;
 }
 
 int rtc_get(struct rtc_time *tmp)
 {
 	int ret = 0;
 	uchar buf[10] = { PCF2127_REG_CTRL1 };
+#ifdef CONFIG_SYS_RTC_BUS_NUM
+	unsigned int bus;
+
+	bus = i2c_get_bus_num();
+	ret = i2c_set_bus_num(CONFIG_SYS_RTC_BUS_NUM);
+	if (ret !=  0)
+		goto fail;
+#ifdef I2C_MUX_CH_RTC
+	ret = select_i2c_ch_pca9547(I2C_MUX_CH_RTC);
+	if (ret !=  0)
+		goto fail;
+#endif
+#endif
 
 	ret = i2c_write(CONFIG_SYS_I2C_RTC_ADDR,
 			PCF2127_REG_CTRL1, 0, buf, 1);
-	if (ret < 0)
-		return ret;
+	if (ret != 0)
+		goto fail;
 	ret = i2c_read(CONFIG_SYS_I2C_RTC_ADDR,
 		       PCF2127_REG_CTRL1, 0, buf, sizeof(buf));
-	if (ret < 0)
-		return ret;
+	if (ret != 0)
+		goto fail;
 
 	if (buf[PCF2127_REG_CTRL3] & 0x04)
 		puts("### Warning: RTC Low Voltage - date/time not reliable\n");
@@ -85,6 +123,13 @@ int rtc_get(struct rtc_time *tmp)
 	      tmp->tm_year, tmp->tm_mon, tmp->tm_mday, tmp->tm_wday,
 	      tmp->tm_hour, tmp->tm_min, tmp->tm_sec);
 
+fail:
+#ifdef CONFIG_SYS_RTC_BUS_NUM
+	ret = i2c_set_bus_num(bus);
+	if (ret != 0)
+		return ret;
+	ret = select_i2c_ch_pca9547(I2C_MUX_CH_DEFAULT);
+#endif
 	return ret;
 }
 
