@@ -531,6 +531,17 @@ int arch_early_init_r(void)
 	return 0;
 }
 
+int eth_early_init_r(void)
+{
+#ifdef CONFIG_SYS_FSL_HAS_RGMII
+	fsl_rgmii_init();
+#endif
+#ifdef CONFIG_FMAN_ENET
+	fman_enet_init();
+#endif
+	return 0;
+}
+
 int timer_init(void)
 {
 	u32 __iomem *cntcr = (u32 *)CONFIG_SYS_FSL_TIMER_ADDR;

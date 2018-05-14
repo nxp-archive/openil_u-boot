@@ -284,6 +284,18 @@
 #define CONFIG_ENABLE_COREID_DEBUG
 #define CONFIG_ENABLE_WRITE_LOCK
 
+#undef CONFIG_EXTRA_ENV_SETTINGS
+#define CONFIG_EXTRA_ENV_SETTINGS		\
+			"ipaddr=10.192.208.125\0" \
+			"eth1addr=00:04:9F:04:F0:F1\0" \
+			"eth2addr=00:1F:7B:63:35:E9\0" \
+			"eth3addr=00:04:9F:04:F0:F3\0" \
+			"eth4addr=00:04:9F:04:F0:F4\0" \
+			"eth5addr=00:04:9F:04:F0:F5\0" \
+			"eth6addr=00:04:9F:04:F0:F6\0" \
+			"eth7addr=68:05:ca:35:cc:61\0" \
+			"ethact=FM1@DTSEC3\0"			\
+
 #include <asm/fsl_secure_boot.h>
 
 #endif /* __LS1046ARDB_H__ */

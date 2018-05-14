@@ -227,7 +227,7 @@ int mdm_init(void);
 int print_cpuinfo(void);
 int update_flash_size(int flash_size);
 int arch_early_init_r(void);
-
+int eth_early_init_r(void);
 /*
  * setup_board_extra() - Fill in extra details in the bd_t structure
  *
