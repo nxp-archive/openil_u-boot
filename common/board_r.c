@@ -462,6 +462,20 @@ static int initr_env(void)
 	return 0;
 }
 
+static int initr_default_env(void)
+{
+	/* initialize environment */
+	set_default_env(NULL);
+#ifdef CONFIG_OF_CONTROL
+	setenv_addr("fdtcontroladdr", gd->fdt_blob);
+#endif
+
+	/* Initialize from environment */
+	load_addr = getenv_ulong("loadaddr", 16, load_addr);
+
+	return 0;
+}
+
 #ifdef CONFIG_SYS_BOOTPARAMS_LEN
 static int initr_malloc_bootparams(void)
 {
@@ -579,12 +593,14 @@ static int initr_bbmii(void)
 #ifdef CONFIG_CMD_NET
 static int initr_net(void)
 {
-	puts("Net:   ");
-	eth_initialize();
+	if (get_core_id() == CONFIG_SLAVE_FIRST_CORE) {
+		puts("Net:   ");
+		eth_initialize();
 #if defined(CONFIG_RESET_PHY_R)
-	debug("Reset Ethernet PHY\n");
-	reset_phy();
+		debug("Reset Ethernet PHY\n");
+		reset_phy();
 #endif
+	}
 	return 0;
 }
 #endif
@@ -930,6 +946,7 @@ init_fnc_t init_sequence_r_slave[] = {
 #endif
 	initr_barrier,
 	initr_malloc,
+	initr_default_env,
 	initr_console_record,
 #ifdef CONFIG_SYS_NONCACHED_MEMORY
 	initr_noncached,
@@ -949,6 +966,9 @@ init_fnc_t init_sequence_r_slave[] = {
 	 * because PCU ressources are crucial for flash access on some boards.
 	 */
 	initr_pci,
+#endif
+#ifdef CONFIG_SLAVE_FMAN_CORE
+	eth_early_init_r,
 #endif
 #if defined(CONFIG_ID_EEPROM) || defined(CONFIG_SYS_I2C_MAC_OFFSET)
 	mac_read_from_eeprom,
@@ -981,6 +1001,9 @@ init_fnc_t init_sequence_r_slave[] = {
 	/* TODO: need add initr_net after add ethernet feature */
 	/* initr_net,
 	 */
+#ifdef CONFIG_SLAVE_FMAN_CORE
+	initr_net,
+#endif
 #endif
 	run_main_loop,
 };

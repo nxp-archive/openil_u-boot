@@ -104,6 +104,7 @@ int checkdram(void);
 extern u8 __dtb_dt_begin[];	/* embedded device tree blob */
 extern u8 __dtb_dt_spl_begin[];	/* embedded device tree blob for SPL/TPL */
 int mdm_init(void);
+int eth_early_init_r(void);
 
 /**
  * Show the DRAM size in a board-specific way
