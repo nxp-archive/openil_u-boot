@@ -11,6 +11,9 @@ void gic_irq_register(int irq_num, void (*irq_handle)(int, int));
 void gic_set_target(u32 core_mask, unsigned long hw_irq);
 void gic_set_type(unsigned long hw_irq);
 void gic_set_pri_per_cpu(void);
+#ifdef CONFIG_ARM64
+void gic_set_offset(void);
+#endif
 void gic_enable_dist(void);
 void gic_set_pri_common(void);
 void gic_set_pri_irq(u32 hw_irq, u8 pri);

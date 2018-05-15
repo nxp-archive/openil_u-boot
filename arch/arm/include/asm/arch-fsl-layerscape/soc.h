@@ -1,6 +1,6 @@
 /* SPDX-License-Identifier: GPL-2.0+ */
 /*
- * Copyright 2017 NXP
+ * Copyright 2017-2019 NXP
  * Copyright 2015 Freescale Semiconductor
  */
 
@@ -49,6 +49,11 @@ struct cpu_type {
 	char name[15];
 	u32 soc_ver;
 	u32 num_cores;
+};
+
+struct giccd_base {
+	u32 *gicd_base;
+	u32 *gicc_base;
 };
 
 #define CPU_TYPE_ENTRY(n, v, nc) \
@@ -145,6 +150,7 @@ int fspi_ahb_init(void);
 #endif
 
 void cpu_name(char *name);
+struct giccd_base get_gic_offset(void);
 #ifdef CONFIG_SYS_FSL_ERRATUM_A009635
 void erratum_a009635(void);
 #endif
