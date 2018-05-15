@@ -52,6 +52,11 @@ struct cpu_type {
 	u32 num_cores;
 };
 
+struct giccd_base {
+	u32 *gicd_base;
+	u32 *gicc_base;
+};
+
 #define CPU_TYPE_ENTRY(n, v, nc) \
 	{ .name = #n, .soc_ver = SVR_##v, .num_cores = (nc)}
 #endif
@@ -105,6 +110,7 @@ void init_pfe_scfg_dcfg_regs(void);
 #endif
 
 void cpu_name(char *name);
+struct giccd_base get_gic_offset(void);
 #ifdef CONFIG_SYS_FSL_ERRATUM_A009635
 void erratum_a009635(void);
 #endif
