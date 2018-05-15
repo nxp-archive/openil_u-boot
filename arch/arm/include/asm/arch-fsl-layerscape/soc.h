@@ -113,6 +113,11 @@ struct ccsr_ahci {
 	u32 cmds;	/* port 0/1 CMD status error */
 };
 
+struct giccd_base {
+	u32 *gicd_base;
+	u32 *gicc_base;
+};
+
 #ifdef CONFIG_FSL_LSCH3
 void fsl_lsch3_early_init_f(void);
 #elif defined(CONFIG_FSL_LSCH2)
@@ -124,6 +129,7 @@ int board_setup_core_volt(u32 vdd);
 void ddr_enable_0v9_volt(bool en);
 
 void cpu_name(char *name);
+struct giccd_base get_gic_offset(void);
 #ifdef CONFIG_SYS_FSL_ERRATUM_A009635
 void erratum_a009635(void);
 #endif

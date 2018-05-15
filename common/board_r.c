@@ -539,6 +539,9 @@ static int initr_enable_interrupts(void)
 
 static int initr_gic_init(void)
 {
+#ifdef CONFIG_ARM64
+	gic_set_offset();
+#endif
 	if (get_core_id() == CONFIG_SLAVE_FIRST_CORE)
 		gic_set_pri_common();
 	gic_set_pri_per_cpu();
