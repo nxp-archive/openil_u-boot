@@ -157,7 +157,9 @@ static int read_eeprom(void)
 
 #ifdef CONFIG_SYS_EEPROM_BUS_NUM
 	bus = i2c_get_bus_num();
-	i2c_set_bus_num(CONFIG_SYS_EEPROM_BUS_NUM);
+	ret = i2c_set_bus_num(CONFIG_SYS_EEPROM_BUS_NUM);
+	if (ret)
+		return 0;
 #endif
 
 	ret = i2c_read(CONFIG_SYS_I2C_EEPROM_ADDR, 0, CONFIG_SYS_I2C_EEPROM_ADDR_LEN,
