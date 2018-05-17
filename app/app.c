@@ -16,7 +16,9 @@ void core1_main(void)
 {
 	test_i2c();
 	test_irq_init();
+#ifdef CONFIG_TARGET_LS1021AIOT
 	test_gpio();
+#endif
 	test_icc_func_init();
 	test_qspi();
 
