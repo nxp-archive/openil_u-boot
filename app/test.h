@@ -13,6 +13,7 @@ int test_gpio(void);
 void test_i2c(void);
 void test_irq_init(void);
 void test_icc_func_init(void);
+int test_qspi(void);
 
 #endif
 #endif /* _FSL_LAYERSCAPE_TEST_H */

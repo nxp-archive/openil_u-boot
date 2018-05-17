@@ -18,6 +18,7 @@ void core1_main(void)
 	test_irq_init();
 	test_gpio();
 	test_icc_func_init();
+	test_qspi();
 
 	return;
 }
