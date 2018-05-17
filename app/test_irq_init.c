@@ -7,6 +7,11 @@
 #include <common.h>
 #include <asm/interrupt-gic.h>
 
+#ifdef CONFIG_TARGET_LS1021AIOT
+#define CONFIG_TEST_HW_IRQ 195
+#elif defined(CONFIG_TARGET_LS1043ARDB) || defined(CONFIG_TARGET_LS1046ARDB)
+#define CONFIG_TEST_HW_IRQ 163
+#endif
 
 static void test_core_handler_ack(int hw_irq, int src_coreid)
 {
@@ -38,15 +43,16 @@ void test_irq_init(void)
 {
 	int coreid = 1;
 	/* irq 0-15 are used for SGI, irq 8 is used for IPC */
-	gic_irq_register(0, test_core_handler_ack);
-	printf("IRQ 0 has been registered as SGI\n");
+	gic_irq_register(9, test_core_handler_ack);
+	printf("IRQ 9 has been registered as SGI\n");
 	/* irq 195-201 are used for hardware interrupt */
-	test_core_hw_irq_init(coreid, 195);
-	printf("IRQ 195 has been registered as HW IRQ\n");
+	test_core_hw_irq_init(coreid, CONFIG_TEST_HW_IRQ);
+	printf("IRQ %d has been registered as HW IRQ\n",
+	       CONFIG_TEST_HW_IRQ);
 
 	/* set a SGI signal */
 	asm volatile("dsb st");
-	gic_set_sgi(1<<coreid, 0);
+	gic_set_sgi(1<<coreid, 9);
 	asm volatile("sev");
 
 	return;
