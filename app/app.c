@@ -20,7 +20,9 @@ void core1_main(void)
 	test_gpio();
 #endif
 	test_icc_func_init();
+#if defined(CONFIG_TARGET_LS1021AIOT) || defined(CONFIG_TARGET_LS1046ARDB)
 	test_qspi();
+#endif
 #ifdef CONFIG_SLAVE_FMAN_CORE
 	test_net();
 #endif
