@@ -12,8 +12,8 @@
 #include <environment.h>
 #include "test_net.h"
 
-#define ping_ip		"10.192.208.233"
-#define ipaddr		"10.192.208.123"
+#define ping_ip		"192.168.1.2"
+#define ipaddr		"192.168.1.1"
 
 
 /* before run this func, need connect network */
