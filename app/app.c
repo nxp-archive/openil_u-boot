@@ -21,6 +21,9 @@ void core1_main(void)
 #endif
 	test_icc_func_init();
 	test_qspi();
+#ifdef CONFIG_SLAVE_FMAN_CORE
+	test_net();
+#endif
 
 	return;
 }
