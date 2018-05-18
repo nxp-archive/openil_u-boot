@@ -289,6 +289,7 @@ static void icc_irq_handler(int hw_irq, int src_coreid)
 		/* add desc_tail */
 		ring->desc_tail = (ring->desc_tail + 1) % ring->desc_num;
 	}
+	invalidate_dcache_all();
 }
 
 static int icc_irq_init(int hw_irq)
