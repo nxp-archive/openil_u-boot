@@ -144,6 +144,10 @@ static void do_icc_send(unsigned long core_mask,
 		if (((core_mask >> i) & 0x1) && (i != mycoreid))
 			dest_core |= 0x1 << i;
 	}
+	if (!dest_core) {
+		printf("dest_core error\n");
+		return;
+	}
 
 	if (counts > ICC_CORE_BLOCK_COUNT * ICC_BLOCK_UNIT_SIZE) {
 		printf(
