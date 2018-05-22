@@ -1015,10 +1015,12 @@ static int fsl_qspi_probe(struct udevice *bus)
 	struct dm_spi_bus *dm_spi_bus;
 	int i;
 
+#ifdef CONFIG_FSL_QSPI_COREID
 	if (get_core_id() != CONFIG_FSL_QSPI_COREID) {
 		printf("QSPI is not assigned on this core\n");
 		return;
 	}
+#endif
 	dm_spi_bus = bus->uclass_priv;
 
 	dm_spi_bus->max_hz = plat->speed_hz;
