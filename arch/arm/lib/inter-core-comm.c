@@ -22,6 +22,7 @@ void *g_icc_irq_cb[CONFIG_MAX_CPUS] = {NULL};
 
 static int icc_ring_empty(struct icc_ring *ring)
 {
+	invalidate_dcache_all();
 	if (ring->desc_tail == ring->desc_head)
 		return 1;
 	return 0;
@@ -181,6 +182,7 @@ int icc_set_block(int core_mask, unsigned int byte_count, unsigned long block)
 	}
 
 	dsb();
+	invalidate_dcache_all();
 	/* trigger the inter-core interrupt */
 	icc_set_sgi(dest_core, ICC_SGI);
 
