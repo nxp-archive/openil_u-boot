@@ -1136,6 +1136,8 @@ int spi_flash_scan(struct spi_flash *flash)
 		flash->flags |= SNOR_F_USE_FSR;
 #endif
 
+	spi_flash_cmd_enter_4byte(flash);
+
 	/* Configure the BAR - discover bank cmds and read current bank */
 #ifdef CONFIG_SPI_FLASH_BAR
 	ret = read_bar(flash, info);
