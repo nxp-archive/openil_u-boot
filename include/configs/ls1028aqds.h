@@ -27,7 +27,7 @@
 
 /* FlexSPI */
 #ifdef CONFIG_NXP_FSPI
-#define NXP_FSPI_FLASH_SIZE            SZ_64M
+#define NXP_FSPI_FLASH_SIZE            SZ_256M
 #define NXP_FSPI_FLASH_NUM              1
 #endif
 

@@ -40,7 +40,7 @@
 		#address-cells = <1>;
 		#size-cells = <0>;
 		reg = <0x0 0x20C0000 0x0 0x10000>,
-		       <0x0 0x20000000 0x0 0x4000000>; /*64MB flash*/
+		       <0x0 0x20000000 0x0 0x10000000>; /*64MB flash*/
                                /* <0x0 0x20000000 0x0 0x4000000>;*/ /*How to incoperate 512M here*/
 		reg-names = "FSPI", "FSPI-memory";
 		num-cs = <1>;
