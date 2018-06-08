@@ -406,6 +406,7 @@ config CLUSTER_CLK_FREQ
 
 config SYS_FSL_PCLK_DIV
 	int "Platform clock divider"
+	default 1 if ARCH_LS1028A
 	default 1 if ARCH_LS1043A
 	default 1 if ARCH_LS1046A
 	default 1 if ARCH_LS1088A
