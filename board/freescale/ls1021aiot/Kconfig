@@ -12,6 +12,20 @@ config SYS_SOC
 config SYS_CONFIG_NAME
 	default "ls1021aiot"
 
+config USB_COREID_SET
+	bool "Enable USB for baremetal"
+	default n
+
+config USB_USB0_COREID
+	int "USB0 is assigned to core1"
+	default "1"
+	depends on USB_COREID_SET
+
+config USB_CTL_NUM
+	int "USB Controller numbers "
+	default "1"
+	depends on USB_COREID_SET
+
 source "board/freescale/common/Kconfig"
 
 endif
