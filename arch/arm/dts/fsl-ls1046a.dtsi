@@ -270,6 +270,7 @@
 			reg = <0x0 0x2f00000 0x0 0x10000>;
 			interrupts = <0 60 4>;
 			dr_mode = "host";
+			status = "disabled";
 		};
 
 		usb1: usb@3000000 {
@@ -277,6 +278,7 @@
 			reg = <0x0 0x3000000 0x0 0x10000>;
 			interrupts = <0 61 4>;
 			dr_mode = "host";
+			status = "disabled";
 		};
 
 		usb2: usb@3100000 {
@@ -284,6 +286,7 @@
 			reg = <0x0 0x3100000 0x0 0x10000>;
 			interrupts = <0 63 4>;
 			dr_mode = "host";
+			status = "disabled";
 		};
 
 		pcie@3400000 {
