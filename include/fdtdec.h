@@ -1,6 +1,8 @@
 /* SPDX-License-Identifier: GPL-2.0+ */
 /*
  * Copyright (c) 2011 The Chromium OS Authors.
+ *
+ * Copyright 2018-2019 NXP
  */
 
 #ifndef __fdtdec_h
@@ -984,6 +986,8 @@ int fdtdec_resetup(int *rescan);
  * and the board implements it.
  */
 void *board_fdt_blob_setup(void);
+
+int fdt_baremetal_setup(void);
 
 /*
  * Decode the size of memory
