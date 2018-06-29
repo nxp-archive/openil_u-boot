@@ -27,6 +27,8 @@ void core1_main(void)
 	test_net();
 #endif
 
+	test_usb();
+
 	return;
 }
 
@@ -35,12 +37,16 @@ void core2_main(void)
 {
 	test_icc_func_init();
 
+	test_usb();
+
 	return;
 }
 
 void core3_main(void)
 {
 	test_icc_func_init();
+
+	test_usb();
 
 	return;
 }

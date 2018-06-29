@@ -15,6 +15,7 @@ void test_irq_init(void);
 void test_icc_func_init(void);
 int test_qspi(void);
 int test_net(void);
+void test_usb(void);
 
 #endif
 #endif /* _FSL_LAYERSCAPE_TEST_H */
