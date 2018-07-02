@@ -16,6 +16,12 @@
 #include <linux/ctype.h>
 
 #ifdef CONFIG_USB_COREID_SET
+#ifndef CONFIG_USB_USB1_COREID
+#define CONFIG_USB_USB1_COREID 0
+#endif
+#ifndef CONFIG_USB_USB2_COREID
+#define CONFIG_USB_USB2_COREID 0
+#endif
 int fdt_baremetal_setup_usb(void)
 {
 	void *blob = gd->fdt_blob;
