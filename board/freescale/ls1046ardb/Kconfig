@@ -15,7 +15,7 @@ config SYS_CONFIG_NAME
 
 config USB_COREID_SET
 	bool "Enable USB for baremetal"
-	default n
+	default y
 
 config USB_USB0_COREID
 	int "USB0 is assigned to core1"
