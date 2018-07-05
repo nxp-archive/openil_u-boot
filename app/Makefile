@@ -12,3 +12,4 @@ obj-y += test_icc.o
 obj-y += test_qspi.o
 obj-y += test_net.o
 obj-y += test_usb.o
+obj-y += test_pcie.o
