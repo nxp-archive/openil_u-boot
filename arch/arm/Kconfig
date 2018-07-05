@@ -103,6 +103,28 @@ config USB_CTL_NUM
 	default 1
 endif
 
+config PCIE_COREID_SET
+	bool "Enable PCIE for baremetal"
+	default n
+
+if PCIE_COREID_SET
+config PCIE_PCIE1_COREID
+	int "The core PCIe1 assigned"
+	default "0"
+
+config PCIE_PCIE2_COREID
+	int "The core PCIe2 assigned"
+	default "0"
+
+config PCIE_PCIE3_COREID
+	int "The core PCIe3 assigned"
+	default "0"
+
+config PCIE_CTL_NUM
+	int "PCIe Controller numbers "
+	default "3"
+endif
+
 endif
 
 if ARM64
