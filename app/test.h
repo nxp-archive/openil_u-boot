@@ -16,6 +16,6 @@ void test_icc_func_init(void);
 int test_qspi(void);
 int test_net(void);
 void test_usb(void);
-
+void test_pcie(void);
 #endif
 #endif /* _FSL_LAYERSCAPE_TEST_H */
