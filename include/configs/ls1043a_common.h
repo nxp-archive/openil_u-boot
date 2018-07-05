@@ -158,7 +158,9 @@
 #define CONFIG_PCIE1		/* PCIE controller 1 */
 #define CONFIG_PCIE2		/* PCIE controller 2 */
 #define CONFIG_PCIE3		/* PCIE controller 3 */
-
+#ifndef CONFIG_PCI
+#define CONFIG_PCI
+#endif
 #ifdef CONFIG_PCI
 #define CONFIG_NET_MULTI
 #define CONFIG_PCI_SCAN_SHOW

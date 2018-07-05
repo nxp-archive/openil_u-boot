@@ -22,9 +22,14 @@ config SYS_HAS_ARMV8_SECURE_BASE
 	  If enabled, please also define the value for ARMV8_SECURE_BASE,
 	  for LS1043ARDB, it could be some address in OCRAM.
 
+config BAREMETAL
+	bool "Enable baremetal"
+	default y
+
 config USB_COREID_SET
 	bool "Enable USB for baremetal"
 	default y
+	depends on BAREMETAL
 
 config USB_USB0_COREID
 	int "USB0 is assigned to core1"
@@ -45,6 +50,31 @@ config USB_CTL_NUM
 	int "USB Controller numbers "
 	default "3"
 	depends on USB_COREID_SET
+
+config PCIE_COREID_SET
+	bool "Enable PCIE for baremetal"
+	default y
+	depends on BAREMETAL
+
+config PCIE_PCIE1_COREID
+	int "PCIe1 is assigned to core0"
+	default "0"
+	depends on PCIE_COREID_SET
+
+config PCIE_PCIE2_COREID
+	int "PCIe2 is assigned to core1"
+	default "1"
+	depends on PCIE_COREID_SET
+
+config PCIE_PCIE3_COREID
+	int "PCIe3 is assigned to core2"
+	default "2"
+	depends on PCIE_COREID_SET
+
+config PCIE_CTL_NUM
+	int "PCIe Controller numbers "
+	default "3"
+	depends on PCIE_COREID_SET
 
 source "board/freescale/common/Kconfig"
 
