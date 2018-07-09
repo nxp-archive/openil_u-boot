@@ -267,7 +267,10 @@ static int show_dram_config(void)
 __weak int dram_init_banksize(void)
 {
 #if defined(CONFIG_NR_DRAM_BANKS) && defined(CONFIG_SYS_SDRAM_BASE)
-	gd->bd->bi_dram[0].start = CONFIG_SYS_SDRAM_BASE;
+	gd->bd->bi_dram[0].start = CONFIG_SYS_SDRAM_BASE +
+			CONFIG_SYS_DDR_SDRAM_MASTER_SIZE +
+			CONFIG_SYS_DDR_SDRAM_SLAVE_SIZE * (get_core_id() - 1);
+
 	gd->bd->bi_dram[0].size = get_effective_memsize();
 #endif
 

@@ -526,9 +526,9 @@ static inline void final_mmu_setup(void)
 		 */
 		switch (final_map[index].virt) {
 		case CONFIG_SYS_FSL_DRAM_BASE1:
-			final_map[index].virt = gd->bd->bi_dram[0].start;
-			final_map[index].phys = gd->bd->bi_dram[0].start;
-			final_map[index].size = gd->bd->bi_dram[0].size;
+			final_map[index].virt = 0x80000000;
+			final_map[index].phys = 0x80000000;
+			final_map[index].size = 0x80000000;
 			break;
 #ifdef CONFIG_SYS_FSL_DRAM_BASE2
 		case CONFIG_SYS_FSL_DRAM_BASE2:
@@ -1439,7 +1439,14 @@ int dram_init_banksize(void)
 	}
 #endif
 
-	gd->bd->bi_dram[0].start = CONFIG_SYS_SDRAM_BASE;
+	if (get_core_id() == CONFIG_MASTER_CORE)
+		gd->bd->bi_dram[0].start = CONFIG_SYS_SDRAM_BASE;
+	else
+		gd->bd->bi_dram[0].start = CONFIG_SYS_SDRAM_BASE +
+			CONFIG_SYS_DDR_SDRAM_MASTER_SIZE +
+			CONFIG_SYS_DDR_SDRAM_SLAVE_SIZE *
+			(get_core_id() - 1);
+
 	if (gd->ram_size > CONFIG_SYS_DDR_BLOCK1_SIZE) {
 		gd->bd->bi_dram[0].size = CONFIG_SYS_DDR_BLOCK1_SIZE;
 		gd->bd->bi_dram[1].start = CONFIG_SYS_DDR_BLOCK2_BASE;
@@ -1573,7 +1580,7 @@ void update_early_mmu_table(void)
 
 	if (gd->ram_size <= CONFIG_SYS_FSL_DRAM_SIZE1) {
 		mmu_change_region_attr(
-					CONFIG_SYS_SDRAM_BASE,
+					gd->bd->bi_dram[0].start,
 					gd->ram_size,
 					PTE_BLOCK_MEMTYPE(MT_NORMAL)	|
 					PTE_BLOCK_OUTER_SHARE		|
@@ -1581,7 +1588,7 @@ void update_early_mmu_table(void)
 					PTE_TYPE_VALID);
 	} else {
 		mmu_change_region_attr(
-					CONFIG_SYS_SDRAM_BASE,
+					gd->bd->bi_dram[0].start,
 					CONFIG_SYS_DDR_BLOCK1_SIZE,
 					PTE_BLOCK_MEMTYPE(MT_NORMAL)	|
 					PTE_BLOCK_OUTER_SHARE		|
