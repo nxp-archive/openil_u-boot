@@ -993,8 +993,7 @@ init_fnc_t init_sequence_r_slave[] = {
 	/* TODO: could x86/PPC have this also perhaps? */
 #ifdef CONFIG_ARM
 	/* TODO: initr_caches can not be added on ls1043a, need add it */
-	/* initr_caches,
-	 */
+	initr_caches,
 
 	/* Note: For Freescale LS2 SoCs, new MMU table is created in DDR.
 	 *	 A temporary mapping of IFC high region is since removed,
