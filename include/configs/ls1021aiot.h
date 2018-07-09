@@ -234,13 +234,16 @@
 #define CONFIG_HAS_ETH1
 #define CONFIG_HAS_ETH2
 #endif
+#endif
 
 /* PCIe */
 #define CONFIG_PCIE1		/* PCIE controler 1 */
 #define CONFIG_PCIE2		/* PCIE controler 2 */
 
 #define FSL_PCIE_COMPAT		"fsl,ls1021a-pcie"
-
+#ifndef CONFIG_PCI
+#define CONFIG_PCI
+#endif
 #ifdef CONFIG_PCI
 #define CONFIG_PCI_SCAN_SHOW
 #define CONFIG_CMD_PCI
@@ -249,7 +252,6 @@
 #define CONFIG_CMD_PING
 #define CONFIG_CMD_DHCP
 #define CONFIG_CMD_MII
-#endif
 
 #define CONFIG_CMDLINE_TAG
 #define CONFIG_CMDLINE_EDITING
