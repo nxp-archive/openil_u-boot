@@ -818,7 +818,9 @@ static int decode_regions(struct pci_controller *hose, ofnode parent_node,
 	/* Add a region for our local memory */
 	size = gd->ram_size;
 #ifdef CONFIG_SYS_SDRAM_BASE
-	base = CONFIG_SYS_SDRAM_BASE;
+	base = CONFIG_SYS_SDRAM_BASE + CONFIG_SYS_DDR_SDRAM_MASTER_SIZE +
+			CONFIG_SYS_DDR_SDRAM_SLAVE_SIZE *
+			(get_core_id() - 1);
 #endif
 	if (gd->pci_ram_top && gd->pci_ram_top < base + size)
 		size = gd->pci_ram_top - base;

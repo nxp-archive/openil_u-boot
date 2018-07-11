@@ -858,7 +858,7 @@ void update_early_mmu_table(void)
 
 	if (gd->ram_size <= CONFIG_SYS_FSL_DRAM_SIZE1) {
 		mmu_change_region_attr(
-					CONFIG_SYS_SDRAM_BASE,
+					gd->bd->bi_dram[0].start,
 					gd->ram_size,
 					PTE_BLOCK_MEMTYPE(MT_NORMAL)	|
 					PTE_BLOCK_OUTER_SHARE		|
@@ -866,7 +866,7 @@ void update_early_mmu_table(void)
 					PTE_TYPE_VALID);
 	} else {
 		mmu_change_region_attr(
-					CONFIG_SYS_SDRAM_BASE,
+					gd->bd->bi_dram[0].start,
 					CONFIG_SYS_DDR_BLOCK1_SIZE,
 					PTE_BLOCK_MEMTYPE(MT_NORMAL)	|
 					PTE_BLOCK_OUTER_SHARE		|
