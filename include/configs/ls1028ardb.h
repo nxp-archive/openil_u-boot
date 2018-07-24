@@ -47,7 +47,9 @@
 /*
  * QIXIS Definitions
  */
+#ifndef CONFIG_EMU
 #define CONFIG_FSL_QIXIS
+#endif
 
 #ifdef CONFIG_FSL_QIXIS
 #define QIXIS_BASE			0x7fb00000
