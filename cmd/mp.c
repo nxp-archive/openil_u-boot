@@ -8,6 +8,9 @@
 #include <command.h>
 
 #ifdef CONFIG_BAREMETAL
+
+DECLARE_GLOBAL_DATA_PTR;
+
 int cpu_bringup_all(unsigned long addr)
 {
 	unsigned long cpuid;
@@ -15,7 +18,12 @@ int cpu_bringup_all(unsigned long addr)
 	for (cpuid = 1; cpuid < CONFIG_MAX_CPUS; cpuid++) {
 		if (is_core_valid(cpuid))
 			fsl_layerscape_wakeup_fixed_core(cpuid, addr);
+		udelay(300000);
 	}
+
+	/* use fsl_layerscape_wakeup_fixed_core(cpuid, gd->relocaddr)
+	 * to prepare for Linux start on core cpuid.
+	 */
 
 	return 0;
 }
