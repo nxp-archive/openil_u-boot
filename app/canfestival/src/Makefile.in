@@ -132,9 +132,10 @@ $(TARGET)_%.o: %.c
 	$(CC) $(CFLAGS) $(PROG_CFLAGS) ${PROGDEFINES} $(INCLUDES) -o $@ -c $<
 
 install: libcanfestival.a
-	mkdir -p $(DESTDIR)$(PREFIX)/lib/
+	mkdir -p $(DESTDIR)$(PREFIX)/lib/pkgconfig
 	mkdir -p $(DESTDIR)$(PREFIX)/include/canfestival
 	cp libcanfestival.a $(DESTDIR)$(PREFIX)/lib/
+	cp ../canfestival.pc $(DESTDIR)$(PREFIX)/lib/pkgconfig/
 	cp ../include/*.h $(DESTDIR)$(PREFIX)/include/canfestival
 
 uninstall:

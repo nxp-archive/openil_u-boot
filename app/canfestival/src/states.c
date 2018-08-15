@@ -31,7 +31,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include "data.h"
 #include "sysdep.h"
-
+#include "callback.h"
 /** Prototypes for internals functions */
 /*!                                                                                                
 **                                                                                                 
@@ -177,11 +177,13 @@ UNS8 setState(CO_Data* d, e_nodeState newState)
 								
 			case Pre_operational:
 			{
-				
 				s_state_communication newCommunicationState = {0, 1, 1, 1, 1, 0, 1};
 				d->nodeState = Pre_operational;
 				switchCommunicationState(d, &newCommunicationState);
-                (*d->preOperational)(d);
+				if (!(*(d->iam_a_slave)))
+					masterSendNMTstateChange (d, 0, NMT_Reset_Node);
+
+				(*d->preOperational)(d);
 			}
 			break;
 								
@@ -308,12 +310,23 @@ void setNodeId(CO_Data* d, UNS8 nodeId)
   *d->bDeviceNodeId = nodeId;
 }
 
-void _initialisation(CO_Data* d){}
-void _preOperational(CO_Data* d){
-    if (!(*(d->iam_a_slave)))
-    {
-        masterSendNMTstateChange (d, 0, NMT_Reset_Node);
-    }
+void _initialisation(CO_Data *d)
+{
+	if (initialization_callback != NULL)
+		initialization_callback(d);
 }
-void _operational(CO_Data* d){}
-void _stopped(CO_Data* d){}
+void _preOperational(CO_Data *d)
+{
+	if (pre_operation_callback != NULL)
+		pre_operation_callback(d);
+}
+void _operational(CO_Data *d)
+{
+	if (operation_callback != NULL)
+		operation_callback(d);
+}
+void _stopped(CO_Data *d)
+{
+	if (stop_callback != NULL)
+		stop_callback(d);
+}
