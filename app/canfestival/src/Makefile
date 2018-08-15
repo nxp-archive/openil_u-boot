@@ -1,0 +1,12 @@
+obj-$(CONFIG_CANFESTIVAL)     += dcf.o
+obj-$(CONFIG_CANFESTIVAL)     += emcy.o
+obj-$(CONFIG_CANFESTIVAL)     += lifegrd.o
+obj-$(CONFIG_CANFESTIVAL)     += nmtMaster.o
+obj-$(CONFIG_CANFESTIVAL)     += nmtSlave.o
+obj-$(CONFIG_CANFESTIVAL)     += objacces.o
+obj-$(CONFIG_CANFESTIVAL)     += pdo.o
+obj-$(CONFIG_CANFESTIVAL)     += sdo.o
+obj-$(CONFIG_CANFESTIVAL)     += states.o
+obj-$(CONFIG_CANFESTIVAL)     += sync.o
+obj-$(CONFIG_CANFESTIVAL)     += timer.o
+obj-$(CONFIG_CANFESTIVAL_LSS) += lss.o
