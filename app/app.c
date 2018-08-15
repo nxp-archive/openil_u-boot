@@ -35,6 +35,10 @@ void core1_main(void)
 	test_pcie();
 #endif
 
+#if CONFIG_FS_FLEXCAN
+	test_flexcan();
+#endif
+
 	return;
 }
 

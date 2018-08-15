@@ -17,5 +17,6 @@ int test_qspi(void);
 int test_net(void);
 void test_usb(void);
 void test_pcie(void);
+void test_flexcan(void);
 #endif
 #endif /* _FSL_LAYERSCAPE_TEST_H */
