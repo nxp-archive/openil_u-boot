@@ -103,7 +103,7 @@ inline void start_and_seek_node(CO_Data* d, UNS8 nodeId){
 static void CheckSDOAndContinue(CO_Data* d, UNS8 nodeId)
 {
     UNS32 abortCode = 0;
-    UNS8 buf[4], match = 0, node;
+    UNS8 buf[4], match = 0;
     UNS32 size=4;
     if(d->dcf_status == DCF_STATUS_READ_CHECK){
         // printf("DCF_STATUS_READ_CHECK \n");
