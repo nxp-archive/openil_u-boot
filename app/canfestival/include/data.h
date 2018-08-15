@@ -32,6 +32,7 @@ extern "C" {
  */
 typedef struct struct_CO_Data CO_Data;
 
+#include "config.h"
 #include "applicfg.h"
 #include "def.h"
 #include "can.h"
