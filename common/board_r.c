@@ -57,6 +57,8 @@
 #include <linux/err.h>
 #include <efi_loader.h>
 #include <asm/interrupt-gic.h>
+#include <flexcan.h>
+#include <flextimer.h>
 
 DECLARE_GLOBAL_DATA_PTR;
 
@@ -1037,6 +1039,10 @@ init_fnc_t init_sequence_r_slave[] = {
 #ifdef CONFIG_SLAVE_FMAN_CORE
 	initr_net,
 #endif
+#endif
+#if CONFIG_FS_FLEXCAN
+	flexcan_init,
+	flextimer_init,
 #endif
 	run_main_loop,
 };
