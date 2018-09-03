@@ -239,6 +239,13 @@ config NXP_FSPI
 	  access SPI NOR flash on platforms embedding this NXP IP code.
 	  This driver support SPI flash single and memory reads.
 
+config SYS_NXP_FSPI_AHB
+	bool "Flash read and write via AHB mode"
+	depends on NXP_FSPI
+	default n
+	help
+	  Enable flash read and write via AHB mode instead of IPS mode.
+
 config FSL_SPI_ALIGNED_TXFIFO
        bool "Write only 16 Bytes aligned data on TxFIFO"
        depends on FSL_QSPI

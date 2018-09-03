@@ -44,11 +44,11 @@ DECLARE_GLOBAL_DATA_PTR;
 /* SEQID */
 #define SEQID_READ		0
 #define SEQID_WREN		1
-#define SEQID_FAST_READ		2
-#define SEQID_RDSR		3
-#define SEQID_SE		4
-#define SEQID_CHIP_ERASE	5
-#define SEQID_PP		6
+#define SEQID_PP		2
+#define SEQID_FAST_READ		3
+#define SEQID_RDSR		4
+#define SEQID_SE		5
+#define SEQID_CHIP_ERASE	6
 #define SEQID_RDID		7
 #define SEQID_BE_4K		8
 #define SEQID_RDFSR		9
@@ -76,6 +76,11 @@ DECLARE_GLOBAL_DATA_PTR;
 #define FSPI_CMD_SE_4B		0xdc    /* Sector erase (usually 64KiB) */
 
 #ifdef CONFIG_DM_SPI
+
+/* AHB initialization parameters for FLSHXNCR2 registers */
+#define AHBWR_ADDITIONAL_LUT	0x1	/* Number of additional LUTs to be
+					 * fired along with AWRSEQID LUT
+					 */
 
 /**
  * struct nxp_fspi_platdata - platform data for NXP FSPI
@@ -183,6 +188,18 @@ static void fspi_set_lut(struct nxp_fspi_priv *priv)
 	fspi_write32(priv->flags, &regs->lut[lut_base + 2], 0);
 	fspi_write32(priv->flags, &regs->lut[lut_base + 3], 0);
 
+	/* Page Program */
+	lut_base = SEQID_PP * 4;
+	fspi_write32(priv->flags, &regs->lut[lut_base],
+		     OPRND0(FSPI_CMD_PP_4B) | PAD0(LUT_PAD1) |
+		     INSTR0(LUT_CMD) | OPRND1(ADDR32BIT) |
+		     PAD1(LUT_PAD1) | INSTR1(LUT_ADDR));
+	fspi_write32(priv->flags, &regs->lut[lut_base + 1],
+		     OPRND0(0) |
+		     PAD0(LUT_PAD1) | INSTR0(LUT_WRITE));
+	fspi_write32(priv->flags, &regs->lut[lut_base + 2], 0);
+	fspi_write32(priv->flags, &regs->lut[lut_base + 3], 0);
+
 	/* Fast Read */
 	lut_base = SEQID_FAST_READ * 4;
 	fspi_write32(priv->flags, &regs->lut[lut_base],
@@ -225,18 +242,6 @@ static void fspi_set_lut(struct nxp_fspi_priv *priv)
 	fspi_write32(priv->flags, &regs->lut[lut_base + 2], 0);
 	fspi_write32(priv->flags, &regs->lut[lut_base + 3], 0);
 
-	/* Page Program */
-	lut_base = SEQID_PP * 4;
-	fspi_write32(priv->flags, &regs->lut[lut_base],
-		     OPRND0(FSPI_CMD_PP_4B) | PAD0(LUT_PAD1) |
-		     INSTR0(LUT_CMD) | OPRND1(ADDR32BIT) |
-		     PAD1(LUT_PAD1) | INSTR1(LUT_ADDR));
-	fspi_write32(priv->flags, &regs->lut[lut_base + 1],
-		     OPRND0(0) |
-		     PAD0(LUT_PAD1) | INSTR0(LUT_WRITE));
-	fspi_write32(priv->flags, &regs->lut[lut_base + 2], 0);
-	fspi_write32(priv->flags, &regs->lut[lut_base + 3], 0);
-
 	/* READ ID */
 	lut_base = SEQID_RDID * 4;
 	fspi_write32(priv->flags, &regs->lut[lut_base], OPRND0(FSPI_CMD_RDID) |
@@ -269,7 +274,6 @@ static void fspi_set_lut(struct nxp_fspi_priv *priv)
 	fspi_write32(priv->flags, &regs->lut[lut_base + 1], 0);
 	fspi_write32(priv->flags, &regs->lut[lut_base + 2], 0);
 	fspi_write32(priv->flags, &regs->lut[lut_base + 3], 0);
-
 
 	/* Lock the LUT */
 	fspi_lut_lock(priv, 1);
@@ -325,7 +329,7 @@ static void fspi_op_write_cmd(struct nxp_fspi_priv *priv)
 	fspi_write32(priv->flags, &regs->intr, FSPI_INTR_IPCMDDONE_MASK);
 }
 
-#if defined(CONFIG_SYS_FSL_FSPI_AHB)
+#if defined(CONFIG_SYS_NXP_FSPI_AHB)
 
 /*
  * If we have changed the content of the flash by writing or erasing,
@@ -351,6 +355,30 @@ static inline void fspi_ahb_invalid(struct nxp_fspi_priv *priv)
 		;
 }
 
+/* Write data to AHB Buffer. */
+static inline void fspi_ahb_write(struct nxp_fspi_priv *priv, void *txbuf, u32 len)
+{
+	u32 tx_size;
+	void *tx_addr;
+
+	tx_addr = (void *)(uintptr_t)(priv->memmap_phy +
+			priv->cur_amba_base +
+			priv->sf_addr);
+	debug("FSPI AHB Write Invoked from:[0x%02x len:%d]\n",
+			(priv->memmap_phy + priv->cur_amba_base + priv->sf_addr), len);
+
+	while (len > 0) {
+		tx_size = (len > 8) ? 8 : len;
+
+		memcpy(tx_addr, txbuf, tx_size);
+
+		tx_addr = (void *)((char *)tx_addr + tx_size);
+		txbuf = (void *)((char *)txbuf + tx_size);
+		len -= tx_size;
+		udelay(100);
+	}
+}
+
 /* Read out the data from the AHB buffer. */
 static inline void fspi_ahb_read(struct nxp_fspi_priv *priv, u8 *rxbuf, int len)
 {
@@ -373,7 +401,7 @@ static inline void fspi_ahb_read(struct nxp_fspi_priv *priv, u8 *rxbuf, int len)
  * After we set up the registers for the "AHB Command Read", we can use
  * the memcpy to read the data directly.
  */
-static void fspi_init_ahb_read(struct nxp_fspi_priv *priv)
+static void fspi_init_ahb(struct nxp_fspi_priv *priv)
 {
 	struct nxp_fspi_regs *regs = priv->regs;
 	int i;
@@ -387,7 +415,8 @@ static void fspi_init_ahb_read(struct nxp_fspi_priv *priv)
 	 * performance
 	 */
 	fspi_write32(priv->flags, &regs->ahbrxbuf7cr0,
-		     FSPI_RX_MAX_AHBBUF_SIZE / 8 | FSPI_AHBCR_PREFETCHEN_MASK);
+		     FSPI_RX_MAX_AHBBUF_SIZE / 8 |
+			FSPI_AHBBUFXCR0_PREFETCHEN_MASK);
 
 	fspi_write32(priv->flags, &regs->ahbcr, FSPI_AHBCR_PREFETCHEN_MASK);
 
@@ -395,7 +424,11 @@ static void fspi_init_ahb_read(struct nxp_fspi_priv *priv)
 	 * Set default lut sequence for AHB Read, bit[4-0] in flsha1cr2 reg.
 	 * Parallel mode is disabled.
 	 */
-	fspi_write32(priv->flags, &regs->flsha1cr2, SEQID_FAST_READ);
+	fspi_write32(priv->flags, &regs->flsha1cr2, SEQID_FAST_READ <<
+			FSPI_FLSHXCR2_ARDSEQID_SHIFT | SEQID_WREN <<
+			FSPI_FLSHXCR2_AWRSEQID_SHIFT |
+			AHBWR_ADDITIONAL_LUT <<
+			FSPI_FLSHXCR2_AWRSEQNUM_SHIFT);
 }
 #endif
 
@@ -452,7 +485,7 @@ static void fspi_op_rdxx(struct nxp_fspi_priv *priv, u32 *rxbuf, u32 len)
 	fspi_write32(priv->flags, &regs->intr, FSPI_INTR_IPCMDDONE_MASK);
 }
 
-#ifndef CONFIG_SYS_FSL_FSPI_AHB
+#ifndef CONFIG_SYS_NXP_FSPI_AHB
 /* If AHB read interface not defined, read data from ip interface. */
 static void fspi_op_read(struct nxp_fspi_priv *priv, u32 *rxbuf, u32 len)
 {
@@ -579,6 +612,7 @@ static void fspi_op_erase(struct nxp_fspi_priv *priv)
 	fspi_write32(priv->flags, &regs->intr, FSPI_INTR_IPCMDDONE_MASK);
 }
 
+#ifndef CONFIG_SYS_NXP_FSPI_AHB
 static void fspi_op_write(struct nxp_fspi_priv *priv, u8 *txbuf, u32 len)
 {
 	struct nxp_fspi_regs *regs = priv->regs;
@@ -685,6 +719,7 @@ static void fspi_op_write(struct nxp_fspi_priv *priv, u8 *txbuf, u32 len)
 			     FSPI_INTR_IPCMDDONE_MASK);
 	}
 }
+#endif
 
 static int fspi_xfer(struct nxp_fspi_priv *priv, unsigned int bitlen,
 		const void *dout, void *din, unsigned long flags)
@@ -716,7 +751,11 @@ static int fspi_xfer(struct nxp_fspi_priv *priv, unsigned int bitlen,
 		if (flags == SPI_XFER_END) {
 			/*priv->sf_addr = wr_sfaddr;*/
 			debug("sf_addr:[0x%02x]\n", priv->sf_addr);
+#ifdef CONFIG_SYS_NXP_FSPI_AHB
+			fspi_ahb_write(priv, (void *)dout, bytes);
+#else
 			fspi_op_write(priv, (u8 *)dout, bytes);
+#endif
 			return 0;
 		}
 
@@ -742,7 +781,7 @@ static int fspi_xfer(struct nxp_fspi_priv *priv, unsigned int bitlen,
 		    (priv->cur_seqid == FSPI_CMD_RDFSR))
 			fspi_op_rdxx(priv, din, bytes);
 		else if (priv->cur_seqid == FSPI_CMD_FAST_READ)
-#ifdef CONFIG_SYS_FSL_FSPI_AHB
+#ifdef CONFIG_SYS_NXP_FSPI_AHB
 			fspi_ahb_read(priv, din, bytes);
 #else
 			fspi_op_read(priv, din, bytes);
@@ -752,10 +791,10 @@ static int fspi_xfer(struct nxp_fspi_priv *priv, unsigned int bitlen,
 			      priv->cur_seqid);
 	}
 
-#ifdef CONFIG_SYS_FSL_FSPI_AHB
+#ifdef CONFIG_SYS_NXP_FSPI_AHB
 	if ((priv->cur_seqid == FSPI_CMD_SE) ||
 	    (priv->cur_seqid == FSPI_CMD_PP) ||
-	    (priv->cur_seqid == FSPI_CMD_BE_4K)
+	    (priv->cur_seqid == FSPI_CMD_BE_4K))
 		fspi_ahb_invalid(priv);
 #endif
 
@@ -860,8 +899,8 @@ static int nxp_fspi_probe(struct udevice *bus)
 
 	fspi_set_lut(priv);
 
-#ifdef CONFIG_SYS_FSL_FSPI_AHB
-	fspi_init_ahb_read(priv);
+#ifdef CONFIG_SYS_NXP_FSPI_AHB
+	fspi_init_ahb(priv);
 #endif
 
 	/*Clear Module Disable mode*/
