@@ -156,7 +156,7 @@ static void NS16550_setbrg(NS16550_t com_port, int baud_divisor)
 	serial_out(0x1, &com_port->dll);
 	serial_out(0x0, &com_port->dlm);
 #elif defined(CONFIG_EMU_CFP)
-	serial_out(0x7, &com_port->dll);
+	serial_out(0x2, &com_port->dll);
 	serial_out(0x0, &com_port->dlm);
 #else
 	serial_out(baud_divisor & 0xff, &com_port->dll);
