@@ -97,23 +97,91 @@
 #define CONFIG_ENV_OFFSET		0x300000        /* 3MB */
 #define CONFIG_ENV_ADDR			(CONFIG_SYS_FLASH_BASE + \
 						CONFIG_ENV_OFFSET)
+#ifndef CONFIG_EMU
+#define BOOT_TARGET_DEVICES(func) \
+	func(MMC, mmc, 0) \
+	func(USB, usb, 0)
+#include <config_distro_bootcmd.h>
 
 /* Initial environment variables */
 #define CONFIG_EXTRA_ENV_SETTINGS		\
 	"hwconfig=fsl_ddr:bank_intlv=auto\0"	\
+	"ramdisk_addr=0x800000\0"		\
+	"ramdisk_size=0x2000000\0"		\
 	"fdt_high=0xffffffffffffffff\0"		\
 	"initrd_high=0xffffffffffffffff\0"	\
-	"load_addr=0xa0000000\0"		\
+	"fdt_addr=0x00f00000\0"                 \
+	"kernel_addr=0x01000000\0"              \
+	"scriptaddr=0x80000000\0"               \
+	"scripthdraddr=0x80080000\0"		\
+	"fdtheader_addr_r=0x80100000\0"         \
+	"kernelheader_addr_r=0x80200000\0"      \
+	"load_addr=0xa0000000\0"            \
+	"kernel_addr_r=0x81000000\0"            \
+	"fdt_addr_r=0x90000000\0"               \
+	"ramdisk_addr_r=0xa0000000\0"           \
 	"kernel_start=0x1000000\0"		\
-	"kernel_addr_nor=0x21000000\0"		\
+	"kernelheader_start=0x800000\0"		\
+	"kernel_load=0xa0000000\0"		\
 	"kernel_size=0x2800000\0"		\
-	"console=ttyS0,115200\0"		\
-	"qspi_bootcmd=echo Trying load from qspi..;"	\
-		"sf probe && sf read $load_addr "	\
-		"$kernel_start $kernel_size; bootm $load_addr\0"
+	"kernelheader_size=0x40000\0"		\
+	"kernel_addr_sd=0x8000\0"		\
+	"kernel_size_sd=0x14000\0"		\
+	"kernelhdr_addr_sd=0x4000\0"		\
+	"kernelhdr_size_sd=0x10\0"		\
+	"console=ttyS0,115200\0"                \
+	 CONFIG_MTDPARTS_DEFAULT "\0"		\
+	BOOTENV					\
+	"boot_scripts=ls1028ardb_boot.scr\0"    \
+	"boot_script_hdr=hdr_ls1028ardb_bs.out\0"	\
+	"scan_dev_for_boot_part="               \
+		"part list ${devtype} ${devnum} devplist; "   \
+		"env exists devplist || setenv devplist 1; "  \
+		"for distro_bootpart in ${devplist}; do "     \
+		  "if fstype ${devtype} "                  \
+			"${devnum}:${distro_bootpart} "      \
+			"bootfstype; then "                  \
+			"run scan_dev_for_boot; "            \
+		  "fi; "                                   \
+		"done\0"                                   \
+	"scan_dev_for_boot="				  \
+		"echo Scanning ${devtype} "		  \
+				"${devnum}:${distro_bootpart}...; "  \
+		"for prefix in ${boot_prefixes}; do "	  \
+			"run scan_dev_for_scripts; "	  \
+		"done;"					  \
+		"\0"					  \
+	"boot_a_script="				  \
+		"load ${devtype} ${devnum}:${distro_bootpart} "  \
+			"${scriptaddr} ${prefix}${script}; "    \
+		"env exists secureboot && load ${devtype} "     \
+			"${devnum}:${distro_bootpart} "		\
+			"${scripthdraddr} ${prefix}${boot_script_hdr} " \
+			"&& esbc_validate ${scripthdraddr};"    \
+		"source ${scriptaddr}\0"	  \
+	"qspi_bootcmd=echo Trying load from flexspi..;"      \
+		"sf probe && sf read $load_addr "         \
+		"$kernel_start $kernel_size; env exists secureboot "	\
+		"&& sf read $kernelheader_addr_r $kernelheader_start "	\
+		"$kernelheader_size && esbc_validate ${kernelheader_addr_r}; " \
+		"bootm $load_addr#$board\0"		\
+	"sd_bootcmd=echo Trying load from SD ..;"	\
+		"mmcinfo; mmc read $load_addr "		\
+		"$kernel_addr_sd $kernel_size_sd && "	\
+		"env exists secureboot && mmc read $kernelheader_addr_r " \
+		"$kernelhdr_addr_sd $kernelhdr_size_sd "		\
+		" && esbc_validate ${kernelheader_addr_r};"	\
+		"bootm $load_addr#$board\0"
 
 #undef CONFIG_BOOTCOMMAND
-#define CONFIG_BOOTCOMMAND "run qspi_bootcmd"
+#if defined(CONFIG_QSPI_BOOT)
+#define CONFIG_BOOTCOMMAND "run distro_bootcmd; run qspi_bootcmd; "	\
+			   "env exists secureboot && esbc_halt;;"
+#elif defined(CONFIG_SD_BOOT)
+#define CONFIG_BOOTCOMMAND "run distro_bootcmd;run sd_bootcmd; "	\
+			   "env exists secureboot && esbc_halt;"
+#endif
+#endif
 #endif
 
 /* Monitor Command Prompt */
