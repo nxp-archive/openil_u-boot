@@ -9,6 +9,13 @@
 
 #include "ls1043a_common.h"
 
+#ifdef CONFIG_BAREMETAL
+#define CONFIG_MP
+#define CONFIG_SYS_DDR_SDRAM_SLAVE_SIZE        (256 * 1024 * 1024)
+#define CONFIG_MASTER_CORE                     0
+#define CONFIG_SYS_DDR_SDRAM_MASTER_SIZE       (512 * 1024 * 1024)
+#endif
+
 #define CONFIG_SYS_CLK_FREQ		100000000
 #define CONFIG_DDR_CLK_FREQ		100000000
 

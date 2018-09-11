@@ -548,10 +548,6 @@ int arch_early_init_r(void)
 #endif
 	if (check_psci()) {
 		debug("PSCI: PSCI does not exist.\n");
-
-		/* if PSCI does not exist, boot secondary cores here */
-		if (fsl_layerscape_wake_seconday_cores())
-			printf("Did not wake secondary cores\n");
 	}
 
 #ifdef CONFIG_SYS_FSL_HAS_RGMII
