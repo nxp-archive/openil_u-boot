@@ -70,8 +70,13 @@
 #endif
 
 #ifdef CONFIG_SD_BOOT
+#ifdef CONFIG_BAREMETAL
+#define CONFIG_SYS_FSL_PBL_RCW  \
+	board/freescale/ls1021aiot/ls102xa_rcw_sd_uart2.cfg
+#else
 #define CONFIG_SYS_FSL_PBL_RCW	\
 	board/freescale/ls1021aiot/ls102xa_rcw_sd.cfg
+#endif
 #define CONFIG_SPL_LIBCOMMON_SUPPORT
 #define CONFIG_SPL_LIBGENERIC_SUPPORT
 #define CONFIG_SPL_ENV_SUPPORT
