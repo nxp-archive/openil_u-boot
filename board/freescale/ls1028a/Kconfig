@@ -39,9 +39,9 @@ config SYS_TEXT_BASE
 if FSL_LS_PPA
 config SYS_LS_PPA_FW_ADDR
 	hex "PPA Firmware Addr"
-	default 0x20400000 if SYS_LS_PPA_FW_IN_XIP && ARCH_LS1028A
 	default 0x20A00000 if SYS_LS_PPA_FW_IN_XIP && ARCH_LS1028A && EMU_DDR && EMU_PXP
 	default 0x9B000000 if SYS_LS_PPA_FW_IN_XIP && ARCH_LS1028A && EMU_DDR
+	default 0x20400000 if SYS_LS_PPA_FW_IN_XIP && ARCH_LS1028A
 endif
 
 source "board/freescale/common/Kconfig"
@@ -89,9 +89,9 @@ config SYS_TEXT_BASE
 if FSL_LS_PPA
 config SYS_LS_PPA_FW_ADDR
 	hex "PPA Firmware Addr"
-	default 0x20400000 if SYS_LS_PPA_FW_IN_XIP && ARCH_LS1028A
 	default 0x20A00000 if SYS_LS_PPA_FW_IN_XIP && ARCH_LS1028A && EMU_DDR && EMU_PXP
 	default 0x9B000000 if SYS_LS_PPA_FW_IN_XIP && ARCH_LS1028A && EMU_DDR
+	default 0x20400000 if SYS_LS_PPA_FW_IN_XIP && ARCH_LS1028A
 endif
 
 source "board/freescale/common/Kconfig"
