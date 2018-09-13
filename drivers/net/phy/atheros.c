@@ -58,7 +58,7 @@ static int ar8035_config(struct phy_device *phydev)
 {
 	int regval;
 
-	printf("%s %d\n",__func__,__LINE__);
+	printf("%s %d\n", __func__, __LINE__);
 	phy_write(phydev, MDIO_DEVAD_NONE, 0xd, 0x0007);
 	phy_write(phydev, MDIO_DEVAD_NONE, 0xe, 0x8016);
 	phy_write(phydev, MDIO_DEVAD_NONE, 0xd, 0x4007);
@@ -71,7 +71,7 @@ static int ar8035_config(struct phy_device *phydev)
 
 	if ((phydev->interface == PHY_INTERFACE_MODE_RGMII_ID) ||
 	    (phydev->interface == PHY_INTERFACE_MODE_RGMII_TXID)) {
-		printf("%s %d: TX\n",__func__,__LINE__);
+		printf("%s %d: TX\n", __func__, __LINE__);
 		/* select debug reg 5 */
 		phy_write(phydev, MDIO_DEVAD_NONE, 0x1D, 0x5);
 		/* enable tx delay */
@@ -80,7 +80,7 @@ static int ar8035_config(struct phy_device *phydev)
 
 	if ((phydev->interface == PHY_INTERFACE_MODE_RGMII_ID) ||
 	    (phydev->interface == PHY_INTERFACE_MODE_RGMII_RXID)) {
-		printf("%s %d:RX\n",__func__,__LINE__);
+		printf("%s %d:RX\n", __func__, __LINE__);
 		/* select debug reg 0 */
 		phy_write(phydev, MDIO_DEVAD_NONE, 0x1D, 0x0);
 		/* enable rx delay */

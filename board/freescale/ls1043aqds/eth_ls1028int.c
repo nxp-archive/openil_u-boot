@@ -188,7 +188,7 @@ void board_ft_fman_fixup_port(void *fdt, char *compat, phys_addr_t addr,
 				   "sgmii-2500");
 	} else if (fm_info_get_enet_if(port) ==
 		   PHY_INTERFACE_MODE_RGMII || (fm_info_get_enet_if(port) ==
-						                   PHY_INTERFACE_MODE_RGMII_TXID)) {
+						PHY_INTERFACE_MODE_RGMII_TXID)) {
 		f_link.phy_id = cpu_to_fdt32(port);
 		f_link.duplex = cpu_to_fdt32(1);
 		f_link.link_speed = cpu_to_fdt32(1000);
@@ -289,14 +289,14 @@ void initialize_mac_to_slot(void)
 	serdes1_prtcl >>= FSL_CHASSIS2_RCWSR4_SRDS1_PRTCL_SHIFT;
 
 	switch (serdes1_prtcl) {
-		case 0x2555:
+	case 0x2555:
 		break;
 	case 0x4558:
 		break;
 	case 0x1355:
 		break;
 	case 0x2460:
-			lane_to_slot[0] = 2;
+		lane_to_slot[0] = 2;
 			lane_to_slot[1] = 2;
 			lane_to_slot[2] = 2;
 			lane_to_slot[3] = 2;
@@ -349,7 +349,7 @@ void initialize_mac_to_slot(void)
 			lane_to_slot[1] = EMI1_SLOT2 - 3;
 			lane_to_slot[2] = EMI1_SLOT2 - 3;
 			lane_to_slot[3] = EMI1_SLOT2 - 3;
-#elif 0 
+#elif 0
 	/* SLOT 3*/
 	/* lane C and D only */
 	/* lane C and D mux to slot3-lan0 and slot3-lan1 only */

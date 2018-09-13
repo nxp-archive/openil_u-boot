@@ -25,7 +25,7 @@
 		#interrupt-cells = <3>;
 		interrupt-controller;
 		interrupts = <1 9 0x4>;
-	};	
+	};
 
 	timer {
 		compatible = "arm,armv8-timer";
@@ -40,8 +40,8 @@
 		#address-cells = <1>;
 		#size-cells = <0>;
 		reg = <0x0 0x20C0000 0x0 0x10000>,
-		       <0x0 0x20000000 0x0 0x10000000>; /*64MB flash*/
-                               /* <0x0 0x20000000 0x0 0x4000000>;*/ /*How to incoperate 512M here*/
+		    <0x0 0x20000000 0x0 0x10000000>; /*64MB flash*/
+		/* <0x0 0x20000000 0x0 0x4000000>;*/ /*How to incoperate 512M here*/
 		reg-names = "FSPI", "FSPI-memory";
 		num-cs = <1>;
 		status = "disabled";
@@ -62,7 +62,7 @@
 		clock-frequency = <0>; 	/* Updated by bootloader */
 		interrupts = <0 32 0x1>; /* edge triggered */
 	};
-	
+
 	pcie@3400000 {
 			compatible = "fsl,ls-pcie", "snps,dw-pcie";
 			reg = <0x00 0x03400000 0x0 0x10000   /* dbi registers */

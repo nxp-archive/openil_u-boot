@@ -386,11 +386,11 @@ static inline void fspi_ahb_read(struct nxp_fspi_priv *priv, u8 *rxbuf, int len)
 
 	debug("FSPI AHB Read Invoked\n");
 	rx_addr = (void *)(uintptr_t)(priv->memmap_phy +
-			              priv->cur_amba_base +
+				      priv->cur_amba_base +
 				      priv->sf_addr);
 
 	/* Read out the data directly from the AHB buffer. */
-	memcpy(rxbuf, rx_addr , len);
+	memcpy(rxbuf, rx_addr, len);
 }
 
 /*
