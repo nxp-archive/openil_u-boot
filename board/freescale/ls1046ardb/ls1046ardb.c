@@ -146,8 +146,8 @@ int last_stage_init(void)
 	if(check_SDenv_version())
 		    env_set("bootcmd","run rollbackboot");
 	
-	/* enable watchdog and set timeout to 17s */
-	writew( 0x3420, WDOG1_BASE_ADDR); 
+	/* enable watchdog and set timeout to 120s */
+	writew( 0x34FF, WDOG1_BASE_ADDR);
 	return 0;
 }
 
