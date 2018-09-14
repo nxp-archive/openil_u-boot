@@ -54,6 +54,8 @@
 #define CONFIG_SYS_MMCSD_RAW_MODE_ARGS_SECTORS	30
 #endif
 
+#define CONFIG_LAST_STAGE_INIT
+
 /*
  * NOR Flash Definitions
  */

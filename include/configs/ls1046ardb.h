@@ -45,6 +45,8 @@
 #endif
 #endif
 
+#define CONFIG_LAST_STAGE_INIT
+
 #ifndef SPL_NO_IFC
 /* IFC */
 #define CONFIG_FSL_IFC
