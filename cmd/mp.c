@@ -1,13 +1,16 @@
 // SPDX-License-Identifier: GPL-2.0+
 /*
  * Copyright 2008-2009 Freescale Semiconductor, Inc.
- * Copyright 2019 NXP
+ * Copyright 2018-2019 NXP
  */
 
 #include <common.h>
 #include <command.h>
 
 #ifdef CONFIG_BAREMETAL
+
+DECLARE_GLOBAL_DATA_PTR;
+
 int cpu_bringup_all(unsigned long addr)
 {
 	unsigned long cpuid;
@@ -15,7 +18,13 @@ int cpu_bringup_all(unsigned long addr)
 	for (cpuid = 1; cpuid < CONFIG_MAX_CPUS; cpuid++) {
 		if (is_core_valid(cpuid))
 			fsl_layerscape_wakeup_fixed_core(cpuid, addr);
+		mdelay(300);
 	}
+
+	/*
+	 * use fsl_layerscape_wakeup_fixed_core(cpuid, gd->relocaddr)
+	 * to prepare for Linux start on core cpuid.
+	 */
 
 	return 0;
 }
