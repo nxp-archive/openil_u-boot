@@ -7,6 +7,28 @@
 #include <common.h>
 #include <command.h>
 
+#ifdef CONFIG_BAREMETAL
+
+DECLARE_GLOBAL_DATA_PTR;
+
+int cpu_bringup_all(unsigned long addr)
+{
+	unsigned long cpuid;
+
+	for (cpuid = 1; cpuid < CONFIG_MAX_CPUS; cpuid++) {
+		if (is_core_valid(cpuid))
+			fsl_layerscape_wakeup_fixed_core(cpuid, addr);
+		udelay(300000);
+	}
+
+	/* use fsl_layerscape_wakeup_fixed_core(cpuid, gd->relocaddr)
+	 * to prepare for Linux start on core cpuid.
+	 */
+
+	return 0;
+}
+#endif
+
 static int cpu_status_all(void)
 {
 	unsigned long cpuid;
@@ -32,7 +54,10 @@ cpu_cmd(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 
 	if (argc == 2 && strncmp(argv[1], "status", 6) == 0)
 		  return cpu_status_all();
-
+#ifdef CONFIG_BAREMETAL
+	if (argc == 3 && strncmp(argv[1], "start", 6) == 0)
+		return cpu_bringup_all(simple_strtoul(argv[2], NULL, 10));
+#endif
 	if (argc < 3)
 		return CMD_RET_USAGE;
 
@@ -41,7 +66,6 @@ cpu_cmd(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 		printf ("Core num: %lu is not valid\n",	cpuid);
 		return 1;
 	}
-
 
 	if (argc == 3) {
 		if (strncmp(argv[2], "reset", 5) == 0)
@@ -72,7 +96,10 @@ static char cpu_help_text[] =
 	"cpu status                      - Status of all cpus\n"
 	"cpu <num> status                - Status of cpu <num>\n"
 	"cpu <num> disable               - Disable cpu <num>\n"
-	"cpu <num> release <addr> [args] - Release cpu <num> at <addr> with [args]"
+	"cpu <num> release <addr> [args] - Release cpu <num> at <addr> with [args]\n"
+#ifdef CONFIG_BAREMETAL
+	"cpu start <addr>				 - Start slave cores from <addr>\n"
+#endif
 #ifdef CONFIG_PPC
 	"\n"
 	"                         [args] : <pir> <r3> <r6>\n" \

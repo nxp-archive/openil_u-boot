@@ -14,6 +14,7 @@
 #include <asm/gic.h>
 #include <asm/io.h>
 #include <asm/secure.h>
+#include <mmc.h>
 
 static unsigned int read_id_pfr1(void)
 {
@@ -86,6 +87,38 @@ __weak void psci_board_init(void)
 {
 }
 
+#ifdef CONFIG_ARMV7_TEE
+void relocate_optee(void)
+{
+#ifdef CONFIG_SECURE_BOOT
+	memcpy((void *)SYS_OPTEE_ENTRY, (void *)OPTEE_IMAGE_START, OPTEE_IMAGE_SIZE);
+#else
+	int dev = CONFIG_SYS_MMC_ENV_DEV;
+	u32 cnt = OPTEE_IMAGE_SIZE / 512;
+	u32 blk = OPTEE_IMAGE_ADDR / 512;
+	void *addr =(void*)SYS_OPTEE_ENTRY;
+	struct mmc *mmc = find_mmc_device(CONFIG_SYS_MMC_ENV_DEV);
+	if (!mmc)
+		printf("\nMMC cannot find device for ucode\n");
+	else {
+		printf("\nMMC read: dev # %u, block # %u, count %u ...\n",
+				dev, blk, cnt);
+		mmc_init(mmc);
+		(void)mmc->block_dev.block_read(&mmc->block_dev, blk, cnt,
+				addr);
+
+		/* flush cache after read */
+		flush_cache((ulong)addr, cnt * 512);
+	}
+#endif
+
+}
+/* Platform specific function to validate tee.bin */
+void __weak validate_optee(void)
+{
+}
+#endif
+
 int armv7_init_nonsec(void)
 {
 	unsigned int reg;
@@ -132,6 +165,16 @@ int armv7_init_nonsec(void)
 	 * cores.
 	 */
 	relocate_secure_section();
+
+	/* Validate & Relocate tee binary from nor flash to secure ram area
+	 * if CONFIG_ARMV7_TEE is enabled.
+	 */
+#ifdef CONFIG_ARMV7_TEE
+#ifdef CONFIG_SECURE_BOOT
+	validate_optee();
+#endif
+	relocate_optee();
+#endif
 
 #ifndef CONFIG_ARMV7_PSCI
 	smp_set_core_boot_addr((unsigned long)secure_ram_addr(_smp_pen), -1);

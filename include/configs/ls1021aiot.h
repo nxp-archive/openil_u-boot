@@ -11,6 +11,17 @@
 
 #define CONFIG_SYS_FSL_CLK
 
+#ifdef CONFIG_ARMV7_TEE
+#define SYS_TEE_RAM_SIZE	0x04000000
+#define CONFIG_SYS_MEM_TOP_HIDE	SYS_TEE_RAM_SIZE
+#define SYS_OPTEE_ENTRY	0xBC000000
+#define OPTEE_HEADER_START	0x82060000
+#define OPTEE_IMAGE_START	0x82100000
+#define OPTEE_IMAGE_SIZE	0x80000
+#define OPTEE_IMAGE_ADDR	0x800000
+#define CONFIG_SYS_MMC_ENV_DEV	0
+#endif
+
 /*
  * Size of malloc() pool
  */
@@ -59,8 +70,13 @@
 #endif
 
 #ifdef CONFIG_SD_BOOT
+#ifdef CONFIG_BAREMETAL
+#define CONFIG_SYS_FSL_PBL_RCW  \
+	board/freescale/ls1021aiot/ls102xa_rcw_sd_uart2.cfg
+#else
 #define CONFIG_SYS_FSL_PBL_RCW	\
 	board/freescale/ls1021aiot/ls102xa_rcw_sd.cfg
+#endif
 #define CONFIG_SPL_LIBCOMMON_SUPPORT
 #define CONFIG_SPL_LIBGENERIC_SUPPORT
 #define CONFIG_SPL_ENV_SUPPORT
@@ -88,6 +104,13 @@
 
 #define CONFIG_SYS_DDR_SDRAM_BASE	0x80000000UL
 #define CONFIG_SYS_SDRAM_BASE		CONFIG_SYS_DDR_SDRAM_BASE
+
+#ifdef CONFIG_BAREMETAL
+#define CONFIG_MP
+#define CONFIG_SYS_DDR_SDRAM_SLAVE_SIZE	(256 * 1024 * 1024)
+#define CONFIG_MASTER_CORE			0
+#define CONFIG_SYS_DDR_SDRAM_MASTER_SIZE	(512 * 1024 * 1024)
+#endif
 
 /*
  * Serial Port
@@ -244,12 +267,12 @@
 #define CONFIG_ENV_OVERWRITE
 
 #if defined(CONFIG_SD_BOOT)
-#define CONFIG_ENV_OFFSET		0x100000
+#define CONFIG_ENV_OFFSET		0x300000
 #define CONFIG_SYS_MMC_ENV_DEV	0
 #define CONFIG_ENV_SIZE			0x2000
 #elif defined(CONFIG_QSPI_BOOT)
 #define CONFIG_ENV_SIZE			0x2000
-#define CONFIG_ENV_OFFSET		0x100000
+#define CONFIG_ENV_OFFSET		0x300000
 #define CONFIG_ENV_SECT_SIZE	0x10000
 #endif
 
@@ -259,5 +282,5 @@
 #define CONFIG_MISC_INIT_R
 
 #include <asm/fsl_secure_boot.h>
-
+#define CONFIG_SYS_BOOTM_LEN     (64 << 20) /* Increase max gunzip size */
 #endif

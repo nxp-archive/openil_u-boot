@@ -12,6 +12,8 @@
 #include <cli.h>
 #include <console.h>
 #include <version.h>
+#include <mmc.h>
+#include <asm/io.h>
 
 DECLARE_GLOBAL_DATA_PTR;
 

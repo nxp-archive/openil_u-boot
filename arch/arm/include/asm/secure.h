@@ -26,4 +26,6 @@
 #define secure_ram_addr(_fn)	(_fn)
 #endif
 
+void validate_optee(void);
+
 #endif

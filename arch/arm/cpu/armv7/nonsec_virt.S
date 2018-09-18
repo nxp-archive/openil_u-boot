@@ -11,6 +11,12 @@
 #include <asm/gic.h>
 #include <asm/armv7.h>
 #include <asm/proc-armv/ptrace.h>
+#ifdef CONFIG_ARMV7_TEE
+#ifndef SYS_OPTEE_ENTRY
+#error "Error! SYS_OPTEE_ENTRY not defined"
+#endif
+#define OPTEE_ENTRY SYS_OPTEE_ENTRY
+#endif
 
 .arch_extension sec
 .arch_extension virt
@@ -28,6 +34,34 @@ _monitor_vectors:
 	.word 0
 	.word 0
 	.word 0
+
+#ifdef CONFIG_ARMV7_TEE
+/* u-boot context registers for core0 used while optee init */
+_core0_ctx:
+	.word 0 /* r4 */
+	.word 0 /* r5 */
+	.word 0 /* r6 */
+	.word 0 /* r7 */
+	.word 0 /* r8 */
+	.word 0 /* r9 */
+	.word 0 /* r10 */
+	.word 0 /* r11 */
+	.word 0 /* sp */
+	.word 0 /* lr */
+
+/* u-boot context registers for core1 used while optee init */
+_core1_ctx:
+	.word 0 /* r4 */
+	.word 0 /* r5 */
+	.word 0 /* r6 */
+	.word 0 /* r7 */
+	.word 0 /* r8 */
+	.word 0 /* r9 */
+	.word 0 /* r10 */
+	.word 0 /* r11 */
+	.word 0 /* sp */
+	.word 0 /* lr */
+#endif
 
 .macro is_cpu_virt_capable	tmp
 	mrc	p15, 0, \tmp, c0, c1, 1		@ read ID_PFR1
@@ -110,6 +144,33 @@ ENTRY(_do_nonsec_entry)
 	smc	#0
 ENDPROC(_do_nonsec_entry)
 
+#ifdef CONFIG_ARMV7_TEE
+/*
+ * No need to switch from secure to non-secure mode as secure OS/TEE
+ * returned control in non-secure mode only.
+ * Here we have to configure spsr register before passing control
+ * to linux.
+ */
+ENTRY(_do_tee_nonsec_entry)
+	mov	lr, r0
+	mov	r0, r1
+	mov	r1, r2
+	mov	r2, r3
+	mov	r6, #SVC_MODE			@ default mode is SVC
+	is_cpu_virt_capable r4
+#ifdef CONFIG_ARMV7_VIRT
+	moveq	r6, #HYP_MODE			@ Enter the kernel as HYP
+#endif
+	mov	ip, #(F_BIT | I_BIT | A_BIT)	@ Set A, I and F
+	tst	r0, #1				@ Check for Thumb PC
+	orrne	ip, ip, #T_BIT			@ Set T if Thumb
+	orr	ip, ip, r6			@ Slot target mode in
+	msr	spsr_cxfs, ip			@ Set full SPSR
+	movs	pc, lr				@ Jump to linux
+	b	.
+ENDPROC(_do_tee_nonsec_entry)
+#endif
+
 .macro get_cbar_addr	addr
 #ifdef CONFIG_ARM_GIC_BASE_ADDRESS
 	ldr	\addr, =CONFIG_ARM_GIC_BASE_ADDRESS
@@ -132,6 +193,12 @@ ENDPROC(_do_nonsec_entry)
 	add	\addr, \addr, \tmp
 .endm
 
+.macro get_core_pos reg, tmp
+#define MPIDR_CPU_MASK		0xff
+	mrc	p15, 0, \reg, c0, c0, 5
+	and	\reg, \reg, #MPIDR_CPU_MASK
+.endm
+
 #ifndef CONFIG_ARMV7_PSCI
 /*
  * Secondary CPUs start here and call the code for the core specific parts
@@ -148,6 +215,36 @@ ENTRY(_smp_pen)
 	adr	r0, _smp_pen			@ do not use this address again
 	b	smp_waitloop			@ wait for IPIs, board specific
 ENDPROC(_smp_pen)
+#endif
+
+#ifdef CONFIG_ARMV7_TEE
+/*
+ * Initialize cntvoff to zero only once during boot time in
+ * secure monitor mode before passing control to secure OS.
+ * Also NS bit should be set while initializing it.
+ * Required for proper linux smp booting.
+ */
+ENTRY(_cntvoff_init)
+#define MON_MODE	0x16
+	mrs	r1, cpsr
+	cps	#MON_MODE
+
+	mrc     p15, 0, r0, c1, c1, 0		@ read SCR
+	orr     r0, r0, #1			@ Set NS in SCR
+	mcr     p15, 0, r0, c1, c1, 0		@ write SCR (with NS bit set)
+
+	@ Reset CNTVOFF to 0 before leaving monitor mode
+	mrc     p15, 0, r2, c0, c1, 1		@ read ID_PFR1
+	ands    r2, r2, #CPUID_ARM_GENTIMER_MASK  @ test arch timer bits
+	movne   r2,#0x0
+	mcrrne  p15, 4, r2, r2, c14		@ Reset CNTVOFF to zero
+
+	bic     r0, r0, #1			@ Clear NS in SCR
+	mcr     p15, 0, r0, c1, c1, 0           @ write SCR (with NS bit reset)
+
+	msr	cpsr, r1
+	bx	lr
+ENDPROC(_cntvoff_init)
 #endif
 
 /*
@@ -196,12 +293,70 @@ ENTRY(_nonsec_init)
 	mcreq	p15, 0, r1, c14, c0, 0		@ write CNTFRQ
 #endif
 
+#ifdef CONFIG_ARMV7_TEE
+	/* Set SMP bit before passing control to secure OS.
+	 * Required to be set before mmu setup by secure OS as
+	 * LDREX instruction abort seen after mmu setup.
+	 */
+	mrc	p15, 0, r0, c1, c0, 1		@ ACTLR
+	tst	r0, #(1 << 6)			@ SMP mode enabled?
+	orreq	r0, r0, #(1 << 6)		@ Set SMP bit
+	mcreq	p15, 0, r0, c1, c0, 1		@ ACTLR
+	isb
+
+	/* Save uboot context for both cores before passing
+	 * control to secure OS.
+	 */
+	get_core_pos r0, r1
+	cmp	r0, #0
+	bne	scr1
+	adr	r0, _core0_ctx
+	stmia	r0!, {r4-r11}			@ Save registers for core0
+	str	sp, [r0]			@ Save sp for core0
+	add	r0, r0, #4
+	str	lr, [r0]			@ Save lr for core0
+	b	init
+scr1:	adr	r0, _core1_ctx
+	stmia	r0!, {r4-r11}			@ Save registers for core1
+	str	sp, [r0]			@ Save sp for core1
+	add	r0, r0, #4
+	str	lr, [r0]			@ Save lr for core1
+
+	/* Initialize CNTVOFF and pass control to secure OS */
+init:	bl	_cntvoff_init			@ Initialize CNTVOFF to zero
+	adr	lr, end_init_optee
+	ldr	r0, =OPTEE_ENTRY
+	movs	pc, r0
+	b	.				@ Control returned by TEE to address in lr
+
+	/* Restore uboot context for both cores after initializing
+	 * secure OS.
+	 */
+end_init_optee:
+	get_core_pos r0, r1
+	cmp	r0, #0
+	bne	rcr1
+	adr	r0, _core0_ctx
+	ldmfd	r0!, {r4-r11}			@ Restore registers for core0
+	ldr	sp, [r0]			@ Restore sp for core0
+	add	r0, r0, #4
+	ldr	lr, [r0]			@ Restore lr for core0
+	b	end
+rcr1:	adr	r0, _core1_ctx
+	ldmfd	r0!, {r4-r11}			@ Restore registers for core1
+	ldr	sp, [r0]			@ Restore sp for core1
+	add	r0, r0, #4
+	ldr	lr, [r0]			@ Restore lr for core1
+end:	bx	lr
+
+#else	/* undefined CONFIG_ARMV7_TEE */
 	adr	r1, _monitor_vectors
 	mcr	p15, 0, r1, c12, c0, 1		@ set MVBAR to secure vectors
 	isb
 
 	mov	r0, r3				@ return GICC address
 	bx	lr
+#endif
 ENDPROC(_nonsec_init)
 
 #ifdef CONFIG_SMP_PEN_ADDR
@@ -216,7 +371,12 @@ ENTRY(smp_waitloop)
 	cmp	r0, r1			@ make sure we dont execute this code
 	beq	smp_waitloop		@ again (due to a spurious wakeup)
 	mov	r0, r1
+#ifdef CONFIG_ARMV7_TEE
+	b	_do_tee_nonsec_entry
+#else
 	b	_do_nonsec_entry
+#endif
+
 ENDPROC(smp_waitloop)
 .weak smp_waitloop
 #endif
