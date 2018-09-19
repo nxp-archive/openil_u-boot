@@ -15,6 +15,12 @@
 #include <net.h>
 #include <asm/processor.h>
 #include <config.h>
+#include <fsl_mdio.h>
+#include <miiphy.h>
+#include <phy.h>
+#include <fm_eth.h>
+#include <fsl_memac.h>
+
 #include "fsl_enetc.h"
 
 DECLARE_GLOBAL_DATA_PTR;
@@ -324,6 +330,51 @@ static int enetc_disable_si_port(struct enetc_devfn *hw)
 	return 0;
 }
 
+#ifdef CONFIG_PHYLIB
+static int enetc_get_eth_phy_data(struct udevice *dev)
+{
+	struct enetc_devfn *hw = dev_get_priv(dev);
+	const void *fdt = gd->fdt_blob;
+	phy_interface_t phy_intf;
+	const char *phy_mode;
+	int node, parent;
+	char name[32];
+	int len;
+	int reg;
+
+	sprintf(name, "ethernet@%u", hw->devno);
+	parent = dev_of_offset(dev->parent);
+
+	node = fdt_subnode_offset(fdt, parent, name);
+	/*TODO: check if ethernet node is enabled */
+	if (node <= 0) {
+		ENETC_ERR(hw, "no %s node in DT\n", name);
+		return -ENOENT;
+	}
+	phy_mode = fdt_getprop(fdt, node, "phy-mode", NULL);
+	if (phy_mode)
+		phy_intf = phy_get_interface_by_name(phy_mode);
+	if (phy_intf < 0 || !phy_mode) {
+		ENETC_ERR(hw, "%s: missing or invalid PHY mode\n", name);
+		return -EINVAL;
+	}
+	node = fdtdec_lookup_phandle(fdt, node, "phy-handle");
+	if (node <= 0) {
+		ENETC_ERR(hw, "%s: missing or invalid PHY phandle\n", name);
+		return -EINVAL;
+	}
+	reg = fdtdec_get_int(fdt, node, "reg", -1);
+	if (reg < 0) {
+		ENETC_ERR(hw, "%s: missing reg property\n",
+			  fdt_get_name(fdt, node, &len));
+		return -EINVAL;
+	}
+	hw->phy_addr = reg;
+	hw->phy_intf = phy_intf;
+
+	return 0;
+}
+#endif
 /*
  * Probe ENETC driver:
  * - initialize port and station interface BARs
@@ -344,6 +395,9 @@ static int enetc_probe(struct udevice *dev)
 		return ret;
 	}
 
+#ifdef CONFIG_PHYLIB
+	ret = enetc_get_eth_phy_data(dev);
+#endif
 	return ret;
 }
 

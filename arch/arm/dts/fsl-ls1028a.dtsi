@@ -93,4 +93,15 @@
 			ranges = <0x81000000 0x0 0x00000000 0x48 0x00020000 0x0 0x00010000   /* downstream I/O */
 				  0x82000000 0x0 0x40000000 0x48 0x40000000 0x0 0x40000000>; /* non-prefetchable memory */
 	};
+
+	enetc_pcie: pcie@1f0000000 { /* rcie_enetc */
+		compatible = "fsl,ls-enetc-rcie", "fsl,ls-enetc-eth";
+		reg= <0x01 0xf0000000 0x0 0x100000>;
+		#address-cells = <3>;
+		#size-cells = <2>;
+		device_type = "pci";
+		bus-range = <0x0 0x0>;
+		/* PF0-6 BAR0 - non-prefetchable memory */
+		ranges= <0x82000000 0x0 0x00000000 0x1 0xf8000000 0x0 0x160000>;
+	};
 };

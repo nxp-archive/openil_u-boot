@@ -136,6 +136,7 @@ enum enetc_bdr_type {TX, RX};
 #define ENETC_PSICFGR(n)	(0x00940 + (n) * 0x10)
 #define ENETC_PSICFGR_SET_TXBDR(val)	((val) & 0xff)
 #define ENETC_PSICFGR_SET_RXBDR(val)	(((val) & 0xff) << 16)
+#define ENETC_EMDIO_CFG 0x1c00
 #define ENETC_PM_CC	0x8008
 /* Port config: enable MAC Tx/Rx, Tx padding, MAC promisc */
 #define ENETC_PM_CC_DEFAULT 0x810
@@ -217,6 +218,11 @@ struct enetc_devfn {
 	/* Rx/Tx buffer descriptor rings info */
 	struct bd_ring tx_bdr;
 	struct bd_ring rx_bdr;
+
+	struct phy_device *phydev;
+	phy_interface_t phy_intf;
+	int phy_addr;
+	struct mii_dev *bus;
 };
 
 /* register accessors */
@@ -226,9 +232,10 @@ struct enetc_devfn {
 #define enetc_write(hw, off, v)	enetc_write_reg((hw)->regs_base + (off), v)
 
 /* port register accessors */
-#define enetc_read_port(hw, off)	enetc_read_reg((hw)->port_regs + (off))
-#define enetc_write_port(hw, off, v)	\
-				enetc_write_reg((hw)->port_regs + (off), v)
+#define enetc_port_regs(hw, off) ((hw)->port_regs + (off))
+#define enetc_read_port(hw, off) enetc_read_reg(enetc_port_regs((hw), (off)))
+#define enetc_write_port(hw, off, v) \
+				enetc_write_reg(enetc_port_regs((hw), (off)), v)
 
 /* BDR register accessors, see ENETC_BDR() */
 #define enetc_bdr_read(hw, t, n, off) \
