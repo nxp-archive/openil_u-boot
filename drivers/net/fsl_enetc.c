@@ -331,6 +331,83 @@ static int enetc_disable_si_port(struct enetc_devfn *hw)
 }
 
 #ifdef CONFIG_PHYLIB
+#define ENETC_MDIO_NAME "ENETC_MDIO"
+static int enetc_init_mdio_phy(struct udevice *dev)
+{
+	struct enetc_devfn *hw = dev_get_priv(dev);
+	struct memac_mdio_controller *mdio_regs;
+	struct memac_mdio_info mdio_info;
+	struct phy_device *phydev;
+	struct mii_dev *bus;
+	int err;
+
+	ENETC_DBG(hw, "%s: connecting to PHY id:%x mode:%s ...\n",
+		  __func__, hw->phy_addr,
+		  phy_string_for_interface(hw->phy_intf));
+
+	mdio_regs = (struct memac_mdio_controller *)
+					enetc_port_regs(hw, ENETC_EMDIO_CFG);
+	mdio_info.regs = mdio_regs;
+	mdio_info.name = ENETC_MDIO_NAME;
+	ENETC_DBG(hw, "%s: EMDIO_CFG=0x%08x\n", __func__,
+		  enetc_read_port(hw, 0x1c00));
+
+	/* register port EMI */
+	err = fm_memac_mdio_init(NULL, &mdio_info);
+	if (err)
+		return err;
+
+	bus = miiphy_get_dev_by_name(ENETC_MDIO_NAME);
+
+	/* try connect to phy */
+	phydev = phy_connect(bus, hw->phy_addr, dev, hw->phy_intf);
+
+	if (!phydev) {
+		ENETC_ERR(hw, "PHY connect fail\n");
+		err = -ENODEV;
+		goto enetc_free_mdio_bus;
+	}
+
+	err = phy_config(phydev);
+	if (err) {
+		ENETC_ERR(hw, "PHY config fail\n");
+		goto enetc_free_mdio_bus;
+	}
+
+	hw->phydev = phydev;
+	hw->bus = bus;
+	ENETC_DBG(hw, "%s: connected to PHY: %s ...\n", __func__,
+		  phydev->drv->name);
+	return 0;
+
+enetc_free_mdio_bus:
+	mdio_unregister(bus);
+	mdio_free(bus);
+
+	return err;
+}
+
+static void enetc_free_mdio_phy(struct udevice *dev)
+{
+	struct enetc_devfn *hw = dev_get_priv(dev);
+	struct phy_device *phydev = hw->phydev;
+	struct mii_dev *bus = hw->bus;
+
+	if (phydev) {
+		ENETC_DBG(hw, "%s: disconnecting from PHY: %s ...\n", __func__,
+			  phydev->drv->name);
+		phy_shutdown(phydev);
+		free(phydev);
+		hw->phydev = NULL;
+	}
+
+	if (bus) {
+		mdio_unregister(bus);
+		mdio_free(bus);
+		hw->bus = NULL;
+	}
+}
+
 static int enetc_get_eth_phy_data(struct udevice *dev)
 {
 	struct enetc_devfn *hw = dev_get_priv(dev);
@@ -567,6 +644,9 @@ static int enetc_start(struct udevice *dev)
 	enetc_setup_tx_bdr(hw);
 	enetc_setup_rx_bdr(dev, hw);
 
+#ifdef CONFIG_PHYLIB
+	ret = enetc_init_mdio_phy(dev);
+#endif
 	return 0;
 }
 
@@ -581,6 +661,10 @@ static void enetc_stop(struct udevice *dev)
 	u16 v = 0;
 
 	ENETC_DBG(hw, "stopping ...\n");
+
+#ifdef CONFIG_PHYLIB
+	enetc_free_mdio_phy(dev);
+#endif
 
 	/* check if this device was started and we have access to it */
 	dm_pci_read_config16(dev, PCI_CFH_CMD, &v);
