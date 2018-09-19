@@ -459,11 +459,11 @@ static int enetc_get_eth_phy_data(struct udevice *dev)
 static int enetc_probe(struct udevice *dev)
 {
 	struct enetc_devfn *hw = dev_get_priv(dev);
-	int ret = 0;
+	int ret;
 
 	hw->name = dev->name;
 	hw->devno = trailing_strtol(dev->name);
-	ENETC_DBG(hw, "probing driver ...\n");
+	ENETC_DBG(hw, "probing driver for %s ...\n", hw->name);
 
 	/* initialize register */
 	ret = enetc_init_pf_regs(dev);
@@ -623,7 +623,7 @@ static int enetc_start(struct udevice *dev)
 	ENETC_DBG(hw, "starting ...\n");
 
 	/* run FLR on current PF */
-	ENETC_DBG(hw, "reseting ...\n");
+	ENETC_DBG(hw, "resetting ...\n");
 	ret = enetc_pf_flr(dev);
 	if (ret < 0)
 		ENETC_ERR(hw, "failed to reset\n");
