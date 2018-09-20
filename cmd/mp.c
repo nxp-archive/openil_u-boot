@@ -56,7 +56,7 @@ cpu_cmd(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 		  return cpu_status_all();
 #ifdef CONFIG_BAREMETAL
 	if (argc == 3 && strncmp(argv[1], "start", 6) == 0)
-		return cpu_bringup_all(simple_strtoul(argv[2], NULL, 10));
+		return cpu_bringup_all(simple_strtoul(argv[2], NULL, 16));
 #endif
 	if (argc < 3)
 		return CMD_RET_USAGE;
