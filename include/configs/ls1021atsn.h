@@ -91,7 +91,6 @@
 #define CONFIG_SYS_FSL_PBL_RCW	\
 	board/freescale/ls1021atsn/ls102xa_rcw_sd_ifc.cfg
 #endif
-#define CONFIG_SPL_FRAMEWORK
 #define CONFIG_SPL_LDSCRIPT	"arch/$(ARCH)/cpu/u-boot-spl.lds"
 #define CONFIG_SPL_LIBCOMMON_SUPPORT
 #define CONFIG_SPL_LIBGENERIC_SUPPORT
@@ -111,7 +110,6 @@
 #define CONFIG_SPL_MAX_SIZE		0x1a000
 #define CONFIG_SPL_STACK		0x1001d000
 #define CONFIG_SPL_PAD_TO		0x1c000
-#define CONFIG_SYS_TEXT_BASE		0x82000000
 
 #define CONFIG_SYS_SPL_MALLOC_START	(CONFIG_SYS_TEXT_BASE + \
 		CONFIG_SYS_MONITOR_LEN)
@@ -291,16 +289,11 @@
 #define CONFIG_PCIE1		/* PCIE controler 1 */
 #define CONFIG_PCIE2		/* PCIE controler 2 */
 #define FSL_PCIE_COMPAT "fsl,ls1021a-pcie"
-#ifdef CONFIG_PCI
-#define CONFIG_PCI_SCAN_SHOW
-#define CONFIG_CMD_PCI
-#endif
 
 #define CONFIG_CMD_PING
 #define CONFIG_CMD_DHCP
 #define CONFIG_CMD_MII
 #define CONFIG_CMDLINE_TAG
-#define CONFIG_CMDLINE_EDITING
 
 #if defined(CONFIG_QSPI_BOOT) || defined(CONFIG_SD_BOOT)
 #undef	CONFIG_CMD_IMLS
@@ -331,8 +324,6 @@
 /*
  * Miscellaneous configurable options
  */
-#define CONFIG_SYS_LONGHELP		/* undef to save memory */
-#define CONFIG_AUTO_COMPLETE
 #define CONFIG_SYS_CBSIZE		256	/* Console I/O Buffer Size */
 #define CONFIG_SYS_PBSIZE		\
 		(CONFIG_SYS_CBSIZE + sizeof(CONFIG_SYS_PROMPT) + 16)
@@ -366,11 +357,9 @@
 
 #if defined(CONFIG_SD_BOOT)
 #define CONFIG_ENV_OFFSET		0x300000
-#define CONFIG_ENV_IS_IN_MMC
 #define CONFIG_SYS_MMC_ENV_DEV		0
 #define CONFIG_ENV_SIZE			0x20000
 #elif defined(CONFIG_QSPI_BOOT)
-#define CONFIG_ENV_IS_IN_SPI_FLASH
 #define CONFIG_ENV_SIZE			0x2000
 #define CONFIG_ENV_OFFSET		0x300000
 #define CONFIG_ENV_SECT_SIZE		0x40000
