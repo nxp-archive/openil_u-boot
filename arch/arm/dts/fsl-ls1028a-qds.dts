@@ -30,3 +30,17 @@
 		reg = <0>;
 	 };
 };
+
+&enetc_pcie {
+        mdio {
+                #address-cells=<0>;
+                #size-cells=<1>;
+                enetc_phy0: phy@0 {
+                        reg = <2>;
+                };
+                ethernet@0 {
+                        phy-mode = "sgmii";
+                        phy-handle = <&enetc_phy0>;
+                };
+        };
+};
