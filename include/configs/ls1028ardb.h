@@ -33,7 +33,7 @@
 
 /* Store environment at top of flash */
 #define CONFIG_ENV_IS_NOWHERE		1
-#define CONFIG_ENV_SIZE			0x1000
+#define CONFIG_ENV_SIZE			0x200000
 
 #ifdef CONFIG_SPL_BUILD
 #define CONFIG_SYS_MONITOR_BASE CONFIG_SPL_TEXT_BASE
