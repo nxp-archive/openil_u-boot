@@ -26,6 +26,15 @@ config BAREMETAL
 	bool "Enable baremetal"
 	default y
 
+config FMAN_COREID_SET
+	bool "Enable FMAN for baremetal"
+	default n
+	depends on BAREMETAL
+
+config FMAN_FMAN1_COREID
+	int "FMAN1 is assigned to that core"
+	default "1"
+
 config USB_COREID_SET
 	bool "Enable USB for baremetal"
 	default y
