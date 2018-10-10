@@ -469,11 +469,11 @@ static int initr_default_env(void)
 	/* initialize environment */
 	set_default_env(NULL);
 #ifdef CONFIG_OF_CONTROL
-	setenv_addr("fdtcontroladdr", gd->fdt_blob);
+	env_set_addr("fdtcontroladdr", gd->fdt_blob);
 #endif
 
 	/* Initialize from environment */
-	load_addr = getenv_ulong("loadaddr", 16, load_addr);
+	load_addr = env_get_ulong("loadaddr", 16, load_addr);
 
 	return 0;
 }
@@ -595,7 +595,8 @@ static int initr_bbmii(void)
 #ifdef CONFIG_CMD_NET
 static int initr_net(void)
 {
-	if (get_core_id() == CONFIG_SLAVE_FIRST_CORE) {
+#ifdef CONFIG_FMAN1_COREID
+	if (get_core_id() == CONFIG_FMAN_FMAN1_COREID) {
 		puts("Net:   ");
 		eth_initialize();
 #if defined(CONFIG_RESET_PHY_R)
@@ -603,6 +604,7 @@ static int initr_net(void)
 		reset_phy();
 #endif
 	}
+#endif
 	return 0;
 }
 #endif
@@ -971,7 +973,7 @@ init_fnc_t init_sequence_r_slave[] = {
 	 */
 	initr_pci,
 #endif
-#ifdef CONFIG_SLAVE_FMAN_CORE
+#ifdef CONFIG_FMAN_COREID_SET
 	eth_early_init_r,
 #endif
 #if defined(CONFIG_ID_EEPROM) || defined(CONFIG_SYS_I2C_MAC_OFFSET)
@@ -1005,7 +1007,7 @@ init_fnc_t init_sequence_r_slave[] = {
 	/* TODO: need add initr_net after add ethernet feature */
 	/* initr_net,
 	 */
-#ifdef CONFIG_SLAVE_FMAN_CORE
+#ifdef CONFIG_FMAN_COREID_SET
 	initr_net,
 #endif
 #endif

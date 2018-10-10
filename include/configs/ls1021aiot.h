@@ -127,7 +127,7 @@
 /*
  * GPIO
  */
-#define CONFIG_MPC85XX_GPIO
+#define CONFIG_MPC8XXX_GPIO
 #define CONFIG_DM_GPIO
 
 /*
@@ -218,6 +218,7 @@
 #define CONFIG_PCI_SCAN_SHOW
 #endif
 
+#define CONFIG_CMD_PING
 #define CONFIG_CMD_MII
 
 #define CONFIG_CMDLINE_TAG
