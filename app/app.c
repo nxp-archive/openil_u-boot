@@ -23,7 +23,8 @@ void core1_main(void)
 #if defined(CONFIG_TARGET_LS1021AIOT) || defined(CONFIG_TARGET_LS1046ARDB)
 	test_qspi();
 #endif
-#ifdef CONFIG_SLAVE_FMAN_CORE
+
+#ifdef CONFIG_FMAN_COREID_SET
 	test_net();
 #endif
 
