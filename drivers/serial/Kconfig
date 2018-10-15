@@ -133,6 +133,18 @@ config SERIAL_SEARCH_ALL
 
 	  If unsure, say N.
 
+config SERIAL_PROBE_ALL
+	bool "Probe all available serial devices"
+	depends on DM_SERIAL
+	help
+	 The serial subsystem only probe for single serial device, but does
+	 not probe for remaining available devices.
+	 With this option set,we make probing for all available devices
+	 mandatory.
+
+	 If probing is not required for all remaining available
+	 devices other than default current console device, say N.
+
 config SPL_DM_SERIAL
 	bool "Enable Driver Model for serial drivers in SPL"
 	depends on DM_SERIAL && SPL_DM
