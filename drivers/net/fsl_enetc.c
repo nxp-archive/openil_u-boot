@@ -792,11 +792,6 @@ static const struct udevice_id ls_enetc_rcie_ids[] = {
 	{ }
 };
 
-static const struct udevice_id ls_enetc_eth_ids[] = {
-	{ .compatible = "fsl,ls-enetc-eth" },
-	{ }
-};
-
 U_BOOT_DRIVER(pci_enetc) = {
 	.name	= "ls_enetc_rcie",
 	.id		= UCLASS_PCI,
@@ -809,7 +804,6 @@ U_BOOT_DRIVER(pci_enetc) = {
 U_BOOT_DRIVER(eth_enetc) = {
 	.name	= "ls_enetc_eth",
 	.id		= UCLASS_ETH,
-	.of_match	= ls_enetc_eth_ids,
 	.bind	= enetc_bind,
 	.probe	= enetc_probe,
 	.remove = enetc_remove,
@@ -818,5 +812,4 @@ U_BOOT_DRIVER(eth_enetc) = {
 	.platdata_auto_alloc_size = sizeof(struct eth_pdata),
 };
 
-U_BOOT_PCI_DEVICE(pci_enetc, enetc_ids);
 U_BOOT_PCI_DEVICE(eth_enetc, enetc_ids);

@@ -95,7 +95,7 @@
 	};
 
 	enetc_pcie: pcie@1f0000000 { /* rcie_enetc */
-		compatible = "fsl,ls-enetc-rcie", "fsl,ls-enetc-eth";
+		compatible = "fsl,ls-enetc-rcie";
 		reg= <0x01 0xf0000000 0x0 0x100000>;
 		#address-cells = <3>;
 		#size-cells = <2>;
