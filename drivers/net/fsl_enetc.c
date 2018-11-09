@@ -341,6 +341,11 @@ static int enetc_init_mdio_phy(struct udevice *dev)
 	struct mii_dev *bus;
 	int err;
 
+	hw->phydev = 0;
+
+	if (hw->phy_addr == -1)
+		return 0;
+
 	ENETC_DBG(hw, "%s: connecting to PHY id:%x mode:%s ...\n",
 		  __func__, hw->phy_addr,
 		  phy_string_for_interface(hw->phy_intf));
@@ -419,6 +424,8 @@ static int enetc_get_eth_phy_data(struct udevice *dev)
 	int len;
 	int reg;
 
+	hw->phy_addr = -1;
+
 	sprintf(name, "ethernet@%u", hw->devno);
 	parent = dev_of_offset(dev->parent);
 
@@ -426,7 +433,7 @@ static int enetc_get_eth_phy_data(struct udevice *dev)
 	/*TODO: check if ethernet node is enabled */
 	if (node <= 0) {
 		ENETC_ERR(hw, "no %s node in DT\n", name);
-		return -ENOENT;
+		return 0;
 	}
 	phy_mode = fdt_getprop(fdt, node, "phy-mode", NULL);
 	if (phy_mode)
