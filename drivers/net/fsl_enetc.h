@@ -19,6 +19,13 @@
 #define ENETC_DBG(devno, args...)	do { } while (0)
 #endif
 
+#ifdef ENETC_DEBUG
+#define ENETC_DBG_UDEV(udev, fmt, args...) \
+	printf("enetc[%s]: DEBUG: " fmt, udev->name, ##args)
+#else
+#define ENETC_DBG_UDEV(devno, args...)	do { } while (0)
+#endif
+
 /* PCI and RCIE */
 #define PCIE_CONFIG_SPACE_SIZE 0x1000
 #define ENETC_PF_HDR_ADD(b, d, f) ((((b) << 8) + ((d) << 3) + (f)) \

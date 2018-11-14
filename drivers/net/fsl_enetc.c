@@ -13,6 +13,7 @@
 #include <asm/io.h>
 #include <pci.h>
 #include <net.h>
+#include <misc.h>
 #include <asm/processor.h>
 #include <config.h>
 #include <fsl_mdio.h>
@@ -104,6 +105,11 @@ enetc_resume_setup:
 
 static struct pci_device_id enetc_ids[] = {
 	{ PCI_DEVICE(PCI_VENDOR_ID_FREESCALE, 0xe100) },
+	{}
+};
+
+static struct pci_device_id netc_mdio_ids[] = {
+	{ PCI_DEVICE(PCI_VENDOR_ID_FREESCALE, 0xee01) },
 	{}
 };
 
@@ -209,12 +215,12 @@ static int enetc_bind(struct udevice *dev)
 	return device_set_name(dev, name);
 }
 
-int enetc_init_pf_regs(struct udevice *dev)
+/* only BAR 0 works for now, to fix later */
+int enetc_get_bar_addr(struct udevice *dev, int bar_no, u64 *addr, u64 *size)
 {
-	struct enetc_devfn *hw = dev_get_priv(dev);
-	u64 regs_addr64 = 0ULL;
 	u32 val = 0;
 
+	*size = *addr = 0ULL;
 	/* Get PF BARs from EA (enhanced allocation) structures;
 	 * ENETC uses EA and standard PCI header BARs are hardwired to 0
 	 */
@@ -222,43 +228,55 @@ int enetc_init_pf_regs(struct udevice *dev)
 
 	/* check if EA capability exists */
 	if ((val & 0xff) != PCI_CFC_EA_CAP_ID) {
-		ENETC_DBG(hw, "PCIe EA not supported\n");
+		ENETC_DBG_UDEV(dev, "PCIe EA not supported\n");
 		return -EEXIST;
 	}
 
-	/* check number of BARs */
-	if (((val >> 16) & 0x3f) != ENETC_PF_HDR_T0_NUM_BAR) {
-		ENETC_DBG(hw, "No PF regs BARs in EA struct\n");
+	/* check number of BARs - ENETC has at least bar_no + 1 */
+	if (((val >> 16) & 0x3f) < bar_no + 1) {
+		ENETC_DBG_UDEV(dev, "No PF regs BARs in EA struct\n");
 		return -EINVAL;
 	}
 
-	val = 0;
 	dm_pci_read_config32(dev, PCI_EA_PF_REG_FORMAT, &val);
 
+	/* TODO: loop here for bar_no */
 	/* check enable and BEI (BAR equiv. indicator) */
 	if (!PCI_EA_PF_REG_FORMAT_ENABLE(val) ||
-	    PCI_EA_PF_REG_FORMAT_BEI(val) != PCI_EA_PF_BEI_BAR0)
+	    PCI_EA_PF_REG_FORMAT_BEI(val) != bar_no)
 		return -EINVAL;
 
-	hw->regs_base = 0;
-	hw->port_regs = 0;
 	/* read low address */
 	val = 0;
 	dm_pci_read_config32(dev, PCI_EA_PF_BAR_LOW, &val);
-	regs_addr64 = PCI_EA_PF_BASE_REG(val);
+	*addr = PCI_EA_PF_BASE_REG(val);
 
 	/* read high address if necessary */
 	if (PCI_EA_PF_BASE_REG_IS_64BIT(val)) {
 		val = 0;
 		dm_pci_read_config32(dev, PCI_EA_PF_BAR_HIGH, &val);
-		regs_addr64 |= ((u64)val) << 32;
+		*addr |= ((u64)val) << 32;
 	}
 
 	/* read reg. region size */
 	val = 0;
 	dm_pci_read_config32(dev, PCI_EA_PF_BAR_SIZE, &val);
+	*size = val;
 
-	hw->regs_size = val;
+	return 0;
+}
+
+int enetc_init_pf_regs(struct udevice *dev)
+{
+	struct enetc_devfn *hw = dev_get_priv(dev);
+	u64 regs_addr64, size;
+	int err;
+
+	err = enetc_get_bar_addr(dev, 0, &regs_addr64, &size);
+	if (err)
+		return err;
+
+	hw->regs_size = size;
 	/* map BAR address to virtual address; also must have a MMU entry */
 	hw->regs_base = map_physmem(regs_addr64, hw->regs_size, MAP_NOCACHE);
 	hw->port_regs = map_physmem(regs_addr64 + ENETC_PORT_REGS_OFF, 0,
@@ -330,8 +348,8 @@ static int enetc_disable_si_port(struct enetc_devfn *hw)
 	return 0;
 }
 
-#ifdef CONFIG_PHYLIB
 #define ENETC_MDIO_NAME "ENETC_MDIO"
+#ifdef CONFIG_PHYLIB
 static int enetc_init_mdio_phy(struct udevice *dev)
 {
 	struct enetc_devfn *hw = dev_get_priv(dev);
@@ -775,6 +793,66 @@ static int enetc_recv(struct udevice *dev, int flags, uchar **packetp)
 	return len;
 }
 
+struct netc_mdio_priv {
+	const char *name; /* device name */
+	int devno; /* */
+	void *regs_base; /* base ENETC registers */
+	u32 regs_size;
+	void *port_regs; /* base ENETC port registers */
+};
+
+#define ENETC_MDIO_NAME_EXT "ENETC_MDIO_EXT"
+
+static int netc_mdio_probe(struct udevice *dev)
+{
+	struct netc_mdio_priv *priv = dev_get_priv(dev);
+	struct memac_mdio_info mdio_info = {0};
+	u64 regs_addr64, size;
+	int err;
+
+
+	priv->devno = 0;
+	priv->name = ENETC_MDIO_NAME_EXT;
+
+	ENETC_DBG_UDEV(dev, "probing MDIO\n");
+
+	err = enetc_get_bar_addr(dev, 0, &regs_addr64, &size);
+	if (err)
+		return err;
+
+	priv->regs_size = size;
+	/* map BAR address to virtual address; also must have a MMU entry */
+	priv->regs_base = map_physmem(regs_addr64, priv->regs_size, MAP_NOCACHE);
+
+	ENETC_DBG_UDEV(dev, "regs:0x%016llx, size:0x%x\n", regs_addr64,
+		       priv->regs_size);
+
+	mdio_info.regs = (struct memac_mdio_controller *)(priv->regs_base + 0x1C00);
+	mdio_info.name = ENETC_MDIO_NAME_EXT;
+	ENETC_DBG_UDEV(dev, "%s: EMDIO_CFG=0x%08x\n", __func__,
+		  enetc_read_port(priv, 0));
+
+	/* register MDIO */
+	err = fm_memac_mdio_init(NULL, &mdio_info);
+
+	return err;
+}
+
+static int netc_mdio_remove(struct udevice *dev)
+{
+	struct netc_mdio_priv *priv = dev_get_priv(dev);
+	struct mii_dev *bus;
+
+	ENETC_DBG_UDEV(dev, "removing driver ...\n");
+	bus = miiphy_get_dev_by_name(ENETC_MDIO_NAME_EXT);
+	if (bus) {
+		mdio_unregister(bus);
+		mdio_free(bus);
+	}
+
+	return 0;
+}
+
 static const struct dm_pci_ops pcie_enetc_ops = {
 	.read_config	= pcie_enetc_ecam_read_config,
 	.write_config	= pcie_enetc_ecam_write_config,
@@ -811,4 +889,35 @@ U_BOOT_DRIVER(eth_enetc) = {
 	.priv_auto_alloc_size = sizeof(struct enetc_devfn),
 };
 
+int netc_mdio_call(struct udevice *dev, int msgid, void *tx_msg, int tx_size,
+		    void *rx_msg, int rx_size)
+{
+	return 0;
+}
+
+static int netc_mdio_start(struct udevice *dev)
+{
+	return -ENODEV;
+}
+
+static void netc_mdio_stop(struct udevice *dev)
+{
+	return 0;
+}
+
+static const struct eth_ops netc_mdio_ops = {
+	.start	= netc_mdio_start,
+	.stop	= netc_mdio_stop,
+};
+
+U_BOOT_DRIVER(netc_mdio) = {
+	.name	= "netc_mdio",
+	.id	= UCLASS_ETH,
+	.probe	= netc_mdio_probe,
+	.remove = netc_mdio_remove,
+	.ops	= &netc_mdio_ops,
+	.priv_auto_alloc_size = sizeof(struct netc_mdio_priv),
+};
+
 U_BOOT_PCI_DEVICE(eth_enetc, enetc_ids);
+U_BOOT_PCI_DEVICE(netc_mdio, netc_mdio_ids);
