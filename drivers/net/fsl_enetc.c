@@ -520,7 +520,7 @@ DEFINE_ALIGN_BUFFER(struct enetc_tx_bd, enetc_txbd, ENETC_BD_CNT, ENETC_ALIGN);
 DEFINE_ALIGN_BUFFER(union enetc_rx_bd, enetc_rxbd, ENETC_BD_CNT, ENETC_ALIGN);
 DEFINE_ALIGN_BUFFER(u8, enetc_rx_buff, ENETC_RX_MBUFF_SIZE, ENETC_ALIGN);
 
-inline u64 enetc_rxb_address(struct udevice *dev, int i)
+static inline u64 enetc_rxb_address(struct udevice *dev, int i)
 {
 	int off = i * ENETC_RX_MAXFRM_SIZE;
 
@@ -809,7 +809,6 @@ U_BOOT_DRIVER(eth_enetc) = {
 	.remove = enetc_remove,
 	.ops	= &enetc_ops,
 	.priv_auto_alloc_size = sizeof(struct enetc_devfn),
-	.platdata_auto_alloc_size = sizeof(struct eth_pdata),
 };
 
 U_BOOT_PCI_DEVICE(eth_enetc, enetc_ids);
