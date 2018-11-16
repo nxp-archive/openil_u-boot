@@ -348,18 +348,20 @@ static int enetc_disable_si_port(struct enetc_devfn *hw)
 	return 0;
 }
 
-#define ENETC_MDIO_NAME "ENETC_MDIO"
+#define ENETC_MDIO_NAME "netc_mdio"
 #ifdef CONFIG_PHYLIB
 static int enetc_init_mdio_phy(struct udevice *dev)
 {
 	struct enetc_devfn *hw = dev_get_priv(dev);
 	struct memac_mdio_controller *mdio_regs;
-	struct memac_mdio_info mdio_info;
+	struct udevice *mdio_dev;
 	struct phy_device *phydev;
 	struct mii_dev *bus;
 	int err;
 
-	hw->phydev = 0;
+	/* if PHY is already connected don't look for it again */
+	if (hw->phydev)
+		return 0;
 
 	if (hw->phy_addr == -1)
 		return 0;
@@ -368,19 +370,16 @@ static int enetc_init_mdio_phy(struct udevice *dev)
 		  __func__, hw->phy_addr,
 		  phy_string_for_interface(hw->phy_intf));
 
-	mdio_regs = (struct memac_mdio_controller *)
-					enetc_port_regs(hw, ENETC_EMDIO_CFG);
-	mdio_info.regs = mdio_regs;
-	mdio_info.name = ENETC_MDIO_NAME;
-	ENETC_DBG(hw, "%s: EMDIO_CFG=0x%08x\n", __func__,
-		  enetc_read_port(hw, 0x1c00));
-
-	/* register port EMI */
-	err = fm_memac_mdio_init(NULL, &mdio_info);
-	if (err)
-		return err;
-
-	bus = miiphy_get_dev_by_name(ENETC_MDIO_NAME);
+	err = device_get_global_by_of_offset(hw->mdio_node, &mdio_dev);
+	if (err) {
+		ENETC_ERR(hw, "couldn't find MDIO bus, ignoring the PHY\n");
+		return -ENODEV;
+	}
+	bus = miiphy_get_dev_by_name(mdio_dev->name);
+	if (!bus) {
+		ENETC_ERR(hw, "couldn't find ENET MDIO bus, ignoring the PHY\n");
+		return -ENODEV;
+	}
 
 	/* try connect to phy */
 	phydev = phy_connect(bus, hw->phy_addr, dev, hw->phy_intf);
@@ -412,23 +411,7 @@ enetc_free_mdio_bus:
 
 static void enetc_free_mdio_phy(struct udevice *dev)
 {
-	struct enetc_devfn *hw = dev_get_priv(dev);
-	struct phy_device *phydev = hw->phydev;
-	struct mii_dev *bus = hw->bus;
-
-	if (phydev) {
-		ENETC_DBG(hw, "%s: disconnecting from PHY: %s ...\n", __func__,
-			  phydev->drv->name);
-		phy_shutdown(phydev);
-		free(phydev);
-		hw->phydev = NULL;
-	}
-
-	if (bus) {
-		mdio_unregister(bus);
-		mdio_free(bus);
-		hw->bus = NULL;
-	}
+	return 0;
 }
 
 static int enetc_get_eth_phy_data(struct udevice *dev)
@@ -450,24 +433,28 @@ static int enetc_get_eth_phy_data(struct udevice *dev)
 	node = fdt_subnode_offset(fdt, parent, name);
 	/*TODO: check if ethernet node is enabled */
 	if (node <= 0) {
-		ENETC_ERR(hw, "no %s node in DT\n", name);
-		return 0;
+		ENETC_DBG(hw, "no %s node in DT\n", name);
+		return -EINVAL;
 	}
 	phy_mode = fdt_getprop(fdt, node, "phy-mode", NULL);
-	if (phy_mode)
-		phy_intf = phy_get_interface_by_name(phy_mode);
 	if (phy_intf < 0 || !phy_mode) {
-		ENETC_ERR(hw, "%s: missing or invalid PHY mode\n", name);
+		ENETC_DBG(hw, "%s: missing or invalid PHY mode, ignoring PHY\n", name);
 		return -EINVAL;
 	}
+
+	phy_intf = phy_get_interface_by_name(phy_mode);
 	node = fdtdec_lookup_phandle(fdt, node, "phy-handle");
 	if (node <= 0) {
-		ENETC_ERR(hw, "%s: missing or invalid PHY phandle\n", name);
+		ENETC_DBG(hw, "%s: missing or invalid PHY phandle\n", name);
 		return -EINVAL;
 	}
+
+	/* find mdio node */
+	hw->mdio_node = fdt_parent_offset(fdt, node);
+
 	reg = fdtdec_get_int(fdt, node, "reg", -1);
 	if (reg < 0) {
-		ENETC_ERR(hw, "%s: missing reg property\n",
+		ENETC_DBG(hw, "%s: missing reg property\n",
 			  fdt_get_name(fdt, node, &len));
 		return -EINVAL;
 	}
@@ -499,6 +486,10 @@ static int enetc_probe(struct udevice *dev)
 
 #ifdef CONFIG_PHYLIB
 	ret = enetc_get_eth_phy_data(dev);
+	if (ret) {
+		ENETC_ERR(hw, "no PHY for %s\n", hw->name);
+		ret = 0;
+	}
 #endif
 	return ret;
 }
@@ -801,18 +792,26 @@ struct netc_mdio_priv {
 	void *port_regs; /* base ENETC port registers */
 };
 
-#define ENETC_MDIO_NAME_EXT "ENETC_MDIO_EXT"
+static int netc_mdio_bind(struct udevice *dev)
+{
+	char name[16];
+	static int num_devices;
+
+	sprintf(name, ENETC_MDIO_NAME "#%u", num_devices++);
+	return device_set_name(dev, name);
+}
 
 static int netc_mdio_probe(struct udevice *dev)
 {
 	struct netc_mdio_priv *priv = dev_get_priv(dev);
 	struct memac_mdio_info mdio_info = {0};
 	u64 regs_addr64, size;
+	int node, parent;
 	int err;
 
 
 	priv->devno = 0;
-	priv->name = ENETC_MDIO_NAME_EXT;
+	priv->name = dev->name;
 
 	ENETC_DBG_UDEV(dev, "probing MDIO\n");
 
@@ -828,12 +827,16 @@ static int netc_mdio_probe(struct udevice *dev)
 		       priv->regs_size);
 
 	mdio_info.regs = (struct memac_mdio_controller *)(priv->regs_base + 0x1C00);
-	mdio_info.name = ENETC_MDIO_NAME_EXT;
+	mdio_info.name = dev->name;
 	ENETC_DBG_UDEV(dev, "%s: EMDIO_CFG=0x%08x\n", __func__,
 		  enetc_read_port(priv, 0));
 
 	/* register MDIO */
 	err = fm_memac_mdio_init(NULL, &mdio_info);
+
+	/* bind to DTS node so other drivers can find us */
+	parent = dev_of_offset(dev->parent);
+	dev_set_of_offset(dev, fdt_subnode_offset(gd->fdt_blob, parent, "mdio"));
 
 	return err;
 }
@@ -844,7 +847,7 @@ static int netc_mdio_remove(struct udevice *dev)
 	struct mii_dev *bus;
 
 	ENETC_DBG_UDEV(dev, "removing driver ...\n");
-	bus = miiphy_get_dev_by_name(ENETC_MDIO_NAME_EXT);
+	bus = miiphy_get_dev_by_name(dev->name);
 	if (bus) {
 		mdio_unregister(bus);
 		mdio_free(bus);
@@ -911,8 +914,9 @@ static const struct eth_ops netc_mdio_ops = {
 };
 
 U_BOOT_DRIVER(netc_mdio) = {
-	.name	= "netc_mdio",
+	.name	= ENETC_MDIO_NAME,
 	.id	= UCLASS_ETH,
+	.bind	= netc_mdio_bind,
 	.probe	= netc_mdio_probe,
 	.remove = netc_mdio_remove,
 	.ops	= &netc_mdio_ops,

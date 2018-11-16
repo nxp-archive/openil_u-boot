@@ -229,6 +229,7 @@ struct enetc_devfn {
 	struct phy_device *phydev;
 	phy_interface_t phy_intf;
 	int phy_addr;
+	int mdio_node;
 	struct mii_dev *bus;
 };
 
