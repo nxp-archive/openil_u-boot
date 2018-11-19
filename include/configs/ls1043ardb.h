@@ -305,7 +305,7 @@
 #else
 #define CONFIG_ENV_ADDR			(CONFIG_SYS_FLASH_BASE + 0x300000)
 #define CONFIG_ENV_SECT_SIZE		0x20000
-#define CONFIG_ENV_SIZE			0x20000
+#define CONFIG_ENV_SIZE			0x2000
 #endif
 
 /* FMan */
