@@ -353,10 +353,9 @@ static int enetc_disable_si_port(struct enetc_devfn *hw)
 static int enetc_init_mdio_phy(struct udevice *dev)
 {
 	struct enetc_devfn *hw = dev_get_priv(dev);
-	struct memac_mdio_controller *mdio_regs;
-	struct udevice *mdio_dev;
 	struct phy_device *phydev;
 	struct mii_dev *bus;
+	const char *mdio_name;
 	int err;
 
 	/* if PHY is already connected don't look for it again */
@@ -370,14 +369,11 @@ static int enetc_init_mdio_phy(struct udevice *dev)
 		  __func__, hw->phy_addr,
 		  phy_string_for_interface(hw->phy_intf));
 
-	err = device_get_global_by_of_offset(hw->mdio_node, &mdio_dev);
-	if (err) {
-		ENETC_ERR(hw, "couldn't find MDIO bus, ignoring the PHY\n");
-		return -ENODEV;
-	}
-	bus = miiphy_get_dev_by_name(mdio_dev->name);
+	mdio_name = fdt_get_name(gd->fdt_blob, hw->mdio_node, NULL);
+	bus = miiphy_get_dev_by_name(mdio_name);
 	if (!bus) {
-		ENETC_ERR(hw, "couldn't find ENET MDIO bus, ignoring the PHY\n");
+		ENETC_ERR(hw, "couldn't find MDIO bus %s, ignoring the PHY\n",
+			  mdio_name);
 		return -ENODEV;
 	}
 
@@ -411,7 +407,6 @@ enetc_free_mdio_bus:
 
 static void enetc_free_mdio_phy(struct udevice *dev)
 {
-	return 0;
 }
 
 static int enetc_get_eth_phy_data(struct udevice *dev)
@@ -451,6 +446,11 @@ static int enetc_get_eth_phy_data(struct udevice *dev)
 
 	/* find mdio node */
 	hw->mdio_node = fdt_parent_offset(fdt, node);
+
+	char path[64];
+
+	fdt_get_path(fdt, node, path, 64);
+	printf("phy path: %s\n", path);
 
 	reg = fdtdec_get_int(fdt, node, "reg", -1);
 	if (reg < 0) {
@@ -792,21 +792,11 @@ struct netc_mdio_priv {
 	void *port_regs; /* base ENETC port registers */
 };
 
-static int netc_mdio_bind(struct udevice *dev)
-{
-	char name[16];
-	static int num_devices;
-
-	sprintf(name, ENETC_MDIO_NAME "#%u", num_devices++);
-	return device_set_name(dev, name);
-}
-
 static int netc_mdio_probe(struct udevice *dev)
 {
 	struct netc_mdio_priv *priv = dev_get_priv(dev);
 	struct memac_mdio_info mdio_info = {0};
 	u64 regs_addr64, size;
-	int node, parent;
 	int err;
 
 
@@ -834,16 +824,11 @@ static int netc_mdio_probe(struct udevice *dev)
 	/* register MDIO */
 	err = fm_memac_mdio_init(NULL, &mdio_info);
 
-	/* bind to DTS node so other drivers can find us */
-	parent = dev_of_offset(dev->parent);
-	dev_set_of_offset(dev, fdt_subnode_offset(gd->fdt_blob, parent, "mdio"));
-
 	return err;
 }
 
 static int netc_mdio_remove(struct udevice *dev)
 {
-	struct netc_mdio_priv *priv = dev_get_priv(dev);
 	struct mii_dev *bus;
 
 	ENETC_DBG_UDEV(dev, "removing driver ...\n");
@@ -905,7 +890,6 @@ static int netc_mdio_start(struct udevice *dev)
 
 static void netc_mdio_stop(struct udevice *dev)
 {
-	return 0;
 }
 
 static const struct eth_ops netc_mdio_ops = {
@@ -916,7 +900,6 @@ static const struct eth_ops netc_mdio_ops = {
 U_BOOT_DRIVER(netc_mdio) = {
 	.name	= ENETC_MDIO_NAME,
 	.id	= UCLASS_ETH,
-	.bind	= netc_mdio_bind,
 	.probe	= netc_mdio_probe,
 	.remove = netc_mdio_remove,
 	.ops	= &netc_mdio_ops,

@@ -36,7 +36,7 @@
 		phy-mode = "sgmii";
 		phy-handle = <&enetc_phy0>;
 	};
-	mdio {
+	netc_mdio {
 		#address-cells=<0>;
 		#size-cells=<1>;
 		enetc_phy0: phy@0 {

@@ -23,6 +23,8 @@
 #include <netdev.h>
 #include <video_fb.h>
 
+#include <fdtdec.h>
+#include <miiphy.h>
 #include "../common/qixis.h"
 
 DECLARE_GLOBAL_DATA_PTR;
@@ -71,7 +73,10 @@ int board_init(void)
 	ppa_init();
 #endif
 
+#ifndef CONFIG_SYS_EARLY_PCI_INIT
+	/* run PCI init to kick off ENETC */
 	pci_init();
+#endif
 
 	return 0;
 }
@@ -136,6 +141,165 @@ int ft_board_setup(void *blob, bd_t *bd)
 }
 #endif
 
+#ifdef CONFIG_FSL_ENETC
+
+#define MUX_INF(fmt, args...)	do {} while (0)
+#define MUX_DBG(fmt, args...)	printf("MDIO MUX: " fmt, ##args)
+#define MUX_ERR(fmt, args...)	printf("MDIO MUX: " fmt, ##args)
+struct mdio_qixis_mux {
+	struct mii_dev *bus;
+	int select;
+	int mask;
+	int mdio_node;
+};
+
+void *mdio_mux_get_parent(struct mii_dev *bus)
+{
+	struct mdio_qixis_mux *priv = bus->priv;
+	const char *mdio_name;
+	struct mii_dev *parent_bus;
+
+	mdio_name = fdt_get_name(gd->fdt_blob, priv->mdio_node, NULL);
+	parent_bus = miiphy_get_dev_by_name(mdio_name);
+	if (!parent_bus)
+		MUX_ERR("couldn't find MDIO bus %s\n", mdio_name);
+	MUX_INF("defer to parent bus %s\n", mdio_name);
+	return parent_bus;
+}
+
+//sim doesn't actually have qixis, keep the code sane
+//#define SIMULATOR
+void mux_group_select(struct mdio_qixis_mux *priv)
+{
+	u8 brdcfg4, reg;
+	static u8 oldsel;
+
+	brdcfg4 = QIXIS_READ(brdcfg[4]);
+	reg = brdcfg4;
+
+	reg = (reg & ~priv->mask) | priv->select;
+
+#ifndef SIMULATOR
+	if (!(brdcfg4 ^ reg))
+		return;
+#else
+	if (oldsel == reg)
+		return;
+	oldsel = reg;
+#endif
+
+	MUX_DBG(" qixis_write %02x\n", reg);
+	QIXIS_WRITE(brdcfg[4], brdcfg4);
+}
+
+int mdio_mux_write(struct mii_dev *bus, int port_addr, int dev_addr,
+		   int regnum, u16 value)
+{
+	struct mii_dev *parent_bus;
+
+	parent_bus = mdio_mux_get_parent(bus);
+	if (!parent_bus)
+		return -ENODEV;
+
+	mux_group_select(bus->priv);
+
+	MUX_INF("write to parent MDIO\n");
+	return parent_bus->write(parent_bus, port_addr, dev_addr, regnum, value);
+}
+
+int mdio_mux_read(struct mii_dev *bus, int port_addr, int dev_addr,
+		  int regnum)
+{
+	struct mii_dev *parent_bus;
+
+	parent_bus = mdio_mux_get_parent(bus);
+	if (!parent_bus)
+		return -ENODEV;
+
+	mux_group_select(bus->priv);
+
+	MUX_INF("read from parent MDIO\n");
+	return parent_bus->read(parent_bus, port_addr, dev_addr, regnum);
+}
+
+int mdio_mux_reset(struct mii_dev *bus)
+{
+	return 0;
+}
+
+static void setup_mdio_mux_group(int offset, int mdio_node, int mask)
+{
+	const void *fdt = gd->fdt_blob;
+	struct mdio_qixis_mux *group;
+	int select;
+
+	char path[32];
+
+	fdt_get_path(fdt, offset, path, 32);
+	MUX_INF("reading node %s\n", path);
+
+	select = fdtdec_get_int(fdt, offset, "reg", -1);
+	if (select < 0) {
+		MUX_ERR("invalid selection word");
+		return;
+	}
+
+	group = malloc(sizeof(struct mdio_qixis_mux));
+	group->select = select;
+	group->mask = mask;
+	group->mdio_node = mdio_node;
+	group->bus = mdio_alloc();
+	if (!group->bus) {
+		MUX_ERR("failed to allocate mdio bus\n");
+		goto err;
+	}
+	group->bus->read = mdio_mux_read;
+	group->bus->write = mdio_mux_write;
+	group->bus->reset = mdio_mux_reset;
+	strcpy(group->bus->name, fdt_get_name(fdt, offset, NULL));
+	group->bus->priv = group;
+	MUX_DBG("register MUX ""%s"" sel=%x, mask=%x\n", group->bus->name, group->select, group->mask);
+	mdio_register(group->bus);
+	return;
+
+err:
+	free(group);
+}
+
+void setup_mdio_mux(void)
+{
+	const void *fdt = gd->fdt_blob;
+	int offset, mux_node, mdio_node, mask;
+
+	mux_node = fdt_path_offset(fdt, "/qixis/mdio-mux@54");
+	if (mux_node < 0) {
+		MUX_ERR("no MDIO MUX node\n");
+		return;
+	}
+
+	mask = fdtdec_get_int(fdt, mux_node, "mux-mask", -1);
+	if (mask < 0)
+		MUX_ERR("invalid mux-mask\n");
+	mdio_node = fdtdec_lookup_phandle(fdt, mux_node, "mdio-parent-bus");
+
+	/* go through MUX nodes, register MDIO buses */
+	for (offset = fdt_first_subnode(fdt, mux_node);
+	     offset >= 0;
+	     offset = fdt_next_subnode(fdt, offset)) {
+		setup_mdio_mux_group(offset, mdio_node, mask);
+	};
+}
+#endif
+
+#ifdef CONFIG_LAST_STAGE_INIT
+int last_stage_init(void)
+{
+#ifdef CONFIG_FSL_ENETC
+	setup_mdio_mux();
+#endif
+	return 0;
+}
+#endif
 
 #ifdef CONFIG_TARGET_LS1028AQDS
 int checkboard(void)
