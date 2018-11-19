@@ -144,9 +144,9 @@ const struct spi_flash_info spi_flash_ids[] = {
 	{"mt25qu02g",	   INFO(0x20bb22, 0x0,  64 * 1024,  4096, RD_FULL | WR_QPP | E_FSR | SECT_4K) },
 	{"mt25ql02g",	   INFO(0x20ba22, 0x0,  64 * 1024,  4096, RD_FULL | WR_QPP | E_FSR | SECT_4K) },
 	{"mt35xu512g",	   INFO6(0x2c5b1a, 0x104100,  128 * 1024,  512, E_FSR | SECT_4K | ADDR_4B) },
-#if defined(CONFIG_TARGET_LS1028ARDB) || defined(CONFIG_TARGET_LS1028AQDS)
+#if defined(CONFIG_TARGET_LS1028_INT)
 	{"mt35xu02g",	   INFO(0x2c5b1c, 0x0, 128 * 1024,  2048, RD_FULL | WR_QPP | ADDR_4B) },
-#else
+#elif defined(CONFIG_TARGET_LS1028ARDB) || defined(CONFIG_TARGET_LS1028AQDS)
 	{"mt35xu02g",      INFO(0x2c5b1c, 0x0,  128 * 1024,  16384, E_FSR | SECT_4K | ADDR_4B) },
 #endif
 #endif
