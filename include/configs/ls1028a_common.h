@@ -204,4 +204,12 @@
 
 #define CONFIG_SYS_BOOTM_LEN   (64 << 20)      /* Increase max gunzip size */
 
+/*  MMC  */
+#ifndef SPL_NO_MMC
+#ifdef CONFIG_MMC
+#define CONFIG_FSL_ESDHC
+#define CONFIG_SYS_FSL_MMC_HAS_CAPBLT_VS33
+#endif
+#endif
+
 #endif /* __L1028A_COMMON_H */

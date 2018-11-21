@@ -173,4 +173,17 @@
                 "bootm $load_addr#$board\0"			\
 	"usb2_enable=i2c probe;i2c mw 0x66 0x5d 0x03;\0"
 #endif /* CONFIG_EMU */
+
+/* SATA */
+#define CONFIG_SCSI_AHCI_PLAT
+
+#define CONFIG_SYS_SATA				AHCI_BASE_ADDR
+#ifndef CONFIG_CMD_EXT2
+#define CONFIG_CMD_EXT2
+#define CONFIG_SYS_SCSI_MAX_SCSI_ID		1
+#define CONFIG_SYS_SCSI_MAX_LUN			1
+#define CONFIG_SYS_SCSI_MAX_DEVICE		(CONFIG_SYS_SCSI_MAX_SCSI_ID * \
+						CONFIG_SYS_SCSI_MAX_LUN)
+#endif
+
 #endif /* __LS1028A_QDS_H */
