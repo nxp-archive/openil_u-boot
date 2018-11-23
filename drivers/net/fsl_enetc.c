@@ -68,7 +68,7 @@ void enetc_setup(void *blob)
 	u32 iommu_map[4];
 	int err;
 
-	debug("configuring ENETC AMQs, MACs..\n");
+	printf("configuring ENETC AMQs, MACs..\n");
 	/* find integrated endpoints, we should only have one node */
 	off = fdt_node_offset_by_compatible(blob, 0, "pci-host-ecam-generic");
 	if (off < 0) {

@@ -27,6 +27,7 @@
 #include <miiphy.h>
 #include "../common/qixis.h"
 
+#define PR printf("AK----> here at %s %s %d\n", __FILE__, __func__, __LINE__)
 DECLARE_GLOBAL_DATA_PTR;
 
 int config_board_mux(void)
@@ -74,7 +75,9 @@ int board_init(void)
 
 #ifndef CONFIG_SYS_EARLY_PCI_INIT
 	/* run PCI init to kick off ENETC */
+#if 1
 	pci_init();
+#endif
 #endif
 
 	return 0;
@@ -112,8 +115,9 @@ int ft_board_setup(void *blob, bd_t *bd)
 {
 	u64 base[CONFIG_NR_DRAM_BANKS];
 	u64 size[CONFIG_NR_DRAM_BANKS];
-
+	PR;
 	ft_cpu_setup(blob, bd);
+	PR;
 
 	/* fixup DT for the two GPP DDR banks */
 	base[0] = gd->bd->bi_dram[0].start;
@@ -130,11 +134,16 @@ int ft_board_setup(void *blob, bd_t *bd)
 		 gd->arch.resv_ram < base[1] + size[1])
 		size[1] = gd->arch.resv_ram - base[1];
 #endif
+	PR;
 
 	fdt_fixup_memory_banks(blob, base, size, 2);
+	PR;
 
 #ifdef CONFIG_FSL_ENETC
+#if 1
 	enetc_setup(blob);
+#endif
+	PR;
 #endif
 	return 0;
 }
