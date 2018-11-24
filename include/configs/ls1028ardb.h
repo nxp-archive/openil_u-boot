@@ -32,11 +32,10 @@
 #endif
 
 /* Store environment at top of flash */
-#define CONFIG_ENV_IS_NOWHERE		1
 #ifdef CONFIG_EMU_PXP
 #define CONFIG_ENV_SIZE			0x1000
 #else
-#define CONFIG_ENV_SIZE			0x200000
+#define CONFIG_ENV_SIZE			0x2000
 #endif
 
 
