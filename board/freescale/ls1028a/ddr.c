@@ -21,17 +21,13 @@ void fsl_ddr_board_options(memctl_options_t *popts,
 	const struct board_specific_parameters *pbsp, *pbsp_highest = NULL;
 	ulong ddr_freq;
 
-	if (ctrl_num > 1) {
+	if (ctrl_num > 3) {
 		printf("Not supported controller number %d\n", ctrl_num);
 		return;
 	}
 	if (!pdimm->n_ranks)
 		return;
 
-	/*
-	 * we use identical timing for all slots. If needed, change the code
-	 * to  pbsp = rdimms[ctrl_num] or pbsp = udimms[ctrl_num];
-	 */
 	pbsp = udimms[0];
 
 	/* Get clk_adjust, wrlvl_start, wrlvl_ctl, according to the board ddr
@@ -45,6 +41,9 @@ void fsl_ddr_board_options(memctl_options_t *popts,
 				popts->wrlvl_start = pbsp->wrlvl_start;
 				popts->wrlvl_ctl_2 = pbsp->wrlvl_ctl_2;
 				popts->wrlvl_ctl_3 = pbsp->wrlvl_ctl_3;
+				popts->cpo_override = pbsp->cpo_override;
+				popts->write_data_delay =
+					pbsp->write_data_delay;
 				goto found;
 			}
 			pbsp_highest = pbsp;
@@ -65,32 +64,48 @@ void fsl_ddr_board_options(memctl_options_t *popts,
 		panic("DIMM is not supported by this board");
 	}
 found:
-	debug("Found timing match: n_ranks %d, data rate %d, rank_gb %d\n"
-		"\tclk_adjust %d, wrlvl_start %d, wrlvl_ctrl_2 0x%x, wrlvl_ctrl_3 0x%x\n",
-		pbsp->n_ranks, pbsp->datarate_mhz_high, pbsp->rank_gb,
-		pbsp->clk_adjust, pbsp->wrlvl_start, pbsp->wrlvl_ctl_2,
-		pbsp->wrlvl_ctl_3);
+	debug("Found timing match: n_ranks %d, data rate %d, rank_gb %d\n",
+	      pbsp->n_ranks, pbsp->datarate_mhz_high, pbsp->rank_gb);
 
+	/* force DDR bus width to 32 bits */
+	popts->data_bus_width = 1;
+	popts->otf_burst_chop_en = 0;
+	popts->burst_length = DDR_BL8;
+	popts->bstopre = 0;		/* enable auto precharge */
 
-
-	popts->half_strength_driver_enable = 0;
+	/*
+	 * Factors to consider for half-strength driver enable:
+	 *	- number of DIMMs installed
+	 */
+	popts->half_strength_driver_enable = 1;
 	/*
 	 * Write leveling override
 	 */
 	popts->wrlvl_override = 1;
 	popts->wrlvl_sample = 0xf;
 
+	/*
+	 * Rtt and Rtt_WR override
+	 */
+	popts->rtt_override = 0;
 
 	/* Enable ZQ calibration */
 	popts->zq_en = 1;
 
-	/* Enable DDR hashing */
-	popts->addr_hash = 1;
+#ifdef CONFIG_SYS_FSL_DDR4
+	popts->ddr_cdr1 = DDR_CDR1_DHC_EN | DDR_CDR1_ODT(DDR_CDR_ODT_80ohm);
+	popts->ddr_cdr2 = DDR_CDR2_ODT(DDR_CDR_ODT_80ohm) |
+			  DDR_CDR2_VREF_OVRD(70);	/* Vref = 70% */
 
-	popts->ddr_cdr1 = DDR_CDR1_DHC_EN | DDR_CDR1_ODT(DDR_CDR_ODT_60ohm);
+	/* optimize cpo for erratum A-009942 */
+	popts->cpo_sample = 0x59;
+#else
+	popts->cswl_override = DDR_CSWL_CS0;
 
-	popts->ddr_cdr2 = DDR_CDR2_ODT(DDR_CDR_ODT_60ohm) |
-			  DDR_CDR2_VREF_TRAIN_EN | DDR_CDR2_VREF_RANGE_2;
+	/* DHC_EN =1, ODT = 75 Ohm */
+	popts->ddr_cdr1 = DDR_CDR1_DHC_EN | DDR_CDR1_ODT(DDR_CDR_ODT_75ohm);
+	popts->ddr_cdr2 = DDR_CDR2_ODT(DDR_CDR_ODT_75ohm);
+#endif
 }
 
 #ifdef CONFIG_EMU

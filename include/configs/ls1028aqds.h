@@ -103,7 +103,7 @@
 
 /* Initial environment variables for QDS */
 #define CONFIG_EXTRA_ENV_SETTINGS               \
-        "hwconfig=fsl_ddr:bank_intlv=auto\0"    \
+	"hwconfig=fsl_ddr:bank_intlv=auto,ecc=off\0"    \
         "ramdisk_addr=0x800000\0"               \
         "ramdisk_size=0x2000000\0"              \
         "fdt_high=0xffffffffffffffff\0"         \
