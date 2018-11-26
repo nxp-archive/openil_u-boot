@@ -438,6 +438,8 @@ static int enetc_get_eth_phy_data(struct udevice *dev)
 	}
 
 	phy_intf = phy_get_interface_by_name(phy_mode);
+	hw->phy_intf = phy_intf;
+
 	node = fdtdec_lookup_phandle(fdt, node, "phy-handle");
 	if (node <= 0) {
 		ENETC_DBG(hw, "%s: missing or invalid PHY phandle\n", name);
@@ -459,7 +461,6 @@ static int enetc_get_eth_phy_data(struct udevice *dev)
 		return -EINVAL;
 	}
 	hw->phy_addr = reg;
-	hw->phy_intf = phy_intf;
 
 	return 0;
 }
@@ -540,15 +541,17 @@ static int enetc_probe(struct udevice *dev)
 	/* enable issue memory I/O requests by this PF - required after FLR */
 	dm_pci_write_config16(dev, PCI_CFH_CMD, PCI_CFH_CMD_IO_MEM_EN);
 
-	configure_serdes(dev);
-
 #ifdef CONFIG_PHYLIB
+	/* TODO: we need to know the lane protocol regardless of PHYLIB,
+	 * this needs rework
+	 */
 	ret = enetc_get_eth_phy_data(dev);
 	if (ret) {
 		ENETC_ERR(hw, "no PHY for %s\n", hw->name);
 		ret = 0;
 	}
 #endif
+	configure_serdes(dev);
 	return ret;
 }
 
