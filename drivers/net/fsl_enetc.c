@@ -809,6 +809,9 @@ static int netc_mdio_probe(struct udevice *dev)
 	if (err)
 		return err;
 
+	/* enable issue memory I/O requests by this PF - required after FLR */
+	dm_pci_write_config16(dev, PCI_CFH_CMD, PCI_CFH_CMD_IO_MEM_EN);
+
 	priv->regs_size = size;
 	/* map BAR address to virtual address; also must have a MMU entry */
 	priv->regs_base = map_physmem(regs_addr64, priv->regs_size, MAP_NOCACHE);
