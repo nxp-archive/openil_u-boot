@@ -1,5 +1,6 @@
 /*
  * Copyright 2014-2015 Freescale Semiconductor, Inc.
+ * Copyright 2017-2018 NXP
  *
  * SPDX-License-Identifier:	GPL-2.0+
  */
@@ -70,6 +71,13 @@ void board_init_f(ulong dummy)
 #endif
 #ifdef CONFIG_VID
 	init_func_vid();
+#endif
+#ifdef CONFIG_TZPC_OCRAM_BSS_HEAP_NS
+	/*
+	 * Mark BSS and HEAP area of OCRAM non-secure
+	 * to support DMA mode in SD.
+	 */
+	out_le32(TZPCR0SIZE_BASE, OCRAM_NONSECURE_SIZE);
 #endif
 	dram_init();
 #ifdef CONFIG_SPL_FSL_LS_PPA
