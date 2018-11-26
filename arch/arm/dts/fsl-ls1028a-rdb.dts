@@ -34,7 +34,7 @@
 &enetc_pcie {
 	ethernet@0 {
 		phy-mode = "sgmii";
-		phy-handle = <&enetc_phy0>;
+		//phy-handle = <&enetc_phy0>;
 	};
 	netc_mdio {
 		#address-cells=<0>;
