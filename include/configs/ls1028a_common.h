@@ -235,6 +235,8 @@
 #define CONFIG_SYS_MMC_ENV_DEV         0
 #define CONFIG_ENV_OFFSET              0x300000        /* 3MB */
 #define CONFIG_ENV_SIZE			0x2000          /* 8KB */
+#define CONFIG_TZPC_OCRAM_BSS_HEAP_NS
+#define OCRAM_NONSECURE_SIZE		0x00010000
 #else
 #define CONFIG_ENV_OFFSET              0x300000        /* 3MB */
 #define CONFIG_ENV_SIZE			0x2000          /* 8KB */
