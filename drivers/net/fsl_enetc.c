@@ -464,6 +464,59 @@ static int enetc_get_eth_phy_data(struct udevice *dev)
 	return 0;
 }
 #endif
+
+void memac_mdio_write2(struct mii_dev *bus, int port, int dev, int reg, int val)
+{
+	out_le32(0x1f8018030, 0x00001408);
+	while (in_le32(0x1f8018030) & 1)
+		continue;
+	out_le32(0x1f8018034, (port << 5) + reg);
+	while (in_le32(0x1f8018030) & 1)
+		continue;
+	out_le32(0x1f8018038, val);
+	while (in_le32(0x1f8018030) & 1)
+		continue;
+}
+
+int memac_mdio_read2(struct mii_dev *bus, int port, int dev, int reg)
+{
+	out_le32(0x1f8018030, 0x00001408);
+	while (in_le32(0x1f8018030) & 1)
+		continue;
+	out_le32(0x1f8018034, (port << 5) + reg);
+	while (in_le32(0x1f8018030) & 1)
+		continue;
+	out_le32(0x1f8018034, (port << 5) + reg + 0x8000);
+	while (in_le32(0x1f8018030) & 1)
+		continue;
+	if (in_le32(0x1f8018030) & 2)
+		return -1;
+
+	return in_le32(0x1f8018038);
+}
+
+static void configure_serdes(struct udevice *dev)
+{
+	struct enetc_devfn *hw = dev_get_priv(dev);
+	struct mii_dev bus = {0};
+	u32 value;
+
+	if (hw->phy_intf != PHY_INTERFACE_MODE_SGMII)
+		return;
+
+	bus.priv = hw->port_regs + 0x8030;
+	value = PHY_SGMII_IF_MODE_SGMII | PHY_SGMII_IF_MODE_AN;
+	memac_mdio_write2(&bus, 0, MDIO_DEVAD_NONE, 0x14, value);
+	/* Dev ability according to SGMII specification */
+	value = PHY_SGMII_DEV_ABILITY_SGMII;
+	memac_mdio_write2(&bus, 0, MDIO_DEVAD_NONE, 0x04, value);
+	/* Adjust link timer for SGMII */
+	memac_mdio_write2(&bus, 0, MDIO_DEVAD_NONE, 0x13, 0x0003);
+	memac_mdio_write2(&bus, 0, MDIO_DEVAD_NONE, 0x12, 0x06a0);
+	value = PHY_SGMII_CR_DEF_VAL | PHY_SGMII_CR_RESET_AN;
+	memac_mdio_write2(&bus, 0, MDIO_DEVAD_NONE, 0x00, value);
+}
+
 /*
  * Probe ENETC driver:
  * - initialize port and station interface BARs
@@ -483,6 +536,11 @@ static int enetc_probe(struct udevice *dev)
 		ENETC_DBG(hw, "failed to initialize PSI reg base\n");
 		return ret;
 	}
+
+	/* enable issue memory I/O requests by this PF - required after FLR */
+	dm_pci_write_config16(dev, PCI_CFH_CMD, PCI_CFH_CMD_IO_MEM_EN);
+
+	configure_serdes(dev);
 
 #ifdef CONFIG_PHYLIB
 	ret = enetc_get_eth_phy_data(dev);
