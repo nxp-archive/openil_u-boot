@@ -547,7 +547,7 @@ static int enetc_probe(struct udevice *dev)
 	 */
 	ret = enetc_get_eth_phy_data(dev);
 	if (ret) {
-		ENETC_ERR(hw, "no PHY for %s\n", hw->name);
+		ENETC_DBG(hw, "no PHY for %s\n", hw->name);
 		ret = 0;
 	}
 #endif
