@@ -42,10 +42,10 @@ int config_board_mux(void)
 	 * I2C3 | 10= Routes {SCL, SDA} to CAN1 transceiver as {TX, RX}.
 	 * --------------------------------------------------------------
 	 * 5-4  | Controls I2C4 routing (net CFG_MUX_I2C4):
-	 * I2C4 |10= Routes {SCL, SDA} to CAN2 transceiver as {TX, RX}.
+	 * I2C4 |11= Routes {SCL, SDA} to CAN2 transceiver as {TX, RX}.
 	 */
 	reg &= ~(0xf0);
-	reg |= 0xa0;
+	reg |= 0xb0;
 	QIXIS_WRITE(brdcfg[13], reg);
 
 	reg = QIXIS_READ(brdcfg[15]);
