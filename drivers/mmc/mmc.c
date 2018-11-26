@@ -2297,7 +2297,6 @@ static int mmc_startup(struct mmc *mmc)
 	if (err)
 		return err;
 
-#if 0
 	if (IS_SD(mmc)) {
 		err = sd_get_capabilities(mmc);
 		if (err)
@@ -2309,7 +2308,6 @@ static int mmc_startup(struct mmc *mmc)
 			return err;
 		mmc_select_mode_and_width(mmc, mmc->card_caps);
 	}
-#endif
 
 	if (err)
 		return err;
