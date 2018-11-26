@@ -21,7 +21,7 @@ void fsl_ddr_board_options(memctl_options_t *popts,
 	const struct board_specific_parameters *pbsp, *pbsp_highest = NULL;
 	ulong ddr_freq;
 
-	if (ctrl_num > 3) {
+	if (ctrl_num > 1) {
 		printf("Not supported controller number %d\n", ctrl_num);
 		return;
 	}
