@@ -875,6 +875,7 @@ U_BOOT_DRIVER(eth_enetc) = {
 	.remove = enetc_remove,
 	.ops	= &enetc_ops,
 	.priv_auto_alloc_size = sizeof(struct enetc_devfn),
+	.platdata_auto_alloc_size = sizeof(struct eth_pdata),
 };
 
 int netc_mdio_call(struct udevice *dev, int msgid, void *tx_msg, int tx_size,
