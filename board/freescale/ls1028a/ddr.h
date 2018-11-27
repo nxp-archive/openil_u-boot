@@ -31,21 +31,11 @@ static const struct board_specific_parameters udimm0[] = {
 	 *   num|  hi| rank|  clk| wrlvl |   wrlvl   |  wrlvl | cpo  |wrdata|2T
 	 * ranks| mhz| GB  |adjst| start |   ctl2    |  ctl3  |      |delay |
 	 */
-#ifdef CONFIG_SYS_FSL_DDR4
+#ifdef CONFIG_TARGET_LS1028ARDB
+	{1,  1666, 0,  8,     5, 0x06070700, 0x00000008,},
+#else
 	{2,  1666, 0,  8,     8, 0x090a0b00, 0x0000000c,},
 	{1,  1666, 0,  8,     8, 0x090a0b00, 0x0000000c,},
-#elif defined(CONFIG_SYS_FSL_DDR3)
-	{1,  833,  1, 12,     8, 0x06060607, 0x08080807,   0x1f,    2,  0},
-	{1,  1350, 1, 12,     8, 0x0708080A, 0x0A0B0C09,   0x1f,    2,  0},
-	{1,  833,  2, 12,     8, 0x06060607, 0x08080807,   0x1f,    2,  0},
-	{1,  1350, 2, 12,     8, 0x0708080A, 0x0A0B0C09,   0x1f,    2,  0},
-	{2,  833,  4, 12,     8, 0x06060607, 0x08080807,   0x1f,    2,  0},
-	{2,  1350, 4, 12,     8, 0x0708080A, 0x0A0B0C09,   0x1f,    2,  0},
-	{2,  1350, 0, 12,     8, 0x0708080A, 0x0A0B0C09,   0x1f,    2,  0},
-	{2,  1666, 4,  8,   0xa, 0x0B08090C, 0x0B0E0D0A,   0x1f,    2,  0},
-	{2,  1666, 0,  8,   0xa, 0x0B08090C, 0x0B0E0D0A,   0x1f,    2,  0},
-#else
-#error DDR type not defined
 #endif
 	{}
 };
