@@ -238,4 +238,13 @@
 		non-removable;
 		bus-width = <4>;
 	};
+
+	sata: sata@3200000 {
+		compatible = "fsl,ls1028a-ahci";
+		reg = <0x0 0x3200000 0x0 0x10000>;
+		interrupts = <0 133 4>;
+		clocks = <&clockgen 4 1>;
+		status = "disabled";
+	      };
+
 };
