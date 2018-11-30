@@ -186,6 +186,8 @@ void mux_group_select(struct mdio_qixis_mux *priv)
 #ifndef SIMULATOR
 	if (!(brdcfg4 ^ reg))
 		return;
+
+	udelay(100);
 #else
 	if (oldsel == reg)
 		return;
@@ -193,7 +195,7 @@ void mux_group_select(struct mdio_qixis_mux *priv)
 #endif
 
 	MUX_DBG(" qixis_write %02x\n", reg);
-	QIXIS_WRITE(brdcfg[4], brdcfg4);
+	QIXIS_WRITE(brdcfg[4], reg);
 }
 
 int mdio_mux_write(struct mii_dev *bus, int port_addr, int dev_addr,
