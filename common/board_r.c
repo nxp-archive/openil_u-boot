@@ -327,10 +327,18 @@ static int initr_manual_reloc_cmdtable(void)
 #endif
 
 #if defined(CONFIG_MTD_NOR_FLASH)
+__weak int is_flash_available(void)
+{
+	return 1;
+}
+
 static int initr_flash(void)
 {
 	ulong flash_size = 0;
 	bd_t *bd = gd->bd;
+
+	if (!is_flash_available())
+		return 0;
 
 	puts("Flash: ");
 
