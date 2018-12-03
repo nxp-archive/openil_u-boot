@@ -512,8 +512,9 @@ static void setup_SXGMII(void)
 	if (value & 0x8000)
 		PCS_ERR("PHY[0] reset timeout\n");
 
-	//value =  CONTROL_AN_EN | CONTROL_RESTART_AN;
-	//enetc_imdio_write(&bus, 0, 0x1f, 0x0, value);
+	/* start AN */
+	value =  CONTROL_AN_EN | CONTROL_RESTART_AN;
+	enetc_imdio_write(&bus, 0, 0x1f, 0x0, value);
 
 //#if Aquantia config?
 	int phy_addr = 2;
@@ -533,7 +534,8 @@ static void setup_SXGMII(void)
 		PCS_ERR("unknown PHY, no init done on it\n");
 	}
 
-	to = 1000;
+//#if wait_for_linkup?
+	to = 10000;
 	do {
 		value = enetc_imdio_read(&bus, 0, 0x1f, 0x1);
 		if ((value & 0x24) == 0x24)
