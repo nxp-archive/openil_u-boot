@@ -98,6 +98,10 @@ int board_eth_init(bd_t *bis)
 
 int board_early_init_f(void)
 {
+
+#ifdef CONFIG_SYS_I2C_EARLY_INIT
+	i2c_early_init_f();
+#endif
 	fsl_lsch3_early_init_f();
 	return 0;
 }
