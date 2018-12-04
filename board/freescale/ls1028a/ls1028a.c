@@ -519,7 +519,7 @@ int checkboard(void)
 #ifdef CONFIG_FSL_QIXIS
 	sw = QIXIS_READ(arch);
 	printf("Board Arch: V%d, ", sw >> 4);
-	printf("Board version: %c, boot from ", (sw & 0xf) + 'A');
+	printf("Board version: %c, boot from ", (sw & 0xf) + 'A' - 1);
 
 	memset((u8 *)buf, 0x00, ARRAY_SIZE(buf));
 
