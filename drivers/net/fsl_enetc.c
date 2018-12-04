@@ -456,7 +456,7 @@ static int enetc_get_eth_phy_data(struct udevice *dev)
 	reg = fdtdec_get_int(fdt, node, "reg", -1);
 	if (reg < 0) {
 		ENETC_DBG(hw, "%s: missing reg property\n",
-			  fdt_get_name(fdt, node, &len));
+			  fdt_get_name(fdt, node, NULL));
 		return -EINVAL;
 	}
 	hw->phy_addr = reg;
