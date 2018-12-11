@@ -29,9 +29,9 @@
 
 DECLARE_GLOBAL_DATA_PTR;
 
-#if defined (CONFIG_TARGET_LS1028AQDS)
 int config_board_mux(void)
 {
+#if defined(CONFIG_TARGET_LS1028AQDS) && defined(CONFIG_FSL_QIXIS)
 	u8 reg;
 
 	reg = QIXIS_READ(brdcfg[13]);
@@ -58,10 +58,9 @@ int config_board_mux(void)
 	 */
 	reg &= ~(0xc0);
 	QIXIS_WRITE(brdcfg[15], reg);
-
+#endif
 	return 0;
 }
-#endif
 
 int board_init(void)
 {
@@ -141,7 +140,7 @@ int ft_board_setup(void *blob, bd_t *bd)
 }
 #endif
 
-#ifdef CONFIG_FSL_ENETC
+#if defined(CONFIG_FSL_ENETC) && defined(CONFIG_FSL_QIXIS)
 
 #define MUX_INF(fmt, args...)	do {} while (0)
 #define MUX_DBG(fmt, args...)	printf("MDIO MUX: " fmt, ##args)
@@ -289,12 +288,12 @@ void setup_mdio_mux(void)
 		setup_mdio_mux_group(offset, mdio_node, mask);
 	};
 }
-#endif
+#endif /* #if defined(CONFIG_FSL_ENETC) && defined(CONFIG_FSL_QIXIS) */
 
 #ifdef CONFIG_LAST_STAGE_INIT
 int last_stage_init(void)
 {
-#ifdef CONFIG_FSL_ENETC
+#if defined(CONFIG_FSL_ENETC) && defined(CONFIG_FSL_QIXIS)
 	setup_mdio_mux();
 #endif
 	return 0;
