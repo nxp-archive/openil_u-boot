@@ -268,7 +268,7 @@ static void setup_mdio_mux_group(int offset, int mdio_node, int mask)
 	group->bus->reset = mdio_mux_reset;
 	strcpy(group->bus->name, fdt_get_name(fdt, offset, NULL));
 	group->bus->priv = group;
-	MUX_DBG("register MUX ""%s"" sel=%x, mask=%x\n", group->bus->name, group->select, group->mask);
+	MUX_INF("register MUX ""%s"" sel=%x, mask=%x\n", group->bus->name, group->select, group->mask);
 	mdio_register(group->bus);
 	return;
 
@@ -441,6 +441,47 @@ void setup_QSGMII(void)
 	}
 }
 
+static void setup_1xSGMII(void)
+{
+	#define NETC_PF0_BAR0_BASE	0x1f8010000
+	#define NETC_PF0_ECAM_BASE	0x1F0000000
+	//#define NETC_PCS_SGMIICR1(n)	(0x001ea1804 + (n) * 0x10)
+	struct mii_dev bus = {0};
+	u16 value;
+
+	if ((serdes_protocol & 0xf) != 0x0008)
+		return;
+
+	printf("trying to set up SGMII, this is hardcoded for SERDES 8xxx!!!!\n");
+
+	//out_le32(NETC_PCS_SGMIICR1(0), 0x00000000);
+	// writing this kills the link for some reason
+
+	/* turn on PCI function */
+	out_le16(NETC_PF0_ECAM_BASE + 4, 0xffff);
+
+	bus.priv = NETC_PF0_BAR0_BASE + 0x8030;
+
+	udelay(100);
+
+	value = PHY_SGMII_IF_MODE_SGMII | PHY_SGMII_IF_MODE_AN;
+	memac_mdio_write22(&bus, 0, MDIO_DEVAD_NONE, 0x14, value);
+	/* Dev ability according to SGMII specification */
+	value = PHY_SGMII_DEV_ABILITY_SGMII;
+	memac_mdio_write22(&bus, 0, MDIO_DEVAD_NONE, 0x04, value);
+	/* Adjust link timer for SGMII */
+	memac_mdio_write22(&bus, 0, MDIO_DEVAD_NONE, 0x13, 0x0003);
+	memac_mdio_write22(&bus, 0, MDIO_DEVAD_NONE, 0x12, 0x06a0);
+	value = PHY_SGMII_CR_DEF_VAL | PHY_SGMII_CR_RESET_AN;
+	memac_mdio_write22(&bus, 0, MDIO_DEVAD_NONE, 0x00, value);
+	memac_mdio_read22(&bus, 0, MDIO_DEVAD_NONE, 0x01);
+	value = memac_mdio_read22(&bus, 0, MDIO_DEVAD_NONE, 0x01);
+	value = memac_mdio_read22(&bus, 0, MDIO_DEVAD_NONE, 0x01);
+	if (!(value & 4))
+		printf("\nSERDES lane didn't link up, status %04x\n", (int)value);
+	printf("BMSR %04x\n", value);
+}
+
 #ifdef CONFIG_LAST_STAGE_INIT
 int last_stage_init(void)
 {
@@ -448,6 +489,7 @@ int last_stage_init(void)
 	setup_mdio_mux();
 #endif
 
+	setup_1xSGMII();
 	setup_4xSGMII();
 	setup_QSGMII();
 	return 0;

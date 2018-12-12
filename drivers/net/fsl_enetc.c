@@ -530,39 +530,6 @@ int memac_mdio_read45(struct mii_dev *bus, int port, int dev, int reg)
 	return in_le32(bus->priv + 8);
 }
 
-extern int serdes_protocol;
-static void configure_serdes(struct udevice *dev)
-{
-	struct enetc_devfn *hw = dev_get_priv(dev);
-	struct mii_dev bus = {0};
-	u32 value;
-
-	bus.priv = hw->port_regs + 0x8030;
-
-	/* only support SERDES 85xx */
-	if ((serdes_protocol & 0xff) != 0x58)
-		return;
-
-	if (hw->phy_intf == PHY_INTERFACE_MODE_SGMII) {
-		value = PHY_SGMII_IF_MODE_SGMII | PHY_SGMII_IF_MODE_AN;
-		memac_mdio_write22(&bus, 0, MDIO_DEVAD_NONE, 0x14, value);
-		/* Dev ability according to SGMII specification */
-		value = PHY_SGMII_DEV_ABILITY_SGMII;
-		memac_mdio_write22(&bus, 0, MDIO_DEVAD_NONE, 0x04, value);
-		/* Adjust link timer for SGMII */
-		memac_mdio_write22(&bus, 0, MDIO_DEVAD_NONE, 0x13, 0x0003);
-		memac_mdio_write22(&bus, 0, MDIO_DEVAD_NONE, 0x12, 0x06a0);
-		value = PHY_SGMII_CR_DEF_VAL | PHY_SGMII_CR_RESET_AN;
-		memac_mdio_write22(&bus, 0, MDIO_DEVAD_NONE, 0x00, value);
-		memac_mdio_read22(&bus, 0, MDIO_DEVAD_NONE, 0x01);
-		value = memac_mdio_read22(&bus, 0, MDIO_DEVAD_NONE, 0x01);
-		value = memac_mdio_read22(&bus, 0, MDIO_DEVAD_NONE, 0x01);
-		if (!(value & 4))
-			printf("\nSERDES lane didn't link up, status %04x\n", (int)value);
-			printf("BMSR %04x\n", value);
-	}
-}
-
 /*
  * Probe ENETC driver:
  * - initialize port and station interface BARs
@@ -596,7 +563,6 @@ static int enetc_probe(struct udevice *dev)
 		ret = 0;
 	}
 #endif
-	configure_serdes(dev);
 	return ret;
 }
 
