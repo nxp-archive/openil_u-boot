@@ -138,12 +138,10 @@ int memac_mdio_read(struct mii_dev *bus, int port_addr, int dev_addr,
 
 	/* Wait till the MDIO write is complete */
 	to = 10000;
-	while (--to && (memac_in_32(&regs->mdio_data) & MDIO_DATA_BSY))
+	while (--to && (memac_in_32(&regs->mdio_stat) & MDIO_STAT_BSY))
 		;
 	if (!to)
 		printf("T");
-
-	udelay(200);
 
 	/* Return all Fs if nothing was there */
 	if (memac_in_32(&regs->mdio_stat) & MDIO_STAT_RD_ER)
