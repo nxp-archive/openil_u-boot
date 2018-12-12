@@ -377,39 +377,56 @@ void setup_QSGMII(void)
 		memac_mdio_write22(&bus, i, MDIO_DEVAD_NONE, 0x12, 0x06a0);
 	}
 
-#if defined(CONFIG_TARGET_LS1028ARDB)
+
+	int phy_addr;
+	char *mdio_name;
+ #if defined(CONFIG_TARGET_LS1028ARDB)
+	mdio_name = "netc_mdio";
+	phy_addr = 0x10;
+#elif defined(CONFIG_TARGET_LS1028AQDS)
+	mdio_name = "mdio@50";
+	phy_addr = 0x08;
+#endif
+
 	/* set up VSC PHY - this works on RDB only for now*/
-	ext_bus = miiphy_get_dev_by_name("netc_mdio");
+	ext_bus = miiphy_get_dev_by_name(mdio_name);
 	if (!ext_bus) {
 		printf("couldn't find MDIO bus, ignoring the PHY\n");
 		return;
 	}
 
-	for (i = 0x10; i < 0x14; i++) {
-		memac_mdio_write(ext_bus, i, MDIO_DEVAD_NONE, 0x1f, 0x0010);
-		value = memac_mdio_read(ext_bus, i, 0x13);
+	/* set up VSC PHY - this works on RDB only for now*/
+	ext_bus = miiphy_get_dev_by_name(mdio_name);
+	if (!ext_bus) {
+		printf("couldn't find MDIO bus, ignoring the PHY\n");
+		return;
+	}
+
+	for (i = phy_addr; i < phy_addr + 4; i++) {
+		ext_bus->write(ext_bus, i, MDIO_DEVAD_NONE, 0x1f, 0x0010);
+		value = ext_bus->read(ext_bus, i, MDIO_DEVAD_NONE, 0x13);
 		value = (value & 0x3fff) | (1 << 14);
-		memac_mdio_write(ext_bus, i, MDIO_DEVAD_NONE, 0x12, 0x80e0);
+		ext_bus->write(ext_bus, i, MDIO_DEVAD_NONE, 0x12, 0x80e0);
 
 		to = 1000;
-		while (--to && (memac_mdio_read(ext_bus, i, MDIO_DEVAD_NONE, 0x12) & 0x8000))
-			continue;
+		while (--to && (ext_bus->read(ext_bus, i, MDIO_DEVAD_NONE, 0x12) & 0x8000))
+			;
 		if (!to)
 			printf("PHY%d TO\n", i);
 
-		memac_mdio_write(ext_bus, i, MDIO_DEVAD_NONE, 0x1f, 0x0000);
-		value = memac_mdio_read(ext_bus, i, MDIO_DEVAD_NONE, 0x17);
+		ext_bus->write(ext_bus, i, MDIO_DEVAD_NONE, 0x1f, 0x0000);
+		value = ext_bus->read(ext_bus, i, MDIO_DEVAD_NONE, 0x17);
 		value = (value & 0xf8ff);
-		memac_mdio_write(ext_bus, i, MDIO_DEVAD_NONE, 0x17, value);
+		ext_bus->write(ext_bus, i, MDIO_DEVAD_NONE, 0x17, value);
 
-		memac_mdio_write(ext_bus, i, MDIO_DEVAD_NONE, 0x1f, 0x0003);
-		value = memac_mdio_read(ext_bus, i, MDIO_DEVAD_NONE, 0x10);
+		ext_bus->write(ext_bus, i, MDIO_DEVAD_NONE, 0x1f, 0x0003);
+		value = ext_bus->read(ext_bus, i, MDIO_DEVAD_NONE, 0x10);
 		value = value | 0x80;
-		memac_mdio_write(ext_bus, i, MDIO_DEVAD_NONE, 0x10, value);
-		memac_mdio_write(ext_bus, i, MDIO_DEVAD_NONE, 0x1f, 0x0000);
-		memac_mdio_write(ext_bus, 1, MDIO_DEVAD_NONE, 0x00, 0x3300);
+		ext_bus->write(ext_bus, i, MDIO_DEVAD_NONE, 0x10, value);
+		ext_bus->write(ext_bus, i, MDIO_DEVAD_NONE, 0x1f, 0x0000);
+		ext_bus->write(ext_bus, 1, MDIO_DEVAD_NONE, 0x00, 0x3300);
 	}
-#endif
+
 	for (i = 4; i < 8; i++) {
 		to = 1000;
 		while (--to && 0x0024 != ((value = memac_mdio_read22(&bus, i, MDIO_DEVAD_NONE, 1)) & 0x0024))
