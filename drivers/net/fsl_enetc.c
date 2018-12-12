@@ -417,7 +417,6 @@ static int enetc_get_eth_phy_data(struct udevice *dev)
 	const char *phy_mode;
 	int node, parent;
 	char name[32];
-	int len;
 	int reg;
 
 	hw->phy_addr = -1;
@@ -466,68 +465,74 @@ static int enetc_get_eth_phy_data(struct udevice *dev)
 }
 #endif
 
-void memac_mdio_write22(struct mii_dev *bus, int port, int dev, int reg, int val)
+int enetc_imdio_write(struct mii_dev *bus, int port, int dev, int reg, u16 val)
 {
-	out_le32(bus->priv + 0, 0x00001408);
-	while (in_le32(bus->priv + 0) & 1)
-		continue;
-	out_le32(bus->priv + 4, (port << 5) + reg);
-	while (in_le32(bus->priv + 0) & 1)
-		continue;
-	out_le32(bus->priv + 8, val);
-	while (in_le32(bus->priv + 0) & 1)
-		continue;
+	if (dev == MDIO_DEVAD_NONE)
+		out_le32(bus->priv + 0, 0x00001408);
+	else
+		out_le32(bus->priv + 0, 0x00001448);
+
+	if (dev != MDIO_DEVAD_NONE) {
+		out_le32(bus->priv + 4, (port << 5) + dev);
+		out_le32(bus->priv + 0xc, reg);
+	} else {
+		out_le32(bus->priv + 4, (port << 5) + reg);
+	}
+	while (in_le32(bus->priv+0) & 1)
+		;
+	out_le32(bus->priv+8, val);
+	while (in_le32(bus->priv+0) & 1)
+		;
+	return 0;
 }
 
-int memac_mdio_read22(struct mii_dev *bus, int port, int dev, int reg)
+int enetc_imdio_read(struct mii_dev *bus, int port, int dev, int reg)
 {
-	out_le32(bus->priv + 0, 0x00001408);
-	while (in_le32(bus->priv + 0) & 1)
-		continue;
-	out_le32(bus->priv + 4, (port << 5) + reg);
-	while (in_le32(bus->priv + 0) & 1)
-		continue;
-	out_le32(bus->priv + 4, (port << 5) + reg + 0x8000);
-	while (in_le32(bus->priv + 0) & 1)
-		continue;
-	if (in_le32(bus->priv + 0) & 2)
+	if (dev == MDIO_DEVAD_NONE) {
+		out_le32(bus->priv + 0, 0x00001408);
+		dev = reg & 0x1f;
+	} else
+		out_le32(bus->priv + 0, 0x00001448);
+
+	while (in_le32(bus->priv+0) & 1)
+		;
+	out_le32(bus->priv+4, (port << 5) + dev);
+	while (in_le32(bus->priv+0) & 1)
+		;
+	udelay(100);
+	if (dev != MDIO_DEVAD_NONE)
+		out_le32(bus->priv + 0xc, reg);
+	udelay(100);
+	out_le32(bus->priv+4, (port << 5) + dev + 0x8000);
+
+	while (in_le32(bus->priv+0) & 1)
+		;
+	if (in_le32(bus->priv+0) & 2)
 		return -1;
-
-	return in_le32(bus->priv + 8);
+	udelay(100);
+	return in_le32(bus->priv+8);
 }
 
-void memac_mdio_write45(struct mii_dev *bus, int port, int dev, int reg, int val)
+extern int memac_mdio_reset(struct mii_dev *bus);
+
+void register_imdio(struct udevice *dev)
 {
-	out_le32(bus->priv + 0, 0x00001448);
-	while (in_le32(bus->priv + 0) & 1)
-		continue;
-	out_le32(bus->priv + 4, (port << 5) + dev);
-	out_le32(bus->priv + 0xc, reg);
-	while (in_le32(bus->priv + 0) & 1)
-		continue;
-	out_le32(bus->priv + 8, val);
-	while (in_le32(bus->priv + 0) & 1)
-		continue;
-}
+	struct mii_dev *bus = mdio_alloc();
+	struct enetc_devfn *hw = dev_get_priv(dev);
 
-int memac_mdio_read45(struct mii_dev *bus, int port, int dev, int reg)
-{
-	out_le32(bus->priv + 0, 0x00001448);
-	while (in_le32(bus->priv + 0) & 1)
-		continue;
-	out_le32(bus->priv + 4, (port << 5) + dev);
-	while (in_le32(bus->priv + 0) & 1)
-		continue;
-	out_le32(bus->priv + 4, (port << 5) + dev);
-	out_le32(bus->priv + 0xc, reg);
-	out_le32(bus->priv + 4, (port << 5) + dev + 0x8000);
+	if (!bus) {
+		printf("Failed to allocate FM TGEC MDIO bus\n");
+		return;
+	}
 
-	while (in_le32(bus->priv + 0) & 1)
-		continue;
-	if (in_le32(bus->priv + 0) & 2)
-		return -1;
+	bus->read = &enetc_imdio_read;
+	bus->write = &enetc_imdio_write;
+	bus->reset = &memac_mdio_reset;
+	strcpy(bus->name, dev->name);
 
-	return in_le32(bus->priv + 8);
+	bus->priv = hw->port_regs + 0x8030;
+
+	mdio_register(bus);
 }
 
 /*
@@ -563,6 +568,7 @@ static int enetc_probe(struct udevice *dev)
 		ret = 0;
 	}
 #endif
+	register_imdio(dev);
 	return ret;
 }
 
@@ -707,8 +713,11 @@ static int enetc_start(struct udevice *dev)
 	struct eth_pdata *plat = dev_get_platdata(dev);
 	struct enetc_devfn *hw = dev_get_priv(dev);
 	int ret;
+	u32 if_mode;
 
 	ENETC_DBG(hw, "starting ...\n");
+
+	if_mode = enetc_read_port(hw, ENETC_PM_IF_MODE);
 
 	/* run FLR on current PF */
 	ENETC_DBG(hw, "resetting ...\n");
@@ -718,6 +727,8 @@ static int enetc_start(struct udevice *dev)
 
 	/* enable issue memory I/O requests by this PF - required after FLR */
 	dm_pci_write_config16(dev, PCI_CFH_CMD, PCI_CFH_CMD_IO_MEM_EN);
+
+	enetc_write_port(hw, ENETC_PM_IF_MODE, if_mode);
 
 	if (!is_valid_ethaddr(plat->enetaddr)) {
 		ENETC_DBG(hw, "invalid MAC address, generate random ...\n");

@@ -152,7 +152,7 @@ int ft_board_setup(void *blob, bd_t *bd)
 #if defined(CONFIG_FSL_ENETC) && defined(CONFIG_FSL_QIXIS)
 
 #define MUX_INF(fmt, args...)	do {} while (0)
-#define MUX_DBG(fmt, args...)	printf("MDIO MUX: " fmt, ##args)
+#define MUX_DBG(fmt, args...)  do {} while (0)
 #define MUX_ERR(fmt, args...)	printf("MDIO MUX: " fmt, ##args)
 struct mdio_qixis_mux {
 	struct mii_dev *bus;
@@ -180,7 +180,9 @@ void *mdio_mux_get_parent(struct mii_dev *bus)
 void mux_group_select(struct mdio_qixis_mux *priv)
 {
 	u8 brdcfg4, reg;
+#ifdef SIMULATOR
 	static u8 oldsel;
+#endif
 
 	brdcfg4 = QIXIS_READ(brdcfg[4]);
 	reg = brdcfg4;
@@ -303,11 +305,13 @@ void setup_mdio_mux(void)
 
 #include <fsl_memac.h>
 
-extern void memac_mdio_write22(struct mii_dev *bus, int port, int dev, int reg, int val);
-extern int memac_mdio_read22(struct mii_dev *bus, int port, int dev, int reg);
+extern int enetc_imdio_read(struct mii_dev *bus, int port, int dev, int reg);
+extern void enetc_imdio_write(struct mii_dev *bus, int port, int dev, int reg, u16 val);
 
 extern int serdes_protocol;
 
+#define PCS_INF(fmt, args...)  do {} while (0)
+#define PCS_ERR(fmt, args...)  printf("PCS: " fmt, ##args)
 void setup_4xSGMII(void)
 {
 #if defined(CONFIG_TARGET_LS1028AQDS)
@@ -316,12 +320,12 @@ void setup_4xSGMII(void)
 	#define NETC_PCS_SGMIICR1(n)	(0x001ea1804 + (n) * 0x10)
 	struct mii_dev bus = {0};
 	u16 value;
-	int i;
+	int i, to;
 
 	if (serdes_protocol != 0x9999)
 		return;
 
-	printf("trying to set up 4xSGMII, this is hardcoded for SERDES 9999!!!!\n");
+	PCS_INF("trying to set up 4xSGMII, this is hardcoded for SERDES 9999!!!!\n");
 
 	out_le32(NETC_PCS_SGMIICR1(0), 0x00000000);
 	out_le32(NETC_PCS_SGMIICR1(1), 0x08000000);
@@ -331,20 +335,30 @@ void setup_4xSGMII(void)
 	/* turn on PCI function */
 	out_le16(NETC_PF5_ECAM_BASE + 4, 0xffff);
 
-	bus.priv = NETC_PF5_BAR0_BASE + 0x8030;
+	bus.priv = (void *)NETC_PF5_BAR0_BASE + 0x8030;
 
 	for (i = 0; i < 4; i++) {
 		value = PHY_SGMII_IF_MODE_SGMII | PHY_SGMII_IF_MODE_AN;
-		memac_mdio_write22(&bus, i, MDIO_DEVAD_NONE, 0x14, value);
+		enetc_imdio_write(&bus, i, MDIO_DEVAD_NONE, 0x14, value);
 		/* Dev ability according to SGMII specification */
 		value = PHY_SGMII_DEV_ABILITY_SGMII;
-		memac_mdio_write22(&bus, i, MDIO_DEVAD_NONE, 0x04, value);
+		enetc_imdio_write(&bus, i, MDIO_DEVAD_NONE, 0x04, value);
 		/* Adjust link timer for SGMII */
-		memac_mdio_write22(&bus, i, MDIO_DEVAD_NONE, 0x13, 0x0003);
-		memac_mdio_write22(&bus, i, MDIO_DEVAD_NONE, 0x12, 0x06a0);
-		value = memac_mdio_read22(&bus, i, MDIO_DEVAD_NONE, 1);
-		value = memac_mdio_read22(&bus, i, MDIO_DEVAD_NONE, 1);
-		printf("BMSR p%d %04x\n", i, (int)value);
+		enetc_imdio_write(&bus, i, MDIO_DEVAD_NONE, 0x13, 0x0003);
+		enetc_imdio_write(&bus, i, MDIO_DEVAD_NONE, 0x12, 0x06a0);
+	}
+	for (i = 0; i < 4; i++) {
+		to = 1000;
+		do {
+			value = enetc_imdio_read(&bus, i, MDIO_DEVAD_NONE, 1);
+			if ((value & 0x24) == 0x24)
+				break;
+		} while (--to);
+		PCS_INF("BMSR: %04x\n", value);
+		if ((value & 0x24) != 0x24) {
+			PCS_ERR("PCS[%d] didn't link up, giving up.\n", i);
+			break;
+		}
 	}
 #endif
 }
@@ -361,26 +375,25 @@ void setup_QSGMII(void)
 	if ((serdes_protocol & 0xf0) != 0x50)
 		return;
 
-	printf("trying to set up QSGMII, this is hardcoded for SERDES x5xx!!!!\n");
+	PCS_INF("trying to set up QSGMII, this is hardcoded for SERDES x5xx!!!!\n");
 
-	out_le32(NETC_PCS_QSGMIICR1, 0x20000000);
+	//out_le32(NETC_PCS_QSGMIICR1, 0x20000000);
 
 	/* turn on PCI function */
 	out_le16(NETC_PF5_ECAM_BASE + 4, 0xffff);
 
-	bus.priv = NETC_PF5_BAR0_BASE + 0x8030;
+	bus.priv = (void *)NETC_PF5_BAR0_BASE + 0x8030;
 
-	for (i = 4; i < 8; i++) {
+	for (i = 0; i < 4; i++) {
 		value = PHY_SGMII_IF_MODE_SGMII | PHY_SGMII_IF_MODE_AN;
-		memac_mdio_write22(&bus, i, MDIO_DEVAD_NONE, 0x14, value);
+		enetc_imdio_write(&bus, i, MDIO_DEVAD_NONE, 0x14, value);
 		/* Dev ability according to SGMII specification */
 		value = PHY_SGMII_DEV_ABILITY_SGMII;
-		memac_mdio_write22(&bus, i, MDIO_DEVAD_NONE, 0x04, value);
+		enetc_imdio_write(&bus, i, MDIO_DEVAD_NONE, 0x04, value);
 		/* Adjust link timer for SGMII */
-		memac_mdio_write22(&bus, i, MDIO_DEVAD_NONE, 0x13, 0x0003);
-		memac_mdio_write22(&bus, i, MDIO_DEVAD_NONE, 0x12, 0x06a0);
+		enetc_imdio_write(&bus, i, MDIO_DEVAD_NONE, 0x13, 0x0003);
+		enetc_imdio_write(&bus, i, MDIO_DEVAD_NONE, 0x12, 0x06a0);
 	}
-
 
 	int phy_addr;
 	char *mdio_name;
@@ -395,7 +408,7 @@ void setup_QSGMII(void)
 	/* set up VSC PHY - this works on RDB only for now*/
 	ext_bus = miiphy_get_dev_by_name(mdio_name);
 	if (!ext_bus) {
-		printf("couldn't find MDIO bus, ignoring the PHY\n");
+		PCS_ERR("couldn't find MDIO bus, skipping external PHY config\n");
 		return;
 	}
 
@@ -413,10 +426,15 @@ void setup_QSGMII(void)
 		ext_bus->write(ext_bus, i, MDIO_DEVAD_NONE, 0x12, 0x80e0);
 
 		to = 1000;
-		while (--to && (ext_bus->read(ext_bus, i, MDIO_DEVAD_NONE, 0x12) & 0x8000))
-			;
-		if (!to)
-			printf("PHY%d TO\n", i);
+
+		do {
+			value = ext_bus->read(ext_bus, i, MDIO_DEVAD_NONE, 0x12);
+			if (!(value & 0x8000))
+				break;
+		} while (--to);
+		if (value & 0x8000)
+			PCS_ERR("PHY[%d] reset timeout\n", i);
+
 
 		ext_bus->write(ext_bus, i, MDIO_DEVAD_NONE, 0x1f, 0x0000);
 		value = ext_bus->read(ext_bus, i, MDIO_DEVAD_NONE, 0x17);
@@ -431,14 +449,170 @@ void setup_QSGMII(void)
 		ext_bus->write(ext_bus, 1, MDIO_DEVAD_NONE, 0x00, 0x3300);
 	}
 
-	for (i = 4; i < 8; i++) {
+	for (i = 0; i < 4; i++) {
 		to = 1000;
-		while (--to && 0x0024 != ((value = memac_mdio_read22(&bus, i, MDIO_DEVAD_NONE, 1)) & 0x0024))
-			continue;
-		printf("BMSR p%d %04x\n", i, (int)value);
-		if (0x0024 != (value & 0x0024))
-			printk("QSGMII PCS%d TO\n", i);
+		do {
+			value = enetc_imdio_read(&bus, i, MDIO_DEVAD_NONE, 1);
+			if ((value & 0x0024) == 0x0024)
+				break;
+		} while (--to);
+		PCS_INF("BMSR: %04x\n", value);
+		if ((value & 0x24) != 0x24) {
+			PCS_ERR("PCS[%d] didn't link up, giving up.\n", i);
+			break;
+		}
 	}
+}
+
+
+#define DEV_ABILITY_RSVD1	0x4000
+#define DEV_ABILITY_DUP		0x1000
+#define DEV_ABILITY_ABIL0	0x0001
+
+#define CONTROL_RESET		0x8000
+#define CONTROL_AN_EN		0x1000
+#define CONTROL_RESTART_AN	0x0200
+
+static void setup_SXGMII(void)
+{
+#if defined(CONFIG_TARGET_LS1028AQDS)
+	#define NETC_PF0_BAR0_BASE	0x1f8010000
+	#define NETC_PF0_ECAM_BASE	0x1F0000000
+	//#define NETC_PCS_SGMIICR1(n)	(0x001ea1804 + (n) * 0x10)
+	struct mii_dev bus = {0}, *ext_bus;
+	u16 value;
+	int to;
+
+	if ((serdes_protocol & 0xf) != 0x0001)
+		return;
+
+	PCS_INF("trying to set up SXGMII, this is hardcoded for SERDES 1xxx!!!!\n");
+
+	// writing this kills the link for some reason
+	//out_le32(NETC_PCS_SGMIICR1(0), 0x00000000);
+
+	/* turn on PCI function */
+	out_le16(NETC_PF0_ECAM_BASE + 4, 0xffff);
+
+	/* set MAC in SXGMII mode */
+	out_le32(NETC_PF0_BAR0_BASE + 0x8300, 0x00001000);
+
+	bus.priv = (void *)NETC_PF0_BAR0_BASE + 0x8030;
+
+	value = DEV_ABILITY_RSVD1 | DEV_ABILITY_DUP | DEV_ABILITY_ABIL0;
+	enetc_imdio_write(&bus, 0, 0x1f, 0x4, value);
+	value = CONTROL_RESET | CONTROL_AN_EN | CONTROL_RESTART_AN;
+	enetc_imdio_write(&bus, 0, 0x1f, 0x0, value);
+	to = 1000;
+	do {
+		value = enetc_imdio_read(&bus, 0, 0x1f, 0x0);
+		if (!(value & 0x8000))
+			break;
+	} while (--to);
+	if (value & 0x8000)
+		PCS_ERR("PHY[0] reset timeout\n");
+
+	//value =  CONTROL_AN_EN | CONTROL_RESTART_AN;
+	//enetc_imdio_write(&bus, 0, 0x1f, 0x0, value);
+
+//#if Aquantia config?
+	int phy_addr = 2;
+	char *mdio_name = "mdio@40";
+
+	/* configure AQR PHY */
+	ext_bus = miiphy_get_dev_by_name(mdio_name);
+	if (!ext_bus) {
+		PCS_ERR("couldn't find MDIO bus, ignoring the PHY\n");
+		return;
+	}
+
+	if (ext_bus->read(ext_bus, phy_addr, 1, 2) == 0x03a1 &&
+	    ext_bus->read(ext_bus, phy_addr, 1, 3) == 0xb662) {
+		ext_bus->write(ext_bus, phy_addr, 4, 0xc441, 0x0008);
+	} else {
+		PCS_ERR("unknown PHY, no init done on it\n");
+	}
+
+	to = 1000;
+	do {
+		value = enetc_imdio_read(&bus, 0, 0x1f, 0x1);
+		if ((value & 0x24) == 0x24)
+			break;
+	} while (--to);
+	PCS_INF("BMSR: %04x\n", value);
+	if ((value & 0x24) != 0x24)
+		PCS_ERR("PCS[0] didn't link up, giving up.\n");
+#endif
+}
+
+/* tested with loopback card */
+void setup_QSXGMII(void)
+{
+	#define NETC_PF5_BAR0_BASE	0x1f8140000
+	#define NETC_PF5_ECAM_BASE	0x1F0005000
+	struct mii_dev bus = {0}, *ext_bus;
+	u16 value;
+	int to, i;
+
+#if defined(CONFIG_TARGET_LS1028AQDS)
+	if ((serdes_protocol & 0xf0) != 0x0030)
+		return;
+
+	PCS_INF("trying to set up QSXGMII, this is hardcoded for SERDES x3xx!!!!\n");
+
+	/* turn on PCI function */
+	out_le16(NETC_PF5_ECAM_BASE + 4, 0xffff);
+
+	bus.priv = (void *)NETC_PF5_BAR0_BASE + 0x8030;
+
+	/*reset lane */
+	enetc_imdio_write(&bus, 0, 0x03, 0, 0x8000);
+	to = 1000;
+	do {
+		if (enetc_imdio_read(&bus, 0, 0x03, 0) & 0x8000)
+	break;
+	} while (--to);
+
+	/* set capabilities for AN  and restart AN*/
+	for (i = 0; i < 4; i++) {
+		enetc_imdio_write(&bus, i, 0x1f, 4, 0xd801);
+		enetc_imdio_write(&bus, i, 0x1f, 0, 0x1200);
+	}
+//#if Aquantia config
+	int phy_addr = 0;
+	char *mdio_name = "mdio@50";
+
+	/* configure AQR PHY */
+	ext_bus = miiphy_get_dev_by_name(mdio_name);
+	if (!ext_bus) {
+		PCS_ERR("couldn't find MDIO bus, ignoring the PHY\n");
+		return;
+	}
+
+	if (ext_bus->read(ext_bus, phy_addr, 1, 2) == 0x03a1 &&
+	    ext_bus->read(ext_bus, phy_addr, 1, 3) == 0xb712) {
+		for (i = phy_addr; i < phy_addr + 4; i++) {
+			ext_bus->write(ext_bus, i, 4, 0xc441, 0x0008);
+		}
+	} else {
+		PCS_ERR("unknown PHY, no init done on it\n");
+	}
+
+	for (i = 0; i < 4; i++) {
+		to = 1000;
+		do {
+			value = enetc_imdio_read(&bus, i, 0x1f, 1);
+			if ((value & 0x24) == 0x24)
+				break;
+		} while (--to);
+		PCS_INF("BMSR %04x\n", value);
+		if ((value & 0x24) != 0x24) {
+			PCS_ERR("PCS[1:%d] didn't link up, giving up.\n", i);
+			break;
+		}
+	}
+
+#endif
 }
 
 static void setup_1xSGMII(void)
@@ -448,11 +622,12 @@ static void setup_1xSGMII(void)
 	//#define NETC_PCS_SGMIICR1(n)	(0x001ea1804 + (n) * 0x10)
 	struct mii_dev bus = {0};
 	u16 value;
+	int to;
 
 	if ((serdes_protocol & 0xf) != 0x0008)
 		return;
 
-	printf("trying to set up SGMII, this is hardcoded for SERDES 8xxx!!!!\n");
+	PCS_INF("trying to set up SGMII, this is hardcoded for SERDES 8xxx!!!!\n");
 
 	//out_le32(NETC_PCS_SGMIICR1(0), 0x00000000);
 	// writing this kills the link for some reason
@@ -460,26 +635,46 @@ static void setup_1xSGMII(void)
 	/* turn on PCI function */
 	out_le16(NETC_PF0_ECAM_BASE + 4, 0xffff);
 
-	bus.priv = NETC_PF0_BAR0_BASE + 0x8030;
 
-	udelay(100);
-
+	bus.priv = (void *)NETC_PF0_BAR0_BASE + 0x8030;
 	value = PHY_SGMII_IF_MODE_SGMII | PHY_SGMII_IF_MODE_AN;
-	memac_mdio_write22(&bus, 0, MDIO_DEVAD_NONE, 0x14, value);
+	enetc_imdio_write(&bus, 0, MDIO_DEVAD_NONE, 0x14, value);
 	/* Dev ability according to SGMII specification */
 	value = PHY_SGMII_DEV_ABILITY_SGMII;
-	memac_mdio_write22(&bus, 0, MDIO_DEVAD_NONE, 0x04, value);
+	enetc_imdio_write(&bus, 0, MDIO_DEVAD_NONE, 0x04, value);
 	/* Adjust link timer for SGMII */
-	memac_mdio_write22(&bus, 0, MDIO_DEVAD_NONE, 0x13, 0x0003);
-	memac_mdio_write22(&bus, 0, MDIO_DEVAD_NONE, 0x12, 0x06a0);
+	enetc_imdio_write(&bus, 0, MDIO_DEVAD_NONE, 0x13, 0x0003);
+	enetc_imdio_write(&bus, 0, MDIO_DEVAD_NONE, 0x12, 0x06a0);
+
+	/* restart AN */
 	value = PHY_SGMII_CR_DEF_VAL | PHY_SGMII_CR_RESET_AN;
-	memac_mdio_write22(&bus, 0, MDIO_DEVAD_NONE, 0x00, value);
-	memac_mdio_read22(&bus, 0, MDIO_DEVAD_NONE, 0x01);
-	value = memac_mdio_read22(&bus, 0, MDIO_DEVAD_NONE, 0x01);
-	value = memac_mdio_read22(&bus, 0, MDIO_DEVAD_NONE, 0x01);
-	if (!(value & 4))
-		printf("\nSERDES lane didn't link up, status %04x\n", (int)value);
-	printf("BMSR %04x\n", value);
+
+	enetc_imdio_write(&bus, 0, MDIO_DEVAD_NONE, 0x00, value);
+	/* wait for link */
+	to = 1000;
+	do {
+		value = enetc_imdio_read(&bus, 0, MDIO_DEVAD_NONE, 0x01);
+		if ((value & 0x0024) == 0x0024)
+			break;
+	} while (--to);
+	PCS_INF("BMSR %04x\n", value);
+	if ((value & 0x0024) != 0x0024)
+		PCS_ERR("PCS[0] didn't link up, giving up.\n");
+}
+
+#include "dm/device.h"
+#include "../drivers/net/fsl_enetc.h"
+extern void register_imdio(struct udevice *dev);
+void setup_switch(void)
+{
+	struct udevice dev;
+	struct enetc_devfn hw;
+
+	dev.name = "sw";
+	dev.priv = &hw;
+	hw.port_regs = (void *)0x1f8140000;
+	register_imdio(&dev);
+
 }
 
 #ifdef CONFIG_LAST_STAGE_INIT
@@ -489,9 +684,15 @@ int last_stage_init(void)
 	setup_mdio_mux();
 #endif
 
+	setup_switch();
+
 	setup_1xSGMII();
 	setup_4xSGMII();
 	setup_QSGMII();
+	setup_SXGMII();
+#if 1
+	setup_QSXGMII();
+#endif
 	return 0;
 }
 #endif
