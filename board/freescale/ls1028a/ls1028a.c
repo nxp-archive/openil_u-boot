@@ -664,6 +664,53 @@ static void setup_1xSGMII(void)
 		PCS_ERR("PCS[0] didn't link up, giving up.\n");
 }
 
+
+void setup_RGMII(void)
+{
+#if defined(CONFIG_TARGET_LS1028AQDS)
+	#define NETC_PF1_BAR0_BASE	0x1f8050000
+	#define NETC_PF1_ECAM_BASE	0x1F0001000
+	struct mii_dev *ext_bus;
+	char *mdio_name = "mdio@00";
+	int phy_addr = 5;
+	int value;
+
+	PCS_INF("trying to set up RGMII\n");
+
+	/* turn on PCI function */
+	out_le16(NETC_PF1_ECAM_BASE + 4, 0xffff);
+	out_le32(NETC_PF1_BAR0_BASE + 0x8300, 0x8006);
+
+	/* configure AQR PHY */
+	ext_bus = miiphy_get_dev_by_name(mdio_name);
+	if (!ext_bus) {
+		PCS_ERR("couldn't find MDIO bus, ignoring the PHY\n");
+		return;
+	}
+	/* Atheros magic */
+	ext_bus->write(ext_bus, phy_addr, MDIO_DEVAD_NONE, 0x0d, 0x0007);
+	ext_bus->write(ext_bus, phy_addr, MDIO_DEVAD_NONE, 0x0e, 0x8016);
+	ext_bus->write(ext_bus, phy_addr, MDIO_DEVAD_NONE, 0x0d, 0x4007);
+	value = ext_bus->read(ext_bus, phy_addr, MDIO_DEVAD_NONE, 0x0e);
+	if (value == 0xffff)
+		goto phy_err;
+	ext_bus->write(ext_bus, phy_addr, MDIO_DEVAD_NONE, 0x0e, value | 0x0018);
+	ext_bus->write(ext_bus, phy_addr, MDIO_DEVAD_NONE, 0x1d, 0x0005);
+	value = ext_bus->read(ext_bus, phy_addr, MDIO_DEVAD_NONE, 0x1e);
+	if (value == 0xffff)
+		goto phy_err;
+	ext_bus->write(ext_bus, phy_addr, MDIO_DEVAD_NONE, 0x1e, value | 0x0100);
+	/* restart AN */
+	ext_bus->write(ext_bus, phy_addr, MDIO_DEVAD_NONE, 0x0d, 0x1200);
+
+	return;
+phy_err:
+	PCS_ERR("RGMII PHY access error, giving up.\n");
+#endif
+}
+
+
+
 #include "dm/device.h"
 #include "../drivers/net/fsl_enetc.h"
 extern void register_imdio(struct udevice *dev);
@@ -692,6 +739,7 @@ int last_stage_init(void)
 	setup_4xSGMII();
 	setup_QSGMII();
 	setup_SXGMII();
+	setup_RGMII();
 #if 1
 	setup_QSXGMII();
 #endif

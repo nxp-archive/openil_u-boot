@@ -472,6 +472,8 @@ int enetc_imdio_write(struct mii_dev *bus, int port, int dev, int reg, u16 val)
 	else
 		out_le32(bus->priv + 0, 0x00001448);
 
+	while (in_le32(bus->priv+0) & 1)
+		;
 	if (dev != MDIO_DEVAD_NONE) {
 		out_le32(bus->priv + 4, (port << 5) + dev);
 		out_le32(bus->priv + 0xc, reg);
@@ -728,6 +730,8 @@ static int enetc_start(struct udevice *dev)
 	/* enable issue memory I/O requests by this PF - required after FLR */
 	dm_pci_write_config16(dev, PCI_CFH_CMD, PCI_CFH_CMD_IO_MEM_EN);
 
+	if (if_mode & ENETC_PM_IF_MODE_RG)
+		if_mode |= ENETC_PM_IF_MODE_ENA;
 	enetc_write_port(hw, ENETC_PM_IF_MODE, if_mode);
 
 	if (!is_valid_ethaddr(plat->enetaddr)) {
@@ -742,6 +746,19 @@ static int enetc_start(struct udevice *dev)
 	/* setup Tx/Rx buffer descriptors */
 	enetc_setup_tx_bdr(hw);
 	enetc_setup_rx_bdr(dev, hw);
+
+	/* if wait for link */
+	if (if_mode & ENETC_PM_IF_MODE_RG) {
+		int to = 10000;
+		u32 stat;
+		do {
+			stat = enetc_read_port(hw, ENETC_PM_IF_STATUS);
+			if (stat & ENETC_PM_IF_STATUS_RGL)
+				break;
+		} while (--to);
+		if (!(stat & ENETC_PM_IF_STATUS_RGL))
+			printf("RGMII didn't link up, giving up.\n");
+	}
 
 #ifdef CONFIG_PHYLIB
 	ret = enetc_init_mdio_phy(dev);

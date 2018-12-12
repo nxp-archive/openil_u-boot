@@ -152,6 +152,11 @@ enum enetc_bdr_type {TX, RX};
 #define ENETC_RX_MAXFRM_SIZE	PKTSIZE_ALIGN
 #define ENETC_BUFF_SIZE	PKTSIZE_ALIGN
 #define ENETC_PM_IF_MODE	0x8300
+#define ENETC_PM_IF_MODE_RG		0x00000004
+#define ENETC_PM_IF_MODE_ENA		0x00008000
+#define ENETC_PM_IF_STATUS		0x8304
+#define ENETC_PM_IF_STATUS_RGL		0x00008000
+#define ENETC_PM_IF_STATUS_RGFD		0x00001000
 /* buffer descriptors count must be multiple of 8 and aligned to 128 bytes */
 #define ENETC_BD_CNT 16
 #define ENETC_ALIGN 128
