@@ -211,4 +211,12 @@
 #ifdef CONFIG_SECURE_BOOT
 #include <asm/fsl_secure_boot.h>
 #endif
+
+/* LPUART */
+#ifdef CONFIG_LPUART
+#define CONFIG_LPUART_32B_REG
+#define CFG_LPUART_MUX_MASK	0xf0
+#define CFG_LPUART_EN		0xf0
+#endif
+
 #endif /* __LS1028A_QDS_H */
