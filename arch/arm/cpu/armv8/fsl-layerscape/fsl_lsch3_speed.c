@@ -1,5 +1,6 @@
 /*
  * Copyright 2014-2015, Freescale Semiconductor, Inc.
+ * Copyright 2017-2019 NXP
  *
  * SPDX-License-Identifier:	GPL-2.0+
  *
@@ -183,6 +184,16 @@ ulong get_ddr_freq(ulong ctrl_num)
 	return gd->mem_clk;
 }
 
+#ifdef CONFIG_FSL_ESDHC
+int get_sdhc_freq(ulong dummy)
+{
+	if (!gd->arch.sdhc_clk)
+		get_clocks();
+
+	return gd->arch.sdhc_clk;
+}
+#endif
+
 int get_i2c_freq(ulong dummy)
 {
 	return get_bus_freq(0) / CONFIG_SYS_FSL_I2C_CLK_DIV;
@@ -205,6 +216,10 @@ unsigned int mxc_get_clock(enum mxc_clock clk)
 		return get_i2c_freq(0);
 	case MXC_DSPI_CLK:
 		return get_dspi_freq(0);
+#if defined(CONFIG_FSL_ESDHC)
+	case MXC_ESDHC_CLK:
+		return get_sdhc_freq(0);
+#endif
 	default:
 		printf("Unsupported clock\n");
 	}

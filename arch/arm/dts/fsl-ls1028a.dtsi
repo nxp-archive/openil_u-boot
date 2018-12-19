@@ -222,4 +222,20 @@
 		dr_mode = "host";
 	};
 
+	esdhc0: esdhc@2140000 {
+		compatible = "fsl,esdhc";
+		reg = <0x0 0x2140000 0x0 0x10000>;
+		interrupts = <0 26 0x4>;
+		big-endian;
+		bus-width = <4>;
+	};
+
+	esdhc1: esdhc@2150000 {
+		compatible = "fsl,esdhc";
+		reg = <0x0 0x2150000 0x0 0x10000>;
+		interrupts = <0 63 0x4>;
+		big-endian;
+		non-removable;
+		bus-width = <4>;
+	};
 };
