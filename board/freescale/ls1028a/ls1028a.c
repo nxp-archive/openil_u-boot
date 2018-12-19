@@ -295,12 +295,138 @@ void setup_mdio_mux(void)
 }
 #endif /* #if defined(CONFIG_FSL_ENETC) && defined(CONFIG_FSL_QIXIS) */
 
+#include <fsl_memac.h>
+
+extern void memac_mdio_write22(struct mii_dev *bus, int port, int dev, int reg, int val);
+extern int memac_mdio_read22(struct mii_dev *bus, int port, int dev, int reg);
+
+extern int serdes_protocol;
+
+void setup_4xSGMII(void)
+{
+#if defined(CONFIG_TARGET_LS1028AQDS)
+	#define NETC_PF5_BAR0_BASE	0x1f8140000
+	#define NETC_PF5_ECAM_BASE	0x1F0005000
+	#define NETC_PCS_SGMIICR1(n)	(0x001ea1804 + (n) * 0x10)
+	struct mii_dev bus = {0};
+	u16 value;
+	int i;
+
+	if (serdes_protocol != 0x9999)
+		return;
+
+	printf("trying to set up 4xSGMII, this is hardcoded for SERDES 9999!!!!\n");
+
+	out_le32(NETC_PCS_SGMIICR1(0), 0x00000000);
+	out_le32(NETC_PCS_SGMIICR1(1), 0x08000000);
+	out_le32(NETC_PCS_SGMIICR1(2), 0x10000000);
+	out_le32(NETC_PCS_SGMIICR1(3), 0x18000000);
+
+	/* turn on PCI function */
+	out_le16(NETC_PF5_ECAM_BASE + 4, 0xffff);
+
+	bus.priv = NETC_PF5_BAR0_BASE + 0x8030;
+
+	for (i = 0; i < 4; i++) {
+		value = PHY_SGMII_IF_MODE_SGMII | PHY_SGMII_IF_MODE_AN;
+		memac_mdio_write22(&bus, i, MDIO_DEVAD_NONE, 0x14, value);
+		/* Dev ability according to SGMII specification */
+		value = PHY_SGMII_DEV_ABILITY_SGMII;
+		memac_mdio_write22(&bus, i, MDIO_DEVAD_NONE, 0x04, value);
+		/* Adjust link timer for SGMII */
+		memac_mdio_write22(&bus, i, MDIO_DEVAD_NONE, 0x13, 0x0003);
+		memac_mdio_write22(&bus, i, MDIO_DEVAD_NONE, 0x12, 0x06a0);
+		value = memac_mdio_read22(&bus, i, MDIO_DEVAD_NONE, 1);
+		value = memac_mdio_read22(&bus, i, MDIO_DEVAD_NONE, 1);
+		printf("BMSR p%d %04x\n", i, (int)value);
+	}
+#endif
+}
+
+void setup_QSGMII(void)
+{
+	#define NETC_PF5_BAR0_BASE	0x1f8140000
+	#define NETC_PF5_ECAM_BASE	0x1F0005000
+	#define NETC_PCS_QSGMIICR1	0x001ea1884
+	struct mii_dev bus = {0}, *ext_bus;
+	u16 value;
+	int i, to;
+
+	if ((serdes_protocol & 0xf0) != 0x50)
+		return;
+
+	printf("trying to set up QSGMII, this is hardcoded for SERDES x5xx!!!!\n");
+
+	out_le32(NETC_PCS_QSGMIICR1, 0x20000000);
+
+	/* turn on PCI function */
+	out_le16(NETC_PF5_ECAM_BASE + 4, 0xffff);
+
+	bus.priv = NETC_PF5_BAR0_BASE + 0x8030;
+
+	for (i = 4; i < 8; i++) {
+		value = PHY_SGMII_IF_MODE_SGMII | PHY_SGMII_IF_MODE_AN;
+		memac_mdio_write22(&bus, i, MDIO_DEVAD_NONE, 0x14, value);
+		/* Dev ability according to SGMII specification */
+		value = PHY_SGMII_DEV_ABILITY_SGMII;
+		memac_mdio_write22(&bus, i, MDIO_DEVAD_NONE, 0x04, value);
+		/* Adjust link timer for SGMII */
+		memac_mdio_write22(&bus, i, MDIO_DEVAD_NONE, 0x13, 0x0003);
+		memac_mdio_write22(&bus, i, MDIO_DEVAD_NONE, 0x12, 0x06a0);
+	}
+
+#if defined(CONFIG_TARGET_LS1028ARDB)
+	/* set up VSC PHY - this works on RDB only for now*/
+	ext_bus = miiphy_get_dev_by_name("netc_mdio");
+	if (!ext_bus) {
+		printf("couldn't find MDIO bus, ignoring the PHY\n");
+		return;
+	}
+
+	for (i = 0x10; i < 0x14; i++) {
+		memac_mdio_write(ext_bus, i, MDIO_DEVAD_NONE, 0x1f, 0x0010);
+		value = memac_mdio_read(ext_bus, i, 0x13);
+		value = (value & 0x3fff) | (1 << 14);
+		memac_mdio_write(ext_bus, i, MDIO_DEVAD_NONE, 0x12, 0x80e0);
+
+		to = 1000;
+		while (--to && (memac_mdio_read(ext_bus, i, MDIO_DEVAD_NONE, 0x12) & 0x8000))
+			continue;
+		if (!to)
+			printf("PHY%d TO\n", i);
+
+		memac_mdio_write(ext_bus, i, MDIO_DEVAD_NONE, 0x1f, 0x0000);
+		value = memac_mdio_read(ext_bus, i, MDIO_DEVAD_NONE, 0x17);
+		value = (value & 0xf8ff);
+		memac_mdio_write(ext_bus, i, MDIO_DEVAD_NONE, 0x17, value);
+
+		memac_mdio_write(ext_bus, i, MDIO_DEVAD_NONE, 0x1f, 0x0003);
+		value = memac_mdio_read(ext_bus, i, MDIO_DEVAD_NONE, 0x10);
+		value = value | 0x80;
+		memac_mdio_write(ext_bus, i, MDIO_DEVAD_NONE, 0x10, value);
+		memac_mdio_write(ext_bus, i, MDIO_DEVAD_NONE, 0x1f, 0x0000);
+		memac_mdio_write(ext_bus, 1, MDIO_DEVAD_NONE, 0x00, 0x3300);
+	}
+#endif
+	for (i = 4; i < 8; i++) {
+		to = 1000;
+		while (--to && 0x0024 != ((value = memac_mdio_read22(&bus, i, MDIO_DEVAD_NONE, 1)) & 0x0024))
+			continue;
+		printf("BMSR p%d %04x\n", i, (int)value);
+		if (0x0024 != (value & 0x0024))
+			printk("QSGMII PCS%d TO\n", i);
+	}
+}
+
 #ifdef CONFIG_LAST_STAGE_INIT
 int last_stage_init(void)
 {
 #if defined(CONFIG_FSL_ENETC) && defined(CONFIG_FSL_QIXIS)
 	setup_mdio_mux();
 #endif
+
+	setup_4xSGMII();
+	setup_QSGMII();
 	return 0;
 }
 #endif

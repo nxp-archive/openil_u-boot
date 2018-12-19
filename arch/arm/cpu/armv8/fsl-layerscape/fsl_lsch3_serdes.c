@@ -1,5 +1,6 @@
 /*
  * Copyright 2014-2015 Freescale Semiconductor, Inc.
+ * Copyright 2017-2019 NXP
  *
  * SPDX-License-Identifier:	GPL-2.0+
  */
@@ -102,6 +103,8 @@ int serdes_get_first_lane(u32 sd, enum srds_prtcl device)
 	return -ENODEV;
 }
 
+int serdes_protocol;
+
 void serdes_init(u32 sd, u32 sd_addr, u32 rcwsr, u32 sd_prctl_mask,
 		 u32 sd_prctl_shift, u8 serdes_prtcl_map[SERDES_PRCTL_COUNT])
 {
@@ -119,6 +122,7 @@ void serdes_init(u32 sd, u32 sd_addr, u32 rcwsr, u32 sd_prctl_mask,
 
 	cfg = serdes_get_number(sd, cfg);
 	printf("Using SERDES%d Protocol: %d (0x%x)\n", sd + 1, cfg, cfg);
+	serdes_protocol = cfg;
 
 	if (!is_serdes_prtcl_valid(sd, cfg))
 		printf("SERDES%d[PRTCL] = 0x%x is not valid\n", sd + 1, cfg);

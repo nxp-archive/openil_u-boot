@@ -466,56 +466,101 @@ static int enetc_get_eth_phy_data(struct udevice *dev)
 }
 #endif
 
-void memac_mdio_write2(struct mii_dev *bus, int port, int dev, int reg, int val)
+void memac_mdio_write22(struct mii_dev *bus, int port, int dev, int reg, int val)
 {
-	out_le32(0x1f8018030, 0x00001408);
-	while (in_le32(0x1f8018030) & 1)
+	out_le32(bus->priv + 0, 0x00001408);
+	while (in_le32(bus->priv + 0) & 1)
 		continue;
-	out_le32(0x1f8018034, (port << 5) + reg);
-	while (in_le32(0x1f8018030) & 1)
+	out_le32(bus->priv + 4, (port << 5) + reg);
+	while (in_le32(bus->priv + 0) & 1)
 		continue;
-	out_le32(0x1f8018038, val);
-	while (in_le32(0x1f8018030) & 1)
+	out_le32(bus->priv + 8, val);
+	while (in_le32(bus->priv + 0) & 1)
 		continue;
 }
 
-int memac_mdio_read2(struct mii_dev *bus, int port, int dev, int reg)
+int memac_mdio_read22(struct mii_dev *bus, int port, int dev, int reg)
 {
-	out_le32(0x1f8018030, 0x00001408);
-	while (in_le32(0x1f8018030) & 1)
+	out_le32(bus->priv + 0, 0x00001408);
+	while (in_le32(bus->priv + 0) & 1)
 		continue;
-	out_le32(0x1f8018034, (port << 5) + reg);
-	while (in_le32(0x1f8018030) & 1)
+	out_le32(bus->priv + 4, (port << 5) + reg);
+	while (in_le32(bus->priv + 0) & 1)
 		continue;
-	out_le32(0x1f8018034, (port << 5) + reg + 0x8000);
-	while (in_le32(0x1f8018030) & 1)
+	out_le32(bus->priv + 4, (port << 5) + reg + 0x8000);
+	while (in_le32(bus->priv + 0) & 1)
 		continue;
-	if (in_le32(0x1f8018030) & 2)
+	if (in_le32(bus->priv + 0) & 2)
 		return -1;
 
-	return in_le32(0x1f8018038);
+	return in_le32(bus->priv + 8);
 }
 
+void memac_mdio_write45(struct mii_dev *bus, int port, int dev, int reg, int val)
+{
+	out_le32(bus->priv + 0, 0x00001448);
+	while (in_le32(bus->priv + 0) & 1)
+		continue;
+	out_le32(bus->priv + 4, (port << 5) + dev);
+	out_le32(bus->priv + 0xc, reg);
+	while (in_le32(bus->priv + 0) & 1)
+		continue;
+	out_le32(bus->priv + 8, val);
+	while (in_le32(bus->priv + 0) & 1)
+		continue;
+}
+
+int memac_mdio_read45(struct mii_dev *bus, int port, int dev, int reg)
+{
+	out_le32(bus->priv + 0, 0x00001448);
+	while (in_le32(bus->priv + 0) & 1)
+		continue;
+	out_le32(bus->priv + 4, (port << 5) + dev);
+	while (in_le32(bus->priv + 0) & 1)
+		continue;
+	out_le32(bus->priv + 4, (port << 5) + dev);
+	out_le32(bus->priv + 0xc, reg);
+	out_le32(bus->priv + 4, (port << 5) + dev + 0x8000);
+
+	while (in_le32(bus->priv + 0) & 1)
+		continue;
+	if (in_le32(bus->priv + 0) & 2)
+		return -1;
+
+	return in_le32(bus->priv + 8);
+}
+
+extern int serdes_protocol;
 static void configure_serdes(struct udevice *dev)
 {
 	struct enetc_devfn *hw = dev_get_priv(dev);
 	struct mii_dev bus = {0};
 	u32 value;
 
-	if (hw->phy_intf != PHY_INTERFACE_MODE_SGMII)
+	bus.priv = hw->port_regs + 0x8030;
+
+	/* only support SERDES 85xx */
+	if ((serdes_protocol & 0xff) != 0x58)
 		return;
 
-	bus.priv = hw->port_regs + 0x8030;
-	value = PHY_SGMII_IF_MODE_SGMII | PHY_SGMII_IF_MODE_AN;
-	memac_mdio_write2(&bus, 0, MDIO_DEVAD_NONE, 0x14, value);
-	/* Dev ability according to SGMII specification */
-	value = PHY_SGMII_DEV_ABILITY_SGMII;
-	memac_mdio_write2(&bus, 0, MDIO_DEVAD_NONE, 0x04, value);
-	/* Adjust link timer for SGMII */
-	memac_mdio_write2(&bus, 0, MDIO_DEVAD_NONE, 0x13, 0x0003);
-	memac_mdio_write2(&bus, 0, MDIO_DEVAD_NONE, 0x12, 0x06a0);
-	value = PHY_SGMII_CR_DEF_VAL | PHY_SGMII_CR_RESET_AN;
-	memac_mdio_write2(&bus, 0, MDIO_DEVAD_NONE, 0x00, value);
+	if (hw->phy_intf == PHY_INTERFACE_MODE_SGMII) {
+		value = PHY_SGMII_IF_MODE_SGMII | PHY_SGMII_IF_MODE_AN;
+		memac_mdio_write22(&bus, 0, MDIO_DEVAD_NONE, 0x14, value);
+		/* Dev ability according to SGMII specification */
+		value = PHY_SGMII_DEV_ABILITY_SGMII;
+		memac_mdio_write22(&bus, 0, MDIO_DEVAD_NONE, 0x04, value);
+		/* Adjust link timer for SGMII */
+		memac_mdio_write22(&bus, 0, MDIO_DEVAD_NONE, 0x13, 0x0003);
+		memac_mdio_write22(&bus, 0, MDIO_DEVAD_NONE, 0x12, 0x06a0);
+		value = PHY_SGMII_CR_DEF_VAL | PHY_SGMII_CR_RESET_AN;
+		memac_mdio_write22(&bus, 0, MDIO_DEVAD_NONE, 0x00, value);
+		memac_mdio_read22(&bus, 0, MDIO_DEVAD_NONE, 0x01);
+		value = memac_mdio_read22(&bus, 0, MDIO_DEVAD_NONE, 0x01);
+		value = memac_mdio_read22(&bus, 0, MDIO_DEVAD_NONE, 0x01);
+		if (!(value & 4))
+			printf("\nSERDES lane didn't link up, status %04x\n", (int)value);
+			printf("BMSR %04x\n", value);
+	}
 }
 
 /*
