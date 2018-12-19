@@ -824,6 +824,7 @@ int checkboard(void)
 
 void *video_hw_init(void)
 {
+	return;
 }
 
 #ifdef CONFIG_EMMC_BOOT
