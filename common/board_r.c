@@ -1,4 +1,6 @@
 /*
+ * Copyright 2018-2019 NXP
+ *
  * Copyright (c) 2011 The Chromium OS Authors.
  * (C) Copyright 2002-2006
  * Wolfgang Denk, DENX Software Engineering, wd@denx.de.
@@ -322,7 +324,7 @@ __weak int power_init_board(void)
 
 static int initr_announce(void)
 {
-	debug("Now running in RAM - U-Boot at: %08lx\n", gd->relocaddr);
+	printf("Now running in RAM - U-Boot at: %08lx\n", gd->relocaddr);
 	return 0;
 }
 

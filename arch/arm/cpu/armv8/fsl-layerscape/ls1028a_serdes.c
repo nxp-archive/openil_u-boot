@@ -10,6 +10,7 @@
 struct serdes_config {
 	u32 protocol;
 	u8 lanes[SRDS_MAX_LANES];
+	u8 rcw_lanes[SRDS_MAX_LANES];
 };
 
 

@@ -92,6 +92,11 @@ int arch_misc_init(void)
 }
 #endif
 
+int board_eth_init(bd_t *bis)
+{
+	return pci_eth_init(bis);
+}
+
 int board_early_init_f(void)
 {
 	fsl_lsch3_early_init_f();
