@@ -6,6 +6,8 @@
  * Copyright (C) 2010 Reinhard Meyer, EMK Elektronik
  * Copyright (C) 2008 Atmel Corporation
  *
+ * Copyright 2018-2019 NXP
+ *
  * SPDX-License-Identifier:	GPL-2.0+
  */
 
@@ -948,6 +950,7 @@ static int set_quad_mode(struct spi_flash *flash,
 #endif
 #ifdef CONFIG_SPI_FLASH_STMICRO
 	case SPI_FLASH_CFI_MFR_STMICRO:
+	case SPI_FLASH_CFI_MFR_MICRON:
 		debug("SF: QEB is volatile for %02x flash\n", JEDEC_MFR(info));
 		return 0;
 #endif
@@ -1035,6 +1038,7 @@ int spi_flash_scan(struct spi_flash *flash)
 #if defined(CONFIG_SPI_FLASH_STMICRO) || defined(CONFIG_SPI_FLASH_SST)
 	/* NOR protection support for STmicro/Micron chips and similar */
 	if (JEDEC_MFR(info) == SPI_FLASH_CFI_MFR_STMICRO ||
+	    JEDEC_MFR(info) == SPI_FLASH_CFI_MFR_MICRON ||
 	    JEDEC_MFR(info) == SPI_FLASH_CFI_MFR_SST) {
 		flash->flash_lock = stm_lock;
 		flash->flash_unlock = stm_unlock;
@@ -1137,6 +1141,13 @@ int spi_flash_scan(struct spi_flash *flash)
 	ret = read_bar(flash, info);
 	if (ret < 0)
 		return ret;
+#endif
+
+#if 0
+	/* MT35x flash supports enter 4 byte cmd. */
+	if ((JEDEC_MFR(info) == SPI_FLASH_CFI_MFR_MICRON) &&
+			(JEDEC_ID(info) == 0x5b1a))
+		spi_flash_cmd_enter_4byte(flash);
 #endif
 
 #if CONFIG_IS_ENABLED(OF_CONTROL) && !CONFIG_IS_ENABLED(OF_PLATDATA)

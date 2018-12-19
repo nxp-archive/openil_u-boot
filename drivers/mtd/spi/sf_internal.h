@@ -4,6 +4,8 @@
  * Copyright (C) 2008 Atmel Corporation
  * Copyright (C) 2013 Jagannadha Sutradharudu Teki, Xilinx Inc.
  *
+ * Copyright 2018-2019 NXP
+ *
  * SPDX-License-Identifier:	GPL-2.0+
  */
 
@@ -35,6 +37,7 @@ enum spi_nor_option_flags {
 /* CFI Manufacture ID's */
 #define SPI_FLASH_CFI_MFR_SPANSION	0x01
 #define SPI_FLASH_CFI_MFR_STMICRO	0x20
+#define SPI_FLASH_CFI_MFR_MICRON	0x2C
 #define SPI_FLASH_CFI_MFR_MACRONIX	0xc2
 #define SPI_FLASH_CFI_MFR_SST		0xbf
 #define SPI_FLASH_CFI_MFR_WINBOND	0xef
@@ -72,6 +75,10 @@ enum spi_nor_option_flags {
 # define CMD_EXTNADDR_WREAR		0xC5
 # define CMD_EXTNADDR_RDEAR		0xC8
 #endif
+
+/* Used for Micron(STMICRO) flashes. */
+#define CMD_ENABLE_4B			0xB7
+#define CMD_EXIT_4B			0xE9
 
 /* Common status */
 #define STATUS_WIP			BIT(0)
@@ -133,7 +140,7 @@ struct spi_flash_info {
 #define RD_DUAL			BIT(5)	/* use Dual Read */
 #define RD_QUADIO		BIT(6)	/* use Quad IO Read */
 #define RD_DUALIO		BIT(7)	/* use Dual IO Read */
-#define ADDR_4B			BIT(8)
+#define ADDR_4B			BIT(8)  /* use 4-byte address support */
 #define RD_FULL			(RD_QUAD | RD_DUAL | RD_QUADIO | RD_DUALIO)
 };
 
@@ -179,6 +186,18 @@ static inline int spi_flash_cmd_write_enable(struct spi_flash *flash)
 static inline int spi_flash_cmd_write_disable(struct spi_flash *flash)
 {
 	return spi_flash_cmd(flash->spi, CMD_WRITE_DISABLE, NULL, 0);
+}
+
+/* Enter 4-byte mode */
+static inline int spi_flash_cmd_enter_4byte(struct spi_flash *flash)
+{
+	return spi_flash_cmd(flash->spi, CMD_ENABLE_4B, NULL, 0);
+}
+
+/* Exit 4-byte mode */
+static inline int spi_flash_cmd_exit_4byte(struct spi_flash *flash)
+{
+	return spi_flash_cmd(flash->spi, CMD_EXIT_4B, NULL, 0);
 }
 
 /*

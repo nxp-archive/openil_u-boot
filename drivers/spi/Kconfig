@@ -232,6 +232,13 @@ config FSL_QSPI
 	  used to access the SPI NOR flash on platforms embedding this
 	  Freescale IP core.
 
+config NXP_FSPI
+	bool "NXP FLEXSPI driver"
+	help
+	  Enable the NXP Flex-SPI (FSPI) driver. This driver can be used to
+	  access SPI NOR flash on platforms embedding this NXP IP code.
+	  This driver support SPI flash single and memory reads.
+
 config FSL_SPI_ALIGNED_TXFIFO
        bool "Write only 16 Bytes aligned data on TxFIFO"
        depends on FSL_QSPI

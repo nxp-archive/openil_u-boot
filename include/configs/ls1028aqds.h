@@ -25,6 +25,11 @@
 #define CONFIG_DIMM_SLOTS_PER_CTLR		2
 #define CONFIG_SYS_SDRAM_SIZE		0x80000000
 
+/* FlexSPI */
+#ifdef CONFIG_NXP_FSPI
+#define NXP_FSPI_FLASH_SIZE            SZ_64M
+#define NXP_FSPI_FLASH_NUM              1
+#endif
 
 /* Store environment at top of flash */
 #define CONFIG_ENV_IS_NOWHERE		1

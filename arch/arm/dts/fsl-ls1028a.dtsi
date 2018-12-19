@@ -35,6 +35,18 @@
 			     <1 10 0x8>; /* Hypervisor PPI, active-low */
 	};
 
+	fspi: flexspi@20C0000 {
+		compatible = "nxp,dn-fspi";
+		#address-cells = <1>;
+		#size-cells = <0>;
+		reg = <0x0 0x20C0000 0x0 0x10000>,
+		       <0x0 0x20000000 0x0 0x4000000>; /*64MB flash*/
+                               /* <0x0 0x20000000 0x0 0x4000000>;*/ /*How to incoperate 512M here*/
+		reg-names = "FSPI", "FSPI-memory";
+		num-cs = <1>;
+		status = "disabled";
+       };
+
 	serial0: serial@21c0500 {
 		device_type = "serial";
 		compatible = "fsl,ns16550", "ns16550a";
