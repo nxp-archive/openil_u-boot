@@ -110,6 +110,7 @@
 #define CONFIG_SYS_SCSI_MAX_LUN			1
 #define CONFIG_SYS_SCSI_MAX_DEVICE		(CONFIG_SYS_SCSI_MAX_SCSI_ID * \
 						CONFIG_SYS_SCSI_MAX_LUN)
+#ifndef SPL_NO_ENV
 #undef CONFIG_EXTRA_ENV_SETTINGS
 #define CONFIG_EXTRA_ENV_SETTINGS		\
 	"board=ls1028aqds\0"			\
@@ -187,6 +188,6 @@
 		"$kernelhdr_addr_sd $kernelhdr_size_sd "		\
 		" && esbc_validate ${kernelheader_addr_r};"	\
 		"bootm $load_addr#$board\0"
-
+#endif
 
 #endif /* __LS1028A_QDS_H */
