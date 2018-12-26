@@ -118,6 +118,44 @@ void detail_board_ddr_info(void)
 }
 #endif
 
+#define DCFG_RCWSR13    0x130
+
+int esdhc_status_fixup(void *blob, const char *compat)
+{
+	u32 __iomem *dcfg_ccsr = (u32 __iomem *)DCFG_BASE;
+	char esdhc1_path[] = "/soc/esdhc@2150000";
+	bool sdhc2_en = false;
+	u8 mux_sdhc2;
+	u8 io = 0;
+
+	/*
+	 * The PMUX IO-expander for mux select is used to control
+	 * the muxing of various onboard interfaces.
+	 *
+	 * IO0[5:3] indicates SDHC2 interface demultiplexer
+	 * select lines.
+	 *      000 - eMMC Memory
+	 *      001 - GPIO
+	 *      010 - SPI2
+	 *      011 - Data
+	 *      101 - Reserved
+	 *      110 - XSPI1_B
+	 *      111 - Reserved
+	 */
+
+	io = in_le32(dcfg_ccsr + DCFG_RCWSR13);
+
+	mux_sdhc2 = (io & 0x38) >> 3;
+	/* Enable SDHC2 only when use eMMC */
+	if (mux_sdhc2 == 0)
+		sdhc2_en = true;
+
+	if (!sdhc2_en)
+		do_fixup_by_path(blob, esdhc1_path, "status", "disabled",
+				sizeof("disabled"), 1);
+	return 0;
+}
+
 #ifdef CONFIG_OF_BOARD_SETUP
 #ifdef CONFIG_FSL_ENETC
 extern void enetc_setup(void *blob);
