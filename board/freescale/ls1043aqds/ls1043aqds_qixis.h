@@ -11,24 +11,6 @@
 /* Definitions of QIXIS Registers for LS1043AQDS */
 
 /* BRDCFG4[4:7] select EC1 and EC2 as a pair */
-
-#ifdef CONFIG_TARGET_LS1028AQDS
-/* BRDCFG4[4:7] select EC1 and EC2 as a pair */
-#define BRDCFG4_EMISEL_MASK		0xf0
-#define BRDCFG4_EMISEL_SHIFT		4
-
-/* SYSCLK */
-#define QIXIS_SYSCLK_100		0x0
-#define QIXIS_SYSCLK_125		0x1
-#define QIXIS_SYSCLK_133		0x2
-
-/* BRDCFG2 - SD clock*/
-#define QIXIS_SDCLK1_100		0x0
-#define QIXIS_SDCLK1_125		0x1
-#define QIXIS_SDCLK1_156		0x2
-#define QIXIS_SDCLK1_161		0x3
-
-#else
 #define BRDCFG4_EMISEL_MASK		0xe0
 #define BRDCFG4_EMISEL_SHIFT		5
 
@@ -54,6 +36,5 @@
 #define QIXIS_SDCLK1_125		0x1
 #define QIXIS_SDCLK1_165		0x2
 #define QIXIS_SDCLK1_100_SP		0x3
-#endif
 
 #endif

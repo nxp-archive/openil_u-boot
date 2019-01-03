@@ -65,7 +65,6 @@
 /* SD boot SPL */
 #ifdef CONFIG_SD_BOOT
 #define CONFIG_SPL_TARGET		"u-boot-with-spl.bin"
-#define CONFIG_SPL_I2C_SUPPORT
 
 #define CONFIG_SPL_TEXT_BASE		0x10000000
 #define CONFIG_SPL_MAX_SIZE		0x17000
@@ -126,7 +125,7 @@
 
 /* IFC */
 #ifndef SPL_NO_IFC
-#if !defined(CONFIG_TARGET_LS1028ARDB) && !defined(CONFIG_TARGET_LS1028AQDS)
+#if !defined(CONFIG_QSPI_BOOT) && !defined(CONFIG_SD_BOOT_QSPI)
 #define CONFIG_FSL_IFC
 /*
  * CONFIG_SYS_FLASH_BASE has the final address (core view)
@@ -180,8 +179,10 @@
 #define CONFIG_SPI_FLASH_STMICRO	/* cs0 */
 #define CONFIG_SPI_FLASH_SST		/* cs1 */
 #define CONFIG_SPI_FLASH_EON		/* cs2 */
+#if !defined(CONFIG_QSPI_BOOT) && !defined(CONFIG_SD_BOOT_QSPI)
 #define CONFIG_SF_DEFAULT_BUS		1
 #define CONFIG_SF_DEFAULT_CS		0
+#endif
 #endif
 #endif
 
@@ -205,7 +206,6 @@
 #define CONFIG_SYS_FMAN_FW_ADDR		(512 * 0x4800)
 #define CONFIG_SYS_QE_FW_ADDR		(512 * 0x4a08)
 #elif defined(CONFIG_QSPI_BOOT)
-#define CONFIG_TARGET_LS1028_INT
 #define CONFIG_SYS_QE_FW_IN_SPIFLASH
 #define CONFIG_SYS_FMAN_FW_ADDR		0x40900000
 #define CONFIG_ENV_SPI_BUS		0
