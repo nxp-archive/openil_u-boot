@@ -77,6 +77,11 @@ int board_init(void)
 	pci_init();
 #endif
 
+#if defined(CONFIG_TARGET_LS1028ARDB)
+	u8 val = I2C_MUX_CH_DEFAULT;
+
+	i2c_write(I2C_MUX_PCA_ADDR_PRI, 0x0b, 1, &val, 1);
+#endif
 	return 0;
 }
 
