@@ -17,6 +17,7 @@
 #include <asm/gpio.h>
 #include <asm/io.h>
 
+#if defined(CONFIG_TARGET_LS1021AIOT)
 struct ccsr_gpio {
 	u32	gpdir;
 	u32	gpodr;
@@ -25,6 +26,7 @@ struct ccsr_gpio {
 	u32	gpimr;
 	u32	gpicr;
 };
+#endif
 
 struct mpc8xxx_gpio_plat {
 	ulong addr;

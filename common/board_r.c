@@ -485,11 +485,11 @@ static int initr_default_env(void)
 	/* initialize environment */
 	set_default_env(NULL);
 #ifdef CONFIG_OF_CONTROL
-	setenv_addr("fdtcontroladdr", gd->fdt_blob);
+	env_set_addr("fdtcontroladdr", gd->fdt_blob);
 #endif
 
 	/* Initialize from environment */
-	load_addr = getenv_ulong("loadaddr", 16, load_addr);
+	load_addr = env_get_ulong("loadaddr", 16, load_addr);
 
 	return 0;
 }
