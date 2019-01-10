@@ -188,6 +188,19 @@ static int mpc8xxx_gpio_get_function(struct udevice *dev, uint gpio)
 #if CONFIG_IS_ENABLED(OF_CONTROL)
 static int mpc8xxx_gpio_ofdata_to_platdata(struct udevice *dev)
 {
+#if defined(CONFIG_TARGET_LS1021AIOT)
+	struct mpc8xxx_gpio_plat *plat = dev_get_platdata(dev);
+	fdt_addr_t addr;
+	fdt_size_t size;
+
+	addr = fdtdec_get_addr_size_auto_noparent(gd->fdt_blob,
+			dev_of_offset(dev), "reg", 0, &size, false);
+
+	plat->addr = addr;
+	plat->size = size;
+	plat->ngpios = fdtdec_get_int(gd->fdt_blob, dev_of_offset(dev),
+				      "ngpios", 32);
+#else
 	struct mpc8xxx_gpio_plat *plat = dev_get_platdata(dev);
 	fdt_addr_t addr;
 	u32 reg[2];
@@ -198,7 +211,7 @@ static int mpc8xxx_gpio_ofdata_to_platdata(struct udevice *dev)
 	plat->addr = addr;
 	plat->size = reg[1];
 	plat->ngpios = dev_read_u32_default(dev, "ngpios", 32);
-
+#endif
 	return 0;
 }
 #endif
