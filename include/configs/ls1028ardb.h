@@ -107,4 +107,8 @@
 #define CONFIG_SYS_SATA1                        AHCI_BASE_ADDR1
 #endif
 
+#ifdef CONFIG_SECURE_BOOT
+#include <asm/fsl_secure_boot.h>
+#endif
+
 #endif /* __LS1028A_RDB_H */

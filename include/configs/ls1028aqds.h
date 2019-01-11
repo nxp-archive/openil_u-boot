@@ -194,4 +194,7 @@
 		"bootm $load_addr#$board\0"
 #endif
 
+#ifdef CONFIG_SECURE_BOOT
+#include <asm/fsl_secure_boot.h>
+#endif
 #endif /* __LS1028A_QDS_H */

@@ -49,6 +49,11 @@ config SYS_LS_PPA_FW_ADDR
 	default 0x9B000000 if SYS_LS_PPA_FW_IN_XIP && ARCH_LS1028A && EMU_DDR
 	default 0x20400000 if SYS_LS_PPA_FW_IN_XIP && ARCH_LS1028A
 	default 0x400000 if SYS_LS_PPA_FW_IN_MMC && ARCH_LS1028A
+if CHAIN_OF_TRUST
+config SYS_LS_PPA_ESBC_ADDR
+	hex "PPA header Addr"
+	default 0x20600000 if SYS_LS_PPA_FW_IN_XIP && ARCH_LS1028A
+endif
 endif
 
 source "board/freescale/common/Kconfig"
@@ -106,6 +111,11 @@ config SYS_LS_PPA_FW_ADDR
 	default 0x9B000000 if SYS_LS_PPA_FW_IN_XIP && ARCH_LS1028A && EMU_DDR
 	default 0x20400000 if SYS_LS_PPA_FW_IN_XIP && ARCH_LS1028A
 	default 0x400000 if SYS_LS_PPA_FW_IN_MMC && ARCH_LS1028A
+if CHAIN_OF_TRUST
+config SYS_LS_PPA_ESBC_ADDR
+	hex "PPA header Addr"
+	default 0x20600000 if SYS_LS_PPA_FW_IN_XIP && ARCH_LS1028A
+endif
 endif
 
 source "board/freescale/common/Kconfig"
