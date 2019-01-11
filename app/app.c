@@ -14,6 +14,7 @@
 
 void core1_main(void)
 {
+#ifndef CONFIG_TARGET_LS1028ARDB
 	test_i2c();
 	test_irq_init();
 #ifdef CONFIG_TARGET_LS1021AIOT
@@ -39,7 +40,7 @@ void core1_main(void)
 #if CONFIG_FS_FLEXCAN
 	test_flexcan();
 #endif
-
+#endif
 	return;
 }
 

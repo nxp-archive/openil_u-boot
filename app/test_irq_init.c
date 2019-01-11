@@ -11,6 +11,8 @@
 #define CONFIG_TEST_HW_IRQ 195
 #elif defined(CONFIG_TARGET_LS1043ARDB) || defined(CONFIG_TARGET_LS1046ARDB)
 #define CONFIG_TEST_HW_IRQ 163
+#else
+#define CONFIG_TEST_HW_IRQ 163
 #endif
 
 static void test_core_handler_ack(int hw_irq, int src_coreid)
