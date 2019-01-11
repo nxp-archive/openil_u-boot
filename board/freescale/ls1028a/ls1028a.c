@@ -514,6 +514,7 @@ static void setup_SXGMII(void)
 #if defined(CONFIG_TARGET_LS1028AQDS)
 	#define NETC_PF0_BAR0_BASE	0x1f8010000
 	#define NETC_PF0_ECAM_BASE	0x1F0000000
+	#define NETC_IERB_BASE		0x1F0800000
 	//#define NETC_PCS_SGMIICR1(n)	(0x001ea1804 + (n) * 0x10)
 	struct mii_dev bus = {0}, *ext_bus;
 	u16 value;
@@ -529,6 +530,10 @@ static void setup_SXGMII(void)
 
 	/* turn on PCI function */
 	out_le16(NETC_PF0_ECAM_BASE + 4, 0xffff);
+
+	/* indicate XGMII in boot-loader param reg */
+	/* TODO: this has to be properly designed at some point */
+	out_le32(0x1F0800000 + 0xd004, 0x80000000);
 
 	/* set MAC in SXGMII mode */
 	out_le32(NETC_PF0_BAR0_BASE + 0x8300, 0x00001000);
