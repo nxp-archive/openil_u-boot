@@ -997,8 +997,10 @@ init_fnc_t init_sequence_r_slave[] = {
 #if defined(CONFIG_ARM) || defined(CONFIG_AVR32)
 	initr_enable_interrupts,
 #endif
+#ifndef CONFIG_ARCH_LS1028A
 	initr_gic_init,
 	icc_init,
+#endif
 #ifdef CONFIG_CMD_NET
 	initr_ethaddr,
 #endif
