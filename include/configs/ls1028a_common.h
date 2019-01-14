@@ -100,11 +100,6 @@
 /* Allow to overwrite serial and ethaddr */
 #define CONFIG_ENV_OVERWRITE
 
-#define CONFIG_SYS_FLASH_BASE		0x20000000
-#define CONFIG_ENV_SECT_SIZE 		0x20000
-#define CONFIG_ENV_OFFSET		0x300000        /* 3MB */
-#define CONFIG_ENV_ADDR			(CONFIG_SYS_FLASH_BASE + \
-						CONFIG_ENV_OFFSET)
 #ifndef CONFIG_EMU
 #define BOOT_TARGET_DEVICES(func) \
 	func(MMC, mmc, 0) \
@@ -207,6 +202,51 @@
 #define CONFIG_SYS_MAXARGS		64	/* max command args */
 
 #define CONFIG_SYS_BOOTM_LEN   (64 << 20)      /* Increase max gunzip size */
+
+/*  MMC  */
+#ifndef SPL_NO_MMC
+#ifdef CONFIG_MMC
+#define CONFIG_FSL_ESDHC
+#define CONFIG_SYS_FSL_MMC_HAS_CAPBLT_VS33
+#endif
+#endif
+
+#ifdef CONFIG_SPL
+#define CONFIG_SPL_BSS_START_ADDR      0x80100000
+#define CONFIG_SPL_BSS_MAX_SIZE                0x00100000
+#define CONFIG_SPL_LDSCRIPT "arch/arm/cpu/armv8/u-boot-spl.lds"
+#define CONFIG_SPL_MAX_SIZE            0x16000
+#define CONFIG_SPL_STACK               (CONFIG_SYS_FSL_OCRAM_BASE + 0x9ff0)
+#define CONFIG_SPL_TARGET              "u-boot-with-spl.bin"
+#define CONFIG_SPL_TEXT_BASE           0x18010000
+
+#define CONFIG_SPL_I2C_SUPPORT
+
+#define CONFIG_SYS_SPL_MALLOC_SIZE     0x00100000
+#define CONFIG_SYS_SPL_MALLOC_START    0x80200000
+#define CONFIG_SYS_MONITOR_LEN         (512 * 1024)
+#endif
+
+#ifdef CONFIG_EMU
+#define CONFIG_ENV_SIZE			0x2000          /* 8KB */
+#define CONFIG_SYS_MMC_ENV_DEV         0
+#else
+#if defined(CONFIG_SD_BOOT)
+#define CONFIG_SYS_MMC_ENV_DEV         0
+#define CONFIG_ENV_OFFSET              0x300000        /* 3MB */
+#define CONFIG_ENV_SIZE			0x2000          /* 8KB */
+#else
+#define CONFIG_ENV_OFFSET              0x300000        /* 3MB */
+#define CONFIG_ENV_SIZE			0x2000          /* 8KB */
+#define CONFIG_ENV_SECT_SIZE           0x40000
+#endif
+#endif
+
+#ifdef CONFIG_SPL_BUILD
+#define CONFIG_SYS_MONITOR_BASE CONFIG_SPL_TEXT_BASE
+#else
+#define CONFIG_SYS_MONITOR_BASE CONFIG_SYS_TEXT_BASE
+#endif
 
 /*  MMC  */
 #ifndef SPL_NO_MMC

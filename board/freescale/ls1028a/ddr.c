@@ -302,13 +302,17 @@ static phys_size_t fixed_sdram(void)
 int fsl_initdram(void)
 {
 #ifdef CONFIG_TARGET_LS1028ARDB
+#if defined(CONFIG_SPL) && !defined(CONFIG_SPL_BUILD)
+	gd->ram_size = 1ULL << 32;
+#else
 	puts("Initializing DDR....using fixed timing\n");
 	gd->ram_size = fixed_sdram();
+#endif
 #else
-	puts("Initializing DDR....using SPD\n");
 #if defined(CONFIG_SPL) && !defined(CONFIG_SPL_BUILD)
 	gd->ram_size = fsl_ddr_sdram_size();
 #else
+	puts("Initializing DDR....using SPD\n");
 	gd->ram_size = fsl_ddr_sdram();
 #endif
 #endif
