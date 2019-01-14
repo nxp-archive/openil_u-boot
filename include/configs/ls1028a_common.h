@@ -75,6 +75,7 @@
 #ifdef CONFIG_FSL_ENETC
 #define CFG_ENETC_PHYS_ADDR 0x1f0000000ULL
 #define CFG_ENETC_PHYS_SIZE 0x10000000UL
+#define CONFIG_FSL_MEMAC
 #endif
 
 /* Miscellaneous configurable options */

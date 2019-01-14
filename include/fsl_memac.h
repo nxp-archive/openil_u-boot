@@ -1,5 +1,6 @@
 /*
  * Copyright 2012 Freescale Semiconductor, Inc.
+ * Copyright 2018-2019 NXP
  *	Roy Zang <tie-fei.zang@freescale.com>
  *
  * SPDX-License-Identifier:	GPL-2.0+
@@ -232,7 +233,9 @@ struct memac {
 #define PHY_SGMII_IF_MODE_SGMII     0x0001
 
 struct memac_mdio_controller {
+#ifndef CONFIG_FSL_ENETC
 	u32	res0[0xc];
+#endif
 	u32	mdio_stat;	/* MDIO configuration and status */
 	u32	mdio_ctl;	/* MDIO control */
 	u32	mdio_data;	/* MDIO data */
