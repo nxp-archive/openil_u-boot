@@ -1,5 +1,6 @@
 /*
  * Copyright 2015 Freescale Semiconductor, Inc.
+ * Copyright 2018-2019 NXP
  *
  * SPDX-License-Identifier:	GPL-2.0+
  */
@@ -42,9 +43,11 @@ int board_eth_init(bd_t *bis)
 	/* Register the 10G MDIO bus */
 	fm_memac_mdio_init(bis, &tgec_mdio_info);
 
+#ifndef CONFIG_TARGET_LS1028ARDB
 	/* Set the two on-board RGMII PHY address */
 	fm_info_set_phy_address(FM1_DTSEC3, RGMII_PHY1_ADDR);
 	fm_info_set_phy_address(FM1_DTSEC4, RGMII_PHY2_ADDR);
+#endif
 
 	/* QSGMII on lane B, MAC 1/2/5/6 */
 	fm_info_set_phy_address(FM1_DTSEC1, QSGMII_PORT1_PHY_ADDR);
@@ -55,6 +58,11 @@ int board_eth_init(bd_t *bis)
 	switch (srds_s1) {
 	case 0x1455:
 		break;
+#ifdef CONFIG_TARGET_LS1028ARDB
+	case 0x3455:
+	case 0x3558:
+		break;
+#endif
 	default:
 		printf("Invalid SerDes protocol 0x%x for LS1043ARDB\n",
 		       srds_s1);
@@ -65,10 +73,16 @@ int board_eth_init(bd_t *bis)
 	for (i = FM1_DTSEC1; i < FM1_DTSEC1 + CONFIG_SYS_NUM_FM1_DTSEC; i++)
 		fm_info_set_mdio(i, dev);
 
+#ifndef CONFIG_TARGET_LS1028ARDB
 	/* XFI on lane A, MAC 9 */
 	fm_info_set_phy_address(FM1_10GEC1, FM1_10GEC1_PHY_ADDR);
 	dev = miiphy_get_dev_by_name(DEFAULT_FM_TGEC_MDIO_NAME);
 	fm_info_set_mdio(FM1_10GEC1, dev);
+#else
+	/* SGMII on slot 1, MAC 9 */
+	fm_info_set_phy_address(FM1_DTSEC9, SGMII_PHY2_ADDR);
+	fm_info_set_mdio(FM1_DTSEC9, dev);
+#endif
 
 	cpu_eth_init(bis);
 #endif

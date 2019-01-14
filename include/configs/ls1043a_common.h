@@ -65,6 +65,7 @@
 /* SD boot SPL */
 #ifdef CONFIG_SD_BOOT
 #define CONFIG_SPL_TARGET		"u-boot-with-spl.bin"
+#define CONFIG_SPL_I2C_SUPPORT
 
 #define CONFIG_SPL_TEXT_BASE		0x10000000
 #define CONFIG_SPL_MAX_SIZE		0x17000
@@ -125,7 +126,7 @@
 
 /* IFC */
 #ifndef SPL_NO_IFC
-#if !defined(CONFIG_QSPI_BOOT) && !defined(CONFIG_SD_BOOT_QSPI)
+#ifndef CONFIG_TARGET_LS1028ARDB
 #define CONFIG_FSL_IFC
 /*
  * CONFIG_SYS_FLASH_BASE has the final address (core view)

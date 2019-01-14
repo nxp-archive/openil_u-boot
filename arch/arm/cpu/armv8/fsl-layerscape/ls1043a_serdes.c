@@ -1,5 +1,6 @@
 /*
  * Copyright 2015 Freescale Semiconductor, Inc.
+ * Copyright 2018-2019 NXP
  *
  * SPDX-License-Identifier:	GPL-2.0+
  */
@@ -35,6 +36,10 @@ static struct serdes_config serdes1_cfg_tbl[] = {
 	{0x2255, {SGMII_2500_FM1_DTSEC9, SGMII_2500_FM1_DTSEC2, PCIE2, PCIE3} },
 	{0x3333, {SGMII_FM1_DTSEC9, SGMII_FM1_DTSEC2, SGMII_FM1_DTSEC5,
 		  SGMII_FM1_DTSEC6} },
+#ifdef CONFIG_TARGET_LS1028ARDB
+	{0x3455, {SGMII_FM1_DTSEC9, QSGMII_FM1_A, PCIE2, PCIE3} },
+	{0x3558, {SGMII_FM1_DTSEC9, PCIE1, PCIE2, SATA1} },
+#endif
 	{}
 };
 

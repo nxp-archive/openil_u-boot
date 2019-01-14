@@ -1,5 +1,6 @@
 /*
  * Copyright 2015 Freescale Semiconductor, Inc.
+ * Copyright 2018-2019 NXP
  *
  * SPDX-License-Identifier:	GPL-2.0+
  */
@@ -19,16 +20,28 @@
 #include <fsl_esdhc.h>
 #include <fsl_ifc.h>
 #include <fsl_sec.h>
+#ifndef CONFIG_TARGET_LS1028ARDB
 #include "cpld.h"
+#endif
 #ifdef CONFIG_U_QE
 #include <fsl_qe.h>
 #endif
 #include <asm/arch/ppa.h>
 
+#ifdef CONFIG_TARGET_LS1028ARDB
+#include "../common/qixis.h"
+#endif
+
 DECLARE_GLOBAL_DATA_PTR;
 
 int board_early_init_f(void)
 {
+
+#ifdef CONFIG_TARGET_LS1028ARDB
+#ifdef CONFIG_SYS_I2C_EARLY_INIT
+	i2c_early_init_f();
+#endif
+#endif
 	fsl_lsch2_early_init_f();
 
 	return 0;
@@ -36,6 +49,60 @@ int board_early_init_f(void)
 
 #ifndef CONFIG_SPL_BUILD
 
+#ifdef CONFIG_TARGET_LS1028ARDB
+int checkboard(void)
+{
+	static const char *freq[2] = {"100.00", "Reserved"};
+
+	char buf[64];
+	u8 sw;
+	int clock;
+
+	printf("Board: LS1028A-RDB, ");
+
+#ifdef CONFIG_FSL_QIXIS
+	sw = QIXIS_READ(arch);
+	printf("Board Arch: V%d, ", sw >> 4);
+	printf("Board version: %c, boot from ", (sw & 0xf) + 'A');
+
+	memset((u8 *)buf, 0x00, ARRAY_SIZE(buf));
+
+	sw = QIXIS_READ(brdcfg[0]);
+	sw = (sw & QIXIS_LBMAP_MASK) >> QIXIS_LBMAP_SHIFT;
+
+#ifdef CONFIG_SD_BOOT
+	puts("SD card\n");
+#else
+	switch (sw) {
+	case 0:
+	case 4:
+		printf("NOR\n");
+		break;
+	case 1:
+		printf("NAND\n");
+		break;
+	case 2:
+	case 3:
+		printf("EMU\n");
+		break;
+	default:
+		printf("invalid setting of SW%u\n", QIXIS_LBMAP_SWITCH);
+		break;
+	}
+#endif
+
+	printf("FPGA: v%d.%d\n", QIXIS_READ(scver), QIXIS_READ(tagdata));
+
+	puts("SERDES1 Reference : ");
+	sw = QIXIS_READ(brdcfg[2]);
+	clock = (sw >> 6) & 3;
+	printf("Clock1 = %sMHz ", freq[clock]);
+	clock = (sw >> 4) & 3;
+	printf("Clock2 = %sMHz\n", freq[clock]);
+#endif
+	return 0;
+}
+#else
 int checkboard(void)
 {
 	static const char *freq[2] = {"100.00MHZ", "156.25MHZ"};
@@ -73,6 +140,7 @@ int checkboard(void)
 
 	return 0;
 }
+#endif
 
 int board_init(void)
 {

@@ -1,5 +1,6 @@
 /*
  * Copyright 2015 Freescale Semiconductor
+ * Copyright 2018-2019 NXP 
  *
  * SPDX-License-Identifier:	GPL-2.0+
  */
@@ -54,11 +55,22 @@
 #define CONFIG_SYS_MMCSD_RAW_MODE_ARGS_SECTORS	30
 #endif
 
+#if defined (CONFIG_QSPI_BOOT) || defined (CONFIG_SD_BOOT)
+#define CONFIG_SYS_NO_FLASH
+
+/* QSPI */
+#define CONFIG_FSL_QSPI
+#define CONFIG_SPI_FLASH_STMICRO
+#define FSL_QSPI_FLASH_NUM		1
+#define FSL_QSPI_FLASH_SIZE		SZ_256M
+#endif
+
 #define CONFIG_LAST_STAGE_INIT
 
 /*
  * NOR Flash Definitions
  */
+#if !defined(CONFIG_QSPI_BOOT)
 #define CONFIG_SYS_NOR_CSPR_EXT		(0x0)
 #define CONFIG_SYS_NOR_AMASK		IFC_AMASK(128*1024*1024)
 #define CONFIG_SYS_NOR_CSPR					\
@@ -95,6 +107,7 @@
 #define CONFIG_CFI_FLASH_USE_WEAK_ACCESSORS
 #define CONFIG_SYS_WRITE_SWAPPED_DATA
 
+#ifndef CONFIG_TARGET_LS1028ARDB
 /*
  * NAND Flash Definitions
  */
@@ -139,13 +152,51 @@
 #define CONFIG_MTD_NAND_VERIFY_WRITE
 
 #define CONFIG_SYS_NAND_BLOCK_SIZE	(128 * 1024)
+#endif
 
 #ifdef CONFIG_NAND_BOOT
 #define CONFIG_SPL_PAD_TO		0x20000		/* block aligned */
 #define CONFIG_SYS_NAND_U_BOOT_OFFS	CONFIG_SPL_PAD_TO
 #define CONFIG_SYS_NAND_U_BOOT_SIZE	(1024 << 10)
 #endif
+#endif
 
+#ifdef CONFIG_TARGET_LS1028ARDB
+
+#define CONFIG_QIXIS_I2C_ACCESS
+#define CONFIG_SYS_I2C_EARLY_INIT
+
+/*
+ * QIXIS Definitions
+ */
+#define CONFIG_FSL_QIXIS
+
+#ifdef CONFIG_FSL_QIXIS
+#define QIXIS_BASE			0x7fb00000
+#define QIXIS_BASE_PHYS			QIXIS_BASE
+#define CONFIG_SYS_I2C_FPGA_ADDR	0x66
+#define QIXIS_LBMAP_SWITCH		2
+#define QIXIS_LBMAP_MASK		0xe0
+#define QIXIS_LBMAP_SHIFT		0x5
+#define QIXIS_LBMAP_DFLTBANK		0x00
+#define QIXIS_LBMAP_ALTBANK		0x20
+#define QIXIS_RST_CTL_RESET		0x41
+#define QIXIS_RCFG_CTL_RECONFIG_IDLE	0x20
+#define QIXIS_RCFG_CTL_RECONFIG_START	0x21
+#define QIXIS_RCFG_CTL_WATCHDOG_ENBLE	0x08
+
+#define CONFIG_SYS_FPGA_CSPR_EXT	(0x0)
+#define CONFIG_SYS_FPGA_CSPR		(CSPR_PHYS_ADDR(QIXIS_BASE_PHYS) | \
+					CSPR_PORT_SIZE_8 | \
+					CSPR_MSEL_GPCM | \
+					CSPR_V)
+#define CONFIG_SYS_FPGA_AMASK		IFC_AMASK(64 * 1024)
+#define CONFIG_SYS_FPGA_CSOR		(CSOR_NOR_ADM_SHIFT(4) | \
+					CSOR_NOR_NOR_MODE_AVD_NOR | \
+					CSOR_NOR_TRHZ_80)
+#endif
+
+#else
 /*
  * CPLD
  */
@@ -172,6 +223,7 @@
 					FTIM2_GPCM_TCH(0xf) | \
 					FTIM2_GPCM_TWP(0xff))
 #define CONFIG_SYS_CPLD_FTIM3		0x0
+#endif
 
 /* IFC Timing Params */
 #ifdef CONFIG_NAND_BOOT
@@ -246,6 +298,10 @@
 #define CONFIG_ENV_OFFSET		(3 * 1024 * 1024)
 #define CONFIG_SYS_MMC_ENV_DEV		0
 #define CONFIG_ENV_SIZE			0x2000
+#elif defined(CONFIG_QSPI_BOOT)
+#define CONFIG_ENV_SIZE			0x2000          /* 8KB */
+#define CONFIG_ENV_OFFSET		0x200000        /* 1MB */
+#define CONFIG_ENV_SECT_SIZE		0x20000
 #else
 #define CONFIG_ENV_ADDR			(CONFIG_SYS_FLASH_BASE + 0x300000)
 #define CONFIG_ENV_SECT_SIZE		0x20000
@@ -258,6 +314,9 @@
 
 #ifdef CONFIG_NET
 #define CONFIG_PHY_VITESSE
+#ifdef CONFIG_TARGET_LS1028ARDB
+#define CONFIG_PHY_ATHEROS
+#endif
 #define CONFIG_PHY_REALTEK
 #endif
 
@@ -269,10 +328,20 @@
 #define RGMII_PHY1_ADDR			0x1
 #define RGMII_PHY2_ADDR			0x2
 
+#ifdef CONFIG_TARGET_LS1028ARDB
+#define SGMII_PHY1_ADDR                 0x1
+#define SGMII_PHY2_ADDR                 0x2
+
+#define QSGMII_PORT1_PHY_ADDR		0x10
+#define QSGMII_PORT2_PHY_ADDR		0x11
+#define QSGMII_PORT3_PHY_ADDR		0x12
+#define QSGMII_PORT4_PHY_ADDR		0x13
+#else
 #define QSGMII_PORT1_PHY_ADDR		0x4
 #define QSGMII_PORT2_PHY_ADDR		0x5
 #define QSGMII_PORT3_PHY_ADDR		0x6
 #define QSGMII_PORT4_PHY_ADDR		0x7
+#endif
 
 #define FM1_10GEC1_PHY_ADDR		0x1
 
@@ -299,6 +368,44 @@
 #define SCSI_VEND_ID 0x1b4b
 #define SCSI_DEV_ID  0x9170
 #define CONFIG_SCSI_DEV_LIST {SCSI_VEND_ID, SCSI_DEV_ID}
+#ifdef CONFIG_TARGET_LS1028ARDB
+#define CONFIG_SCSI_AHCI_PLAT
+#define CONFIG_SYS_SATA                                AHCI_BASE_ADDR
+#endif
+#endif
+
+#ifdef CONFIG_TARGET_LS1028ARDB
+#undef CONFIG_EXTRA_ENV_SETTINGS
+#define CONFIG_EXTRA_ENV_SETTINGS		\
+	"hwconfig=fsl_ddr:bank_intlv=auto\0"	\
+	"fdt_high=0xffffffffffffffff\0"		\
+	"initrd_high=0xffffffffffffffff\0"	\
+	"load_addr=0xa0000000\0"		\
+	"kernel_start=0x1000000\0"		\
+	"kernel_addr_nand=0x61000000\0"		\
+	"kernel_addr_nor=0x41000000\0"		\
+	"kernel_addr_sd=0x8000\0"		\
+	"kernel_size=0x2800000\0"		\
+	"kernel_size_sd=0x14000\0"		\
+	"console=ttyS0,115200\0"		\
+	"qspi_bootcmd=echo Trying load from qspi..;"	\
+		"sf probe && sf read $load_addr "	\
+		"$kernel_start $kernel_size; bootm $load_addr\0"	\
+	"nand_bootcmd=echo Trying load from nand..;"	\
+		"nand read $load_addr $kernel_start "	\
+		"$kernel_size; bootm $load_addr\0"	    \
+	"sd_bootcmd=echo Trying load from SD ..;"       \
+		"mmcinfo; mmc read $load_addr "         \
+		"$kernel_addr_sd $kernel_size_sd && bootm $load_addr\0"
+
+#undef CONFIG_BOOTCOMMAND
+#if defined(CONFIG_QSPI_BOOT) || defined(CONFIG_SD_BOOT_QSPI)
+#define CONFIG_BOOTCOMMAND "run qspi_bootcmd"
+#elif defined(CONFIG_SD_BOOT)
+#define CONFIG_BOOTCOMMAND "run sd_bootcmd"
+#else
+#define CONFIG_BOOTCOMMAND "run nand_bootcmd"
+#endif
 #endif
 
 #include <asm/fsl_secure_boot.h>
