@@ -7,6 +7,8 @@
  * Sysgo Real-Time Solutions, GmbH <www.elinos.com>
  * Marius Groeger <mgroeger@sysgo.de>
  *
+ * Copyright 2018-2019 NXP
+ *
  * SPDX-License-Identifier:	GPL-2.0+
  */
 
@@ -152,7 +154,7 @@ static int show_dram_config(void)
 {
 	unsigned long long size;
 
-#ifdef CONFIG_NR_DRAM_BANKS
+#if !defined(CONFIG_EMU_DDR) && defined(CONFIG_NR_DRAM_BANKS)
 	int i;
 
 	debug("\nRAM Configuration:\n");

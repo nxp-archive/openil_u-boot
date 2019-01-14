@@ -2,6 +2,10 @@
  * COM1 NS16550 support
  * originally from linux source (arch/powerpc/boot/ns16550.c)
  * modified to use CONFIG_SYS_ISA_MEM and new defines
+ *
+ * Copyright 2018-2019 NXP
+ *
+ * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #include <common.h>
@@ -148,8 +152,16 @@ int ns16550_calc_divisor(NS16550_t port, int clock, int baudrate)
 static void NS16550_setbrg(NS16550_t com_port, int baud_divisor)
 {
 	serial_out(UART_LCR_BKSE | UART_LCRVAL, &com_port->lcr);
+#if defined(CONFIG_EMU_PXP)
+	serial_out(0x1, &com_port->dll);
+	serial_out(0x0, &com_port->dlm);
+#elif defined(CONFIG_EMU_CFP)
+	serial_out(0x7, &com_port->dll);
+	serial_out(0x0, &com_port->dlm);
+#else
 	serial_out(baud_divisor & 0xff, &com_port->dll);
 	serial_out((baud_divisor >> 8) & 0xff, &com_port->dlm);
+#endif
 	serial_out(UART_LCRVAL, &com_port->lcr);
 }
 

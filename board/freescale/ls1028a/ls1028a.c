@@ -43,12 +43,14 @@ int board_early_init_f(void)
 	return 0;
 }
 
+#ifndef CONFIG_EMU_DDR
 void detail_board_ddr_info(void)
 {
 	puts("\nDDR    ");
 	print_size(gd->bd->bi_dram[0].size + gd->bd->bi_dram[1].size, "");
 	print_ddr_info(0);
 }
+#endif
 
 #ifdef CONFIG_OF_BOARD_SETUP
 int ft_board_setup(void *blob, bd_t *bd)

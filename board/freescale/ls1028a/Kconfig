@@ -12,6 +12,25 @@ config SYS_SOC
 config SYS_CONFIG_NAME
 	default "ls1028aqds"
 
+config EMU
+	bool "Emulator Support"
+	default n
+
+config EMU_PXP
+	bool "Emulator (PXP) Support"
+	depends on EMU
+	default n
+
+config EMU_CFP
+	bool "Emulator (CFP) Support"
+	depends on EMU
+	default n
+
+config EMU_DDR
+	bool "Emulator (DDR) Support"
+	depends on EMU
+	default n
+
 config SYS_TEXT_BASE
 	default 0x96000000 if EMU && EMU_DDR
 	default 0x20004000 if EMU

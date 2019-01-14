@@ -93,6 +93,129 @@ found:
 			  DDR_CDR2_VREF_TRAIN_EN | DDR_CDR2_VREF_RANGE_2;
 }
 
+#ifdef CONFIG_EMU
+#if defined(CONFIG_EMU_PXP)
+void setup_tzc(void)
+{
+	out_le32(0x01100004,  0x1);
+	out_le32(0x01100120,  0x00000000);
+	out_le32(0x01100124,  0x00000000);
+	out_le32(0x01100128,  0xffffffff);
+	out_le32(0x0110012C,  0xffffffff);
+	out_le32(0x01100130,  0xc0000001);
+	out_le32(0x01100134,  0xffffffff);
+	out_le32(0x01100008,  0x00010001);
+}
+
+void ddrmc_init(void)
+{
+	setup_tzc();
+
+	out_le32(0x000001080000,0x000001ff);
+	out_le32(0x000001080008,0x100011ff);
+	out_le32(0x000001080010,0x200021ff);
+	out_le32(0x000001080018,0x300031ff);
+	out_le32(0x000001080080,0x80000522); /* DDR Config : load from flash */
+	out_le32(0x000001080084,0x80000522);
+	out_le32(0x000001080088,0x80000522);
+	out_le32(0x00000108008c,0x80000522);
+	out_le32(0x000001080104,0x110108);
+	out_le32(0x000001080108,0x44c2a222);
+	out_le32(0x00000108010c,0x484804);
+	out_le32(0x000001080100,0x1051000);
+	out_le32(0x000001080250,0x0);
+	out_le32(0x000001080160,0x0);
+	out_le32(0x000001080164,0x0);
+	out_le32(0x000001080168,0x0);
+	out_le32(0x00000108016C,0x20000000);
+	out_le32(0x000001080250,0x0);
+	out_le32(0x000001080118,0x4);
+	out_le32(0x00000108011c,0x00000000);
+	out_le32(0x000001080220,0x00000400);
+	out_le32(0x000001080224,0x04000000);
+	out_le32(0x000001080b2c,0x8000);
+	out_le32(0x000001080124,0x0);
+	out_le32(0x000001080170,0x87090700);
+	out_le32(0x000001080114,0x00000000);
+	out_le32(0x000001080130,0x02000000);
+	out_le32(0x000001080F10,0xff800800);
+	out_le32(0x000001080F14,0x08000800);
+	out_le32(0x000001080F18,0x08000800);
+	out_le32(0x000001080F1C,0x08000800);
+	out_le32(0x000001080F20,0x08000800);
+	out_le32(0x000001080f08,0x00000400);
+	out_le32(0x000001080110,0xC50C0000);
+}
+#elif defined(CONFIG_EMU_CFP)
+void setup_tzc(void)
+{
+    out_le32(0x1100000 + 0x004,  0x00000001);
+    out_le32(0x1100000 + 0x110,  0xc0000000);
+    out_le32(0x1100000 + 0x114,  0xffffffff);
+    out_le32(0x1100000 + 0x128,  0xfffff000);
+    out_le32(0x1100000 + 0x12C,  0x000000ff);
+    out_le32(0x1100000 + 0x130,  0xc0000001);
+    out_le32(0x1100000 + 0x134,  0xffffffff);
+    out_le32(0x1100000 + 0x008,  0x00000001);
+}
+
+void ddrmc_init(void)
+{
+	setup_tzc();
+
+	out_le32(0x01080b28, 0x80040000);
+	out_le32(0x01080b2c, 0x0000a101);
+	out_le32(0x01080080, 0x80010322);
+	out_le32(0x01080000, 0x000003ff);
+	out_le32(0x010800c0, 0x00000000);
+	out_le32(0x01080104, 0xd0550018);
+	out_le32(0x01080108, 0xc9c6be44);
+	out_le32(0x0108010c, 0x00590114);
+	out_le32(0x01080100, 0x010b1000);
+	out_le32(0x01080160, 0x00220000);
+	out_le32(0x01080164, 0x02401400);
+	out_le32(0x01080168, 0x00000000);
+	out_le32(0x0108016c, 0x13300000);
+	out_le32(0x01080250, 0x01334800);
+	out_le32(0x01080170, 0x83020102);
+	out_le32(0x01080250, 0x01334800);
+	out_le32(0x01080174, 0x06550607);
+	out_le32(0x01080190, 0x00000000);
+	out_le32(0x01080194, 0x00000000);
+	out_le32(0x01080110, 0x450c0005);
+	out_le32(0x01080114, 0x00401000);
+	out_le32(0x01080118, 0x01010215);
+	out_le32(0x0108011c, 0x00100000);
+	out_le32(0x01080124, 0x16da05b6);
+	out_le32(0x01080f70, 0x30003000);
+	out_le32(0x01080f08, 0x00000400);
+	out_le32(0x01080f10, 0xff800000);
+	out_le32(0x01080110, 0xc50c0005);
+
+}
+#endif
+
+#ifdef CONFIG_EMU_DDR
+int dram_init(void)
+{
+	puts("Skipping DDR init..\n");
+
+	gd->ram_size = CONFIG_SYS_SDRAM_SIZE;
+
+	return 0;
+}
+#else
+int fsl_initdram(void)
+{
+	puts("Initializing DDR....using Hardcoded settings\n");
+
+	ddrmc_init();
+	gd->ram_size = CONFIG_SYS_SDRAM_SIZE;
+
+	return 0;
+}
+#endif
+#else
 int fsl_initdram(void)
 {
 
@@ -104,3 +227,4 @@ int fsl_initdram(void)
 #endif
 	return 0;
 }
+#endif
