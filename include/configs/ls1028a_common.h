@@ -231,7 +231,7 @@
 #define CONFIG_ENV_SIZE			0x2000          /* 8KB */
 #define CONFIG_SYS_MMC_ENV_DEV         0
 #else
-#if defined(CONFIG_SD_BOOT)
+#if defined(CONFIG_SD_BOOT) || defined(CONFIG_EMMC_BOOT)
 #define CONFIG_SYS_MMC_ENV_DEV         0
 #define CONFIG_ENV_OFFSET              0x300000        /* 3MB */
 #define CONFIG_ENV_SIZE			0x2000          /* 8KB */

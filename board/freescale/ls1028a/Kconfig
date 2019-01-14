@@ -31,10 +31,15 @@ config EMU_DDR
 	depends on EMU
 	default n
 
+config EMMC_BOOT
+	bool "Support for booting from EMMC"
+	default n
+
 config SYS_TEXT_BASE
 	default 0x96000000 if EMU && EMU_DDR
 	default 0x96000000 if EMU && SD_BOOT
 	default 0x20004000 if EMU
+	default 0x96000000 if SD_BOOT || EMMC_BOOT
 	default 0x20100000
 
 if FSL_LS_PPA
@@ -43,6 +48,7 @@ config SYS_LS_PPA_FW_ADDR
 	default 0x20A00000 if SYS_LS_PPA_FW_IN_XIP && ARCH_LS1028A && EMU_DDR && EMU_PXP
 	default 0x9B000000 if SYS_LS_PPA_FW_IN_XIP && ARCH_LS1028A && EMU_DDR
 	default 0x20400000 if SYS_LS_PPA_FW_IN_XIP && ARCH_LS1028A
+	default 0x400000 if SYS_LS_PPA_FW_IN_MMC && ARCH_LS1028A
 endif
 
 source "board/freescale/common/Kconfig"
@@ -82,11 +88,15 @@ config EMU_DDR
 	depends on EMU
 	default n
 
+config EMMC_BOOT
+	bool "Support for booting from EMMC"
+	default n
+
 config SYS_TEXT_BASE
 	default 0x96000000 if EMU && EMU_DDR
 	default 0x96000000 if EMU && SD_BOOT
 	default 0x20004000 if EMU
-	default 0x96000000 if SD_BOOT
+	default 0x96000000 if SD_BOOT || EMMC_BOOT
 	default 0x20100000
 
 if FSL_LS_PPA

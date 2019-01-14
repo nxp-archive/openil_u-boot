@@ -320,6 +320,8 @@ int checkboard(void)
 #ifdef CONFIG_FSL_QIXIS
 #ifdef CONFIG_SD_BOOT
 	puts("SD\n");
+#elif defined(CONFIG_EMMC_BOOT)
+	puts("eMMC card\n");
 #else
 
 	sw = QIXIS_READ(brdcfg[0]);
@@ -377,6 +379,8 @@ int checkboard(void)
 
 #ifdef CONFIG_SD_BOOT
 	puts("SD card\n");
+#elif defined(CONFIG_EMMC_BOOT)
+	puts("eMMC card\n");
 #else
 	switch (sw) {
 	case 0:
@@ -413,3 +417,10 @@ void *video_hw_init(void)
 {
 }
 
+#ifdef CONFIG_EMMC_BOOT
+void *esdhc_get_base_addr(void)
+{
+	return (void *)CONFIG_SYS_FSL_ESDHC1_ADDR;
+}
+
+#endif

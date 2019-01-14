@@ -6,6 +6,7 @@
  * (C) Copyright 2003
  * Kyle Harris, Nexus Technologies, Inc. kharris@nexus-tech.net
  *
+ * Copyright 2017-2019 NXP
  * SPDX-License-Identifier:	GPL-2.0+
  */
 
@@ -1265,12 +1266,17 @@ int fsl_esdhc_initialize(bd_t *bis, struct fsl_esdhc_cfg *cfg)
 	return 0;
 }
 
+__weak void *esdhc_get_base_addr(void)
+{
+	return (void *)CONFIG_SYS_FSL_ESDHC_ADDR;
+}
+
 int fsl_esdhc_mmc_init(bd_t *bis)
 {
 	struct fsl_esdhc_cfg *cfg;
 
 	cfg = calloc(sizeof(struct fsl_esdhc_cfg), 1);
-	cfg->esdhc_base = CONFIG_SYS_FSL_ESDHC_ADDR;
+	cfg->esdhc_base = (phys_addr_t)esdhc_get_base_addr();
 	cfg->sdhc_clk = gd->arch.sdhc_clk;
 	return fsl_esdhc_initialize(bis, cfg);
 }
