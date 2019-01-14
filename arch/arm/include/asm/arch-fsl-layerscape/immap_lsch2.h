@@ -1,6 +1,7 @@
 /* SPDX-License-Identifier: GPL-2.0+ */
 /*
  * Copyright 2013-2015 Freescale Semiconductor, Inc.
+ * Copyright 2018-2019 NXP
  */
 
 #ifndef __ARCH_FSL_LSCH2_IMMAP_H__
@@ -396,6 +397,7 @@ struct ccsr_gur {
 #define SCFG_USB_TXVREFTUNE			0x9
 #define SCFG_USB_SQRXTUNE_MASK		0x7
 #define SCFG_USB_PCSTXSWINGFULL		0x47
+#define SCFG_USB_MPLL_LOOP_CTL		0x60
 #define SCFG_USB_PHY1			0x084F0000
 #define SCFG_USB_PHY2			0x08500000
 #define SCFG_USB_PHY3			0x08510000

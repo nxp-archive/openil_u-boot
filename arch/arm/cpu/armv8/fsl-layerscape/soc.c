@@ -56,6 +56,25 @@ bool soc_has_aiop(void)
 	return false;
 }
 
+static void erratum_a010078(void)
+{
+#ifdef CONFIG_SYS_FSL_ERRATUM_A010078
+	void __iomem *usb_phy = (void __iomem *)SCFG_USB_PHY1;
+
+#if defined(CONFIG_ARCH_LS1043A)
+	out_be16(usb_phy + SCFG_USB_MPLL_LOOP_CTL, 4 << 4);
+
+	usb_phy = (void __iomem *)SCFG_USB_PHY2;
+	out_be16(usb_phy + SCFG_USB_MPLL_LOOP_CTL, 4 << 4);
+
+	usb_phy = (void __iomem *)SCFG_USB_PHY3;
+	out_be16(usb_phy + SCFG_USB_MPLL_LOOP_CTL, 4 << 4);
+#elif defined(CONFIG_ARCH_LS1012A)
+	out_be16(usb_phy + SCFG_USB_MPLL_LOOP_CTL, 1 << 4);
+#endif
+#endif
+}
+
 static inline void set_usb_txvreftune(u32 __iomem *scfg, u32 offset)
 {
 	scfg_clrsetbits32(scfg + offset / 4,
@@ -676,6 +695,7 @@ void fsl_lsch2_early_init_f(void)
 	erratum_a009798();
 	erratum_a008997();
 	erratum_a009007();
+	erratum_a010078();
 
 #if defined(CONFIG_ARCH_LS1043A) || defined(CONFIG_ARCH_LS1046A)
 	set_icids();
