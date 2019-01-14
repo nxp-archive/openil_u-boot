@@ -1,5 +1,6 @@
 /*
  * Copyright 2015 Freescale Semiconductor, Inc.
+ * Copyright 2018-2019 NXP 
  *
  * SPDX-License-Identifier:	GPL-2.0+
  */
@@ -46,6 +47,47 @@ enum {
 #define CFG_UART_MUX_SHIFT	1
 #define CFG_LPUART_EN		0x1
 
+#ifdef CONFIG_TARGET_LS1028AQDS
+int checkboard(void)
+{
+	char buf[64];
+#ifndef CONFIG_SD_BOOT
+	u8 sw;
+#endif
+
+	puts("Board: LS1028AQDS, boot from ");
+
+#ifdef CONFIG_SD_BOOT
+	puts("SD\n");
+#else
+	sw = QIXIS_READ(brdcfg[0]);
+
+	switch (sw) {
+	case 0x00:
+		printf("Serial NOR flash\n");
+		break;
+	case 0x20:
+		printf("Serial NAND flash\n");
+		break;
+	case 0x60:
+		printf("QSPI Emulator\n");
+		break;
+	default:
+		printf("invalid setting of SW: 0x%x\n", sw);
+		break;
+	}
+#endif
+
+	printf("Sys ID: 0x%02x, Sys Ver: 0x%02x\n",
+	       QIXIS_READ(id), QIXIS_READ(arch));
+
+	printf("FPGA:  v%d (%s), build %d\n",
+	       (int)QIXIS_READ(scver), qixis_read_tag(buf),
+	       (int)qixis_read_minor());
+
+	return 0;
+}
+#else
 int checkboard(void)
 {
 	char buf[64];
@@ -82,6 +124,26 @@ int checkboard(void)
 
 	return 0;
 }
+#endif
+
+#ifdef CONFIG_TARGET_LS1028AQDS
+unsigned long get_board_sys_clk(void)
+{
+#if 0
+	u8 sysclk_conf = QIXIS_READ(brdcfg[1]);
+
+	switch (sysclk_conf & 0x0f) {
+	case QIXIS_SYSCLK_100:
+		return 100000000;
+	case QIXIS_SYSCLK_125:
+		return 125000000;
+	case QIXIS_SYSCLK_133:
+		return 133333333;
+	}
+#endif
+	return 100000000;
+}
+#else
 
 bool if_board_diff_clk(void)
 {
@@ -133,6 +195,7 @@ unsigned long get_board_ddr_clk(void)
 
 	return 66666666;
 }
+#endif
 
 int select_i2c_ch_pca9547(u8 ch)
 {
@@ -154,7 +217,7 @@ int dram_init(void)
 	 * in the default channel. So, switch to the default channel
 	 * before accessing DDR SPD.
 	 */
-	select_i2c_ch_pca9547(I2C_MUX_CH_DEFAULT);
+///	select_i2c_ch_pca9547(I2C_MUX_CH_DEFAULT);
 	fsl_initdram();
 #if !defined(CONFIG_SPL) || defined(CONFIG_SPL_BUILD)
 	/* This will break-before-make MMU for DDR */
@@ -338,7 +401,9 @@ int ft_board_setup(void *blob, bd_t *bd)
 {
 	u64 base[CONFIG_NR_DRAM_BANKS];
 	u64 size[CONFIG_NR_DRAM_BANKS];
+#ifndef CONFIG_TARGET_LS1028AQDS
 	u8 reg;
+#endif
 
 	/* fixup DT for the two DDR banks */
 	base[0] = gd->bd->bi_dram[0].start;
@@ -354,11 +419,13 @@ int ft_board_setup(void *blob, bd_t *bd)
 	fdt_fixup_board_enet(blob);
 #endif
 
+#ifndef CONFIG_TARGET_LS1028AQDS
 	reg = QIXIS_READ(brdcfg[0]);
 	reg = (reg & QIXIS_LBMAP_MASK) >> QIXIS_LBMAP_SHIFT;
 
 	/* Disable IFC if QSPI is enabled */
 	if (reg == 0xF)
+#endif
 		do_fixup_by_compat(blob, "fsl,ifc",
 				   "status", "disabled", 8 + 1, 1);
 

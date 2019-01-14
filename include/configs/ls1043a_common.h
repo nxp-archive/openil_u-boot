@@ -126,7 +126,7 @@
 
 /* IFC */
 #ifndef SPL_NO_IFC
-#ifndef CONFIG_TARGET_LS1028ARDB
+#if !defined(CONFIG_TARGET_LS1028ARDB) && !defined(CONFIG_TARGET_LS1028AQDS)
 #define CONFIG_FSL_IFC
 /*
  * CONFIG_SYS_FLASH_BASE has the final address (core view)
@@ -180,10 +180,8 @@
 #define CONFIG_SPI_FLASH_STMICRO	/* cs0 */
 #define CONFIG_SPI_FLASH_SST		/* cs1 */
 #define CONFIG_SPI_FLASH_EON		/* cs2 */
-#if !defined(CONFIG_QSPI_BOOT) && !defined(CONFIG_SD_BOOT_QSPI)
 #define CONFIG_SF_DEFAULT_BUS		1
 #define CONFIG_SF_DEFAULT_CS		0
-#endif
 #endif
 #endif
 

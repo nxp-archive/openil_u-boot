@@ -2,6 +2,7 @@
  * Device Tree Include file for Freescale Layerscape-1043A family SoC.
  *
  * Copyright (C) 2015, Freescale Semiconductor
+ * Copyright 2018-2019 NXP
  *
  * Mingkai Hu <Mingkai.hu@freescale.com>
  *
@@ -74,18 +75,6 @@
 		#address-cells = <1>;
 		#size-cells = <0>;
 
-		i2c@0 {
-			#address-cells = <1>;
-			#size-cells = <0>;
-			reg = <0x0>;
-
-			rtc@68 {
-				compatible = "dallas,ds3232";
-				reg = <0x68>;
-				/* IRQ10_B */
-				interrupts = <0 150 0x4>;
-			};
-		};
 
 		i2c@2 {
 			#address-cells = <1>;

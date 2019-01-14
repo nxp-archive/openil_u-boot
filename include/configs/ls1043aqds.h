@@ -1,5 +1,6 @@
 /*
  * Copyright 2015 Freescale Semiconductor, Inc.
+ * Copyright 2018-2019 NXP 
  *
  * SPDX-License-Identifier:	GPL-2.0+
  */
@@ -9,14 +10,14 @@
 
 #include "ls1043a_common.h"
 
+#undef CONFIG_DISPLAY_BOARDINFO
+#define CONFIG_DISPLAY_BOARDINFO_LATE
 #ifndef __ASSEMBLY__
 unsigned long get_board_sys_clk(void);
-unsigned long get_board_ddr_clk(void);
 #endif
 
 #define CONFIG_SYS_CLK_FREQ		get_board_sys_clk()
-#define CONFIG_DDR_CLK_FREQ		get_board_ddr_clk()
-
+#define CONFIG_DDR_CLK_FREQ		100000000
 #define CONFIG_SKIP_LOWLEVEL_INIT
 
 #define CONFIG_LAYERSCAPE_NS_ACCESS
@@ -26,10 +27,13 @@ unsigned long get_board_ddr_clk(void);
 #define CONFIG_CHIP_SELECTS_PER_CTRL	4
 #define CONFIG_NR_DRAM_BANKS		2
 
+#if 1
 #define CONFIG_DDR_SPD
 #define SPD_EEPROM_ADDRESS		0x51
 #define CONFIG_SYS_SPD_BUS_NUM		0
+#endif
 
+#define CONFIG_FSL_DDR_BIST
 #ifndef CONFIG_SPL
 #define CONFIG_FSL_DDR_INTERACTIVE	/* Interactive debugging */
 #endif
@@ -44,9 +48,18 @@ unsigned long get_board_ddr_clk(void);
 #define CONFIG_FMAN_ENET
 #define CONFIG_PHY_VITESSE
 #define CONFIG_PHY_REALTEK
+#define	CONFIG_PHY_AQUANTIA
+#ifdef CONFIG_TARGET_LS1028AQDS
+#define	CONFIG_PHY_ATHEROS
+#endif
 #define CONFIG_PHYLIB_10G
+#ifndef CONFIG_TARGET_LS1028AQDS
 #define RGMII_PHY1_ADDR		0x1
 #define RGMII_PHY2_ADDR		0x2
+#else
+#define RGMII_PHY1_ADDR		0x1
+#define RGMII_PHY2_ADDR		0x5
+#endif
 #define SGMII_CARD_PORT1_PHY_ADDR 0x1C
 #define SGMII_CARD_PORT2_PHY_ADDR 0x1D
 #define SGMII_CARD_PORT3_PHY_ADDR 0x1E
@@ -87,6 +100,17 @@ unsigned long get_board_ddr_clk(void);
 
 /* SATA */
 #define CONFIG_SCSI_AHCI_PLAT
+
+#ifdef CONFIG_TARGET_LS1028AQDS
+#define CONFIG_SYS_SATA				AHCI_BASE_ADDR
+#ifndef CONFIG_CMD_EXT2
+#define CONFIG_CMD_EXT2
+#endif
+#define CONFIG_SYS_SCSI_MAX_SCSI_ID		1
+#define CONFIG_SYS_SCSI_MAX_LUN			1
+#define CONFIG_SYS_SCSI_MAX_DEVICE		(CONFIG_SYS_SCSI_MAX_SCSI_ID * \
+						CONFIG_SYS_SCSI_MAX_LUN)
+#endif
 
 /* EEPROM */
 #define CONFIG_ID_EEPROM
@@ -199,10 +223,59 @@ unsigned long get_board_ddr_clk(void);
 #endif
 
 #if defined(CONFIG_QSPI_BOOT) || defined(CONFIG_SD_BOOT_QSPI)
+#define CONFIG_SYS_NO_FLASH
 #define CONFIG_QIXIS_I2C_ACCESS
 #define CONFIG_SYS_I2C_EARLY_INIT
 #endif
 
+#ifdef CONFIG_TARGET_LS1028AQDS
+/*
+ * QIXIS Definitions
+ */
+#define CONFIG_FSL_QIXIS
+
+#ifdef CONFIG_FSL_QIXIS
+#define QIXIS_BASE			0x7fb00000
+#define QIXIS_BASE_PHYS			QIXIS_BASE
+#define CONFIG_SYS_I2C_FPGA_ADDR	0x66
+#define QIXIS_LBMAP_SWITCH		1
+#define QIXIS_LBMAP_MASK		0x0f
+#define QIXIS_LBMAP_SHIFT		5
+#define	QIXIS_LBMAP_DFLTBANK		0
+#define QIXIS_LBMAP_ALTBANK		0x00
+#define QIXIS_LBMAP_SD_QSPI		0x00
+#define QIXIS_LBMAP_QSPI		0x00
+#define QIXIS_RCW_SRC_SD		0x040
+#define QIXIS_RCW_SRC_QSPI		0x062
+#define QIXIS_RST_CTL_RESET		0x41
+#define QIXIS_RCFG_CTL_RECONFIG_IDLE	0x20
+#define QIXIS_RCFG_CTL_RECONFIG_START	0x21
+#define QIXIS_RCFG_CTL_WATCHDOG_ENBLE	0x08
+
+#define CONFIG_SYS_FPGA_CSPR_EXT	(0x0)
+#define CONFIG_SYS_FPGA_CSPR		(CSPR_PHYS_ADDR(QIXIS_BASE_PHYS) | \
+					CSPR_PORT_SIZE_8 | \
+					CSPR_MSEL_GPCM | \
+					CSPR_V)
+#define CONFIG_SYS_FPGA_AMASK		IFC_AMASK(64 * 1024)
+#define CONFIG_SYS_FPGA_CSOR		(CSOR_NOR_ADM_SHIFT(4) | \
+					CSOR_NOR_NOR_MODE_AVD_NOR | \
+					CSOR_NOR_TRHZ_80)
+
+/*
+ * QIXIS Timing parameters for IFC GPCM
+ */
+#define CONFIG_SYS_FPGA_FTIM0		(FTIM0_GPCM_TACSE(0xc) | \
+					FTIM0_GPCM_TEADC(0x20) | \
+					FTIM0_GPCM_TEAHC(0x10))
+#define CONFIG_SYS_FPGA_FTIM1		(FTIM1_GPCM_TACO(0x50) | \
+					FTIM1_GPCM_TRAD(0x1f))
+#define CONFIG_SYS_FPGA_FTIM2		(FTIM2_GPCM_TCS(0x8) | \
+					FTIM2_GPCM_TCH(0x8) | \
+					FTIM2_GPCM_TWP(0xf0))
+#define CONFIG_SYS_FPGA_FTIM3		0x0
+#endif
+#else
 /*
  * QIXIS Definitions
  */
@@ -320,6 +393,7 @@ unsigned long get_board_ddr_clk(void);
 #define CONFIG_SYS_CS3_FTIM2		CONFIG_SYS_FPGA_FTIM2
 #define CONFIG_SYS_CS3_FTIM3		CONFIG_SYS_FPGA_FTIM3
 #endif
+#endif
 
 /*
  * I2C bus multiplexer
@@ -355,8 +429,9 @@ unsigned long get_board_ddr_clk(void);
 #define CONFIG_FSL_QSPI
 #ifdef CONFIG_FSL_QSPI
 #define CONFIG_SPI_FLASH_SPANSION
-#define FSL_QSPI_FLASH_SIZE		(1 << 24)
-#define FSL_QSPI_FLASH_NUM		2
+#define CONFIG_SPI_FLASH_STMICRO
+#define FSL_QSPI_FLASH_NUM		1
+#define FSL_QSPI_FLASH_SIZE		SZ_256M
 #endif
 #endif
 

@@ -1,5 +1,6 @@
 /*
  * Copyright 2015 Freescale Semiconductor, Inc.
+ * Copyright 2018-2019 NXP 
  *
  * SPDX-License-Identifier:	GPL-2.0+
  */
@@ -109,10 +110,83 @@ found:
 #endif
 }
 
+#ifdef CONFIG_TARGET_LS1028AQDS
+#if 0
+static phys_size_t fixed_ddr_settings(void)
+{
+	size_t ddr_size;
+
+#if defined(CONFIG_SPL_BUILD) || !defined(CONFIG_SPL)
+	fsl_ddr_cfg_regs_t ddr_cfg_regs = {
+		.cs[0].bnds		= 0x000000ff,
+		.cs[0].config		= 0x80040422,
+		.cs[0].config_2		= 0,
+		.cs[1].bnds		= 0,
+		.cs[1].config		= 0,
+		.cs[1].config_2		= 0,
+
+		.timing_cfg_3		= 0x01111000,
+		.timing_cfg_0		= 0xd0550018,
+		.timing_cfg_1		= 0xFAFC0C42,
+		.timing_cfg_2		= 0x0048c114,
+		.ddr_sdram_cfg		= 0xe50c000c,
+		.ddr_sdram_cfg_2	= 0x00401110,
+		.ddr_sdram_mode		= 0x01010230,
+		.ddr_sdram_mode_2	= 0x0,
+
+		.ddr_sdram_md_cntl	= 0x0600001f,
+		.ddr_sdram_interval	= 0x18600618,
+		.ddr_data_init		= 0xdeadbeef,
+
+		.ddr_sdram_clk_cntl	= 0x02000000,
+		.ddr_init_addr		= 0,
+		.ddr_init_ext_addr	= 0,
+
+		.timing_cfg_4		= 0x00000002,
+		.timing_cfg_5		= 0x07401400,
+		.timing_cfg_6		= 0x0,
+		.timing_cfg_7		= 0x23300000,
+
+		.ddr_zq_cntl		= 0x8A090705,
+		.ddr_wrlvl_cntl		= 0x86550607,
+		.ddr_sr_cntr		= 0,
+		.ddr_sdram_rcw_1	= 0,
+		.ddr_sdram_rcw_2	= 0,
+		.ddr_wrlvl_cntl_2	= 0x0708080A,
+		.ddr_wrlvl_cntl_3	= 0x0A0B0C09,
+
+		.ddr_sdram_mode_9	= 0x00000400,
+		.ddr_sdram_mode_10	= 0x04000000,
+
+		.timing_cfg_8		= 0x06115600,
+
+		.dq_map_0		= 0x5b65b658,
+		.dq_map_1		= 0xd96d8000,
+		.dq_map_2		= 0,
+		.dq_map_3		= 0x01600000,
+
+		.ddr_cdr1		= 0x80040000,
+		.ddr_cdr2		= 0x000000C1
+	};
+
+
+	fsl_ddr_set_memctl_regs(&ddr_cfg_regs, 0, 0);
+#endif
+	ddr_size = 1ULL << 32;
+
+	return ddr_size;
+}
+#endif
+#endif
+
 int fsl_initdram(void)
 {
 	phys_size_t dram_size;
 
+#if 0
+	puts("Initializing DDR....using fixed timing\n");
+	dram_size = fixed_ddr_settings();
+#else
 #if defined(CONFIG_SPL) && !defined(CONFIG_SPL_BUILD)
 	gd->ram_size = fsl_ddr_sdram_size();
 
@@ -121,6 +195,7 @@ int fsl_initdram(void)
 	puts("Initializing DDR....using SPD\n");
 
 	dram_size = fsl_ddr_sdram();
+#endif
 #endif
 	erratum_a008850_post();
 
