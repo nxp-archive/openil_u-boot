@@ -1,0 +1,29 @@
+Overview
+--------
+The LS1028A Reference Design (RDB) is a high-performance computing,
+evaluation, and development platform that supports ARM SoC LS1028A and its
+derivatives.
+
+
+LS1028A SoC Overview
+--------------------------------------
+Please refer arch/arm/cpu/armv8/fsl-layerscape/doc/README.soc
+
+QDS Default Switch Settings (1: ON; 0: OFF)
+-------------------------------------------
+TBD
+
+ LS1028AQDS board Overview
+ -------------------------
+TBD
+
+FlexSPI flash memory map valid for both QDS and RDB
+  Image                               Flash Offset
+ RCW+PBI                             0x00000000
+ Boot firmware (U-Boot)              0x00100000
+ Boot firmware Environment           0x00300000
+ PPA firmware                        0x00400000
+ DPAA2 MC                            0x00A00000
+ DPAA2 DPL                           0x00D00000
+ DPAA2 DPC                           0x00E00000
+ Kernel.itb                          0x01000000

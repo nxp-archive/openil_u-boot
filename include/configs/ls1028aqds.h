@@ -1,0 +1,39 @@
+/*
+ * Copyright 2017-2019 NXP
+ *
+ * SPDX-License-Identifier:	GPL-2.0+
+ */
+
+#ifndef __LS1028A_QDS_H
+#define __LS1028A_QDS_H
+
+#include "ls1028a_common.h"
+
+#define CONFIG_SYS_CLK_FREQ		100000000
+#define CONFIG_DDR_CLK_FREQ		100000000
+#define COUNTER_FREQUENCY_REAL		(CONFIG_SYS_CLK_FREQ/4)
+
+/* DDR */
+#define CONFIG_DDR_SPD
+#define CONFIG_DDR_ECC
+#define CONFIG_ECC_INIT_VIA_DDRCONTROLLER
+#define CONFIG_MEM_INIT_VALUE		0xdeadbeef
+#define SPD_EEPROM_ADDRESS1	0x51
+#define SPD_EEPROM_ADDRESS2	0x52
+#define CONFIG_SYS_SPD_BUS_NUM	0	/* SPD on I2C bus 0 */
+#define SPD_EEPROM_ADDRESS	SPD_EEPROM_ADDRESS1
+#define CONFIG_DIMM_SLOTS_PER_CTLR		2
+#define CONFIG_SYS_SDRAM_SIZE		0x80000000
+
+
+/* Store environment at top of flash */
+#define CONFIG_ENV_IS_NOWHERE		1
+#define CONFIG_ENV_SIZE			0x1000
+
+#ifdef CONFIG_SPL_BUILD
+#define CONFIG_SYS_MONITOR_BASE CONFIG_SPL_TEXT_BASE
+#else
+#define CONFIG_SYS_MONITOR_BASE CONFIG_SYS_TEXT_BASE
+#endif
+
+#endif /* __LS1028A_QDS_H */

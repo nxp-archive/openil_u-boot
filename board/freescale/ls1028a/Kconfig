@@ -1,0 +1,30 @@
+if TARGET_LS1028AQDS
+
+config SYS_BOARD
+	default "ls1028a"
+
+config SYS_VENDOR
+	default "freescale"
+
+config SYS_SOC
+	default "fsl-layerscape"
+
+config SYS_CONFIG_NAME
+	default "ls1028aqds"
+
+config SYS_TEXT_BASE
+	default 0x96000000 if EMU && EMU_DDR
+	default 0x20004000 if EMU
+	default 0x20100000
+
+if FSL_LS_PPA
+config SYS_LS_PPA_FW_ADDR
+	hex "PPA Firmware Addr"
+	default 0x20400000 if SYS_LS_PPA_FW_IN_XIP && ARCH_LS1028A
+	default 0x20A00000 if SYS_LS_PPA_FW_IN_XIP && ARCH_LS1028A && EMU_DDR && EMU_PXP
+	default 0x9B000000 if SYS_LS_PPA_FW_IN_XIP && ARCH_LS1028A && EMU_DDR
+endif
+
+source "board/freescale/common/Kconfig"
+
+endif

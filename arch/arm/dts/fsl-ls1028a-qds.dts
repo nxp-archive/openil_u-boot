@@ -1,0 +1,16 @@
+/*
+ * NXP ls1028a Simulator device tree source
+ *
+ * Copyright 2018-2019 NXP
+ *
+ * SPDX-License-Identifier:	GPL-2.0+
+ */
+
+/dts-v1/;
+
+#include "fsl-ls1028a.dtsi"
+
+/ {
+	model = "NXP Layerscape 1028a QDS Board";
+	compatible = "fsl,ls1028a-qds", "fsl,ls1028a";
+};
