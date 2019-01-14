@@ -1,5 +1,6 @@
 /*
  * Copyright 2014 Freescale Semiconductor
+ * Copyright 2018-2019 NXP
  *
  * SPDX-License-Identifier:	GPL-2.0+
  */
@@ -11,9 +12,6 @@
 
 #define CONFIG_SYS_CLK_FREQ	100000000
 #define CONFIG_DDR_CLK_FREQ	133333333
-
-#define CONFIG_SYS_MXC_I2C1_SPEED	40000000
-#define CONFIG_SYS_MXC_I2C2_SPEED	40000000
 
 #define CONFIG_DDR_SPD
 #define CONFIG_SYS_FSL_DDR_EMU		/* Support emulator */
