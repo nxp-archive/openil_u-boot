@@ -1,0 +1,103 @@
+/*
+ * NXP ls1028a Simulator device tree source
+ *
+ * Copyright 2018-2019 NXP
+ *
+ * SPDX-License-Identifier:	GPL-2.0+
+ */
+
+/dts-v1/;
+
+#include "fsl-ls1028a.dtsi"
+
+/ {
+	model = "NXP Layerscape 1028a QDS Board";
+	compatible = "fsl,ls1028a-qds", "fsl,ls1028a";
+	aliases {
+		spi0 = &fspi;
+	};
+
+	qixis: qixis {
+		#address-cells=<0>;
+		#size-cells=<1>;
+	};
+};
+
+&fspi {
+	bus-num = <0>;
+	status = "okay";
+
+	qflash0: mt35xu512g@0 {
+		#address-cells = <1>;
+		#size-cells = <1>;
+		compatible = "spi-flash";
+		spi-max-frequency = <20000000>; /* TODO Need to chk*/
+		reg = <0>;
+	 };
+};
+
+&enetc_pcie {
+	ethernet@0 {
+		phy-mode = "sgmii";
+		//phy-handle = <&enetc_phy0>;
+	};
+	ethernet@1 {
+		phy-mode = "rgmii";
+		//phy-handle = <&enetc_phy1>;
+	};
+	netc_mdio0: netc_mdio {
+		#address-cells=<0>;
+		#size-cells=<1>;
+	};
+};
+
+&qixis {
+	mdio-mux@54 {
+		#address-cells=<1>;
+		#size-cells = <0>;
+		reg = <0x54>;
+		mux-mask = <0xf0>;
+		mdio-parent-bus = <&netc_mdio0>;
+		/* on-board RGMII PHY */
+		mdio@00 {
+			#address-cells = <1>;
+			#size-cells = <0>;
+			reg = <0x00>;
+			enetc_phy1: mdio0_phy@5 {
+				reg = <5>;
+			};
+		};
+		/* slot 1 - up to 4x, SoC lanes 0, 1, optionally 3, 4 */
+		mdio@40 {
+			#address-cells = <1>;
+			#size-cells = <0>;
+			reg = <0x40>;
+			/* SerDes 8xxx - VSC8234 in slot 1 */
+			enetc_phy0: mdio_phy0@1c {
+				reg = <0x1c>;
+			};
+		};
+		/* slot 2 or SFP cage - 1x, SoC lanes 0, 1 (?) */
+		mdio@50 {
+			#address-cells = <1>;
+			#size-cells = <0>;
+			reg = <0x50>;
+		};
+		/* slot 3 - 1x or 2x, SoC lane 2 and optionally 3 */
+		mdio@60 {
+			#address-cells = <1>;
+			#size-cells = <0>;
+			reg = <0x60>;
+		};
+		/* slot 4  - 1x, SoC lane 3 */
+		mdio@70 {
+			#address-cells = <1>;
+			#size-cells = <0>;
+			reg = <0x70>;
+		};
+	};
+};
+
+&sata {
+	status = "okay";
+};

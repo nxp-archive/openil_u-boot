@@ -1,4 +1,6 @@
 /*
+ * Copyright 2018-2019 NXP
+ *
  * Copyright (c) 2011 The Chromium OS Authors.
  * (C) Copyright 2002-2006
  * Wolfgang Denk, DENX Software Engineering, wd@denx.de.

@@ -3,6 +3,7 @@
  *	Andy Fleming <afleming@gmail.com>
  *	Roy Zang <tie-fei.zang@freescale.com>
  *
+ * Copyright 2017-2019 NXP
  * SPDX-License-Identifier:	GPL-2.0+
  * Some part is taken from tsec.c
  */
@@ -43,6 +44,7 @@ int memac_mdio_write(struct mii_dev *bus, int port_addr, int dev_addr,
 	u32 mdio_ctl;
 	struct memac_mdio_controller *regs = bus->priv;
 	u32 c45 = 1; /* Default to 10G interface */
+	int to;
 
 	if (dev_addr == MDIO_DEVAD_NONE) {
 		c45 = 0; /* clause 22 */
@@ -51,9 +53,14 @@ int memac_mdio_write(struct mii_dev *bus, int port_addr, int dev_addr,
 	} else
 		memac_setbits_32(&regs->mdio_stat, MDIO_STAT_ENC);
 
+	to = 10000;
 	/* Wait till the bus is free */
-	while ((memac_in_32(&regs->mdio_stat)) & MDIO_STAT_BSY)
+	while (--to && ((memac_in_32(&regs->mdio_stat)) & MDIO_STAT_BSY))
 		;
+	if (!to) {
+		printf("T");
+		return -1;
+	}
 
 	/* Set the port and dev addr */
 	mdio_ctl = MDIO_CTL_PORT_ADDR(port_addr) | MDIO_CTL_DEV_ADDR(dev_addr);
@@ -64,16 +71,25 @@ int memac_mdio_write(struct mii_dev *bus, int port_addr, int dev_addr,
 		memac_out_32(&regs->mdio_addr, regnum & 0xffff);
 
 	/* Wait till the bus is free */
-	while ((memac_in_32(&regs->mdio_stat)) & MDIO_STAT_BSY)
+	to = 10000;
+	while (--to && ((memac_in_32(&regs->mdio_stat)) & MDIO_STAT_BSY))
 		;
+	if (!to) {
+		printf("T");
+		return -1;
+	}
 
 	/* Write the value to the register */
 	memac_out_32(&regs->mdio_data, MDIO_DATA(value));
 
 	/* Wait till the MDIO write is complete */
-	while ((memac_in_32(&regs->mdio_data)) & MDIO_DATA_BSY)
+	to = 10000;
+	while (--to && ((memac_in_32(&regs->mdio_stat)) & MDIO_STAT_BSY))
 		;
-
+	if (!to) {
+		printf("T");
+		return -1;
+	}
 	return 0;
 }
 
@@ -88,6 +104,7 @@ int memac_mdio_read(struct mii_dev *bus, int port_addr, int dev_addr,
 	u32 mdio_ctl;
 	struct memac_mdio_controller *regs = bus->priv;
 	u32 c45 = 1;
+	int to;
 
 	if (dev_addr == MDIO_DEVAD_NONE) {
 		if (!strcmp(bus->name, DEFAULT_FM_TGEC_MDIO_NAME))
@@ -99,9 +116,13 @@ int memac_mdio_read(struct mii_dev *bus, int port_addr, int dev_addr,
 		memac_setbits_32(&regs->mdio_stat, MDIO_STAT_ENC);
 
 	/* Wait till the bus is free */
-	while ((memac_in_32(&regs->mdio_stat)) & MDIO_STAT_BSY)
+	to = 10000;
+	while (--to && (memac_in_32(&regs->mdio_stat) & MDIO_STAT_BSY))
 		;
-
+	if (!to) {
+		printf("T");
+		return 0xffff;
+	}
 	/* Set the Port and Device Addrs */
 	mdio_ctl = MDIO_CTL_PORT_ADDR(port_addr) | MDIO_CTL_DEV_ADDR(dev_addr);
 	memac_out_32(&regs->mdio_ctl, mdio_ctl);
@@ -111,16 +132,25 @@ int memac_mdio_read(struct mii_dev *bus, int port_addr, int dev_addr,
 		memac_out_32(&regs->mdio_addr, regnum & 0xffff);
 
 	/* Wait till the bus is free */
-	while ((memac_in_32(&regs->mdio_stat)) & MDIO_STAT_BSY)
+	to = 10000;
+	while (--to && (memac_in_32(&regs->mdio_stat) & MDIO_STAT_BSY))
 		;
-
+	if (!to) {
+		printf("T");
+		return 0xffff;
+	}
 	/* Initiate the read */
 	mdio_ctl |= MDIO_CTL_READ;
 	memac_out_32(&regs->mdio_ctl, mdio_ctl);
 
 	/* Wait till the MDIO write is complete */
-	while ((memac_in_32(&regs->mdio_data)) & MDIO_DATA_BSY)
+	to = 10000;
+	while (--to && (memac_in_32(&regs->mdio_stat) & MDIO_STAT_BSY))
 		;
+	if (!to) {
+		printf("T");
+		return 0xffff;
+	}
 
 	/* Return all Fs if nothing was there */
 	if (memac_in_32(&regs->mdio_stat) & MDIO_STAT_RD_ER)

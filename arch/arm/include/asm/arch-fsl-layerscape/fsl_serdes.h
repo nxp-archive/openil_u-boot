@@ -1,5 +1,6 @@
 /*
  * Copyright 2015 Freescale Semiconductor, Inc.
+ * Copyright 2018-2019 NXP 
  *
  * SPDX-License-Identifier:	GPL-2.0+
  */
@@ -52,6 +53,22 @@ enum srds_prtcl {
 	QSGMII_B,
 	QSGMII_C,
 	QSGMII_D,
+	SGMII_T1,
+	SGMII_T2,
+	SGMII_T3,
+	SGMII_T4,
+	SGMII_S1,
+	SGMII_S2,
+	SGMII_S3,
+	SGMII_S4,
+	SXGMII1,
+	SXGMII2,
+	SXGMII3,
+	SXGMII4,
+	QXGMII1,
+	QXGMII2,
+	QXGMII3,
+	QXGMII4,
 	SERDES_PRCTL_COUNT
 };
 

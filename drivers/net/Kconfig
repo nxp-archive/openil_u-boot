@@ -155,6 +155,12 @@ config FEC_MXC
 	  This driver supports the 10/100 Fast Ethernet controller for
 	  NXP i.MX processors.
 
+config FSL_ENETC
+       bool "NXP ENETC Ethernet controller"
+       depends on DM_PCI && DM_ETH
+       help
+         This driver supports the NXP ENETC Ethernet controller
+
 config FTMAC100
 	bool "Ftmac100 Ethernet Support"
 	help

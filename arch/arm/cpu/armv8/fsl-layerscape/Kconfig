@@ -12,8 +12,46 @@ config ARCH_LS1012A
 	select SYS_FSL_ERRATUM_A008997
 	select SYS_FSL_ERRATUM_A009007
 	select SYS_FSL_ERRATUM_A009008
+	select SYS_FSL_ERRATUM_A010078
 	select ARCH_EARLY_INIT_R
 	select BOARD_EARLY_INIT_F
+	select SYS_I2C_MXC
+	select SYS_I2C_MXC_I2C1
+	select SYS_I2C_MXC_I2C2
+	imply PANIC_HANG
+
+config ARCH_LS1028A
+	bool
+	select ARMV8_SET_SMPEN
+	select FSL_LSCH3
+	select FSL_LSCH3_2
+	select SYS_FSL_HAS_CCI400
+	select SYS_FSL_SRDS_1
+	select SYS_HAS_SERDES
+	select SYS_FSL_DDR
+	select SYS_FSL_DDR_LE
+	select SYS_FSL_DDR_VER_50
+	select SYS_FSL_HAS_DDR3
+	select SYS_FSL_HAS_DDR4
+	select SYS_FSL_HAS_SEC
+	select SYS_FSL_SEC_COMPAT_5
+	select SYS_FSL_SEC_LE
+	select FSL_TZASC_1
+	select ARCH_EARLY_INIT_R
+	select BOARD_EARLY_INIT_F
+	select SYS_I2C_MXC
+	select SYS_I2C_MXC_I2C1
+	select SYS_I2C_MXC_I2C2
+	select SYS_I2C_MXC_I2C3
+	select SYS_I2C_MXC_I2C4
+	select SYS_I2C_MXC_I2C5
+	select SYS_I2C_MXC_I2C6
+	select SYS_I2C_MXC_I2C7
+	select SYS_I2C_MXC_I2C8
+	select SYS_FSL_ERRATUM_A009007
+	select SYS_FSL_ERRATUM_A008514
+	select SYS_FSL_ERRATUM_A009663
+	select SYS_FSL_ERRATUM_A009942
 	imply PANIC_HANG
 
 config ARCH_LS1043A
@@ -37,10 +75,16 @@ config ARCH_LS1043A
 	select SYS_FSL_ERRATUM_A009942
 	select SYS_FSL_ERRATUM_A010315
 	select SYS_FSL_ERRATUM_A010539
+	select SYS_FSL_ERRATUM_A010078
 	select SYS_FSL_HAS_DDR3
 	select SYS_FSL_HAS_DDR4
 	select ARCH_EARLY_INIT_R
 	select BOARD_EARLY_INIT_F
+	select SYS_I2C_MXC
+	select SYS_I2C_MXC_I2C1
+	select SYS_I2C_MXC_I2C2
+	select SYS_I2C_MXC_I2C3
+	select SYS_I2C_MXC_I2C4
 	imply SCSI
 	imply SCSI_AHCI
 	imply CMD_PCI
@@ -70,6 +114,11 @@ config ARCH_LS1046A
 	select SYS_FSL_SRDS_2
 	select ARCH_EARLY_INIT_R
 	select BOARD_EARLY_INIT_F
+	select SYS_I2C_MXC
+	select SYS_I2C_MXC_I2C1
+	select SYS_I2C_MXC_I2C2
+	select SYS_I2C_MXC_I2C3
+	select SYS_I2C_MXC_I2C4
 	imply SCSI
 	imply SCSI_AHCI
 
@@ -102,6 +151,11 @@ config ARCH_LS1088A
 	select FSL_TZASC_1
 	select ARCH_EARLY_INIT_R
 	select BOARD_EARLY_INIT_F
+	select SYS_I2C_MXC
+	select SYS_I2C_MXC_I2C1
+	select SYS_I2C_MXC_I2C2
+	select SYS_I2C_MXC_I2C3
+	select SYS_I2C_MXC_I2C4
 	imply SCSI
 	imply PANIC_HANG
 
@@ -156,6 +210,9 @@ config FSL_LSCH2
 config FSL_LSCH3
 	bool
 
+config FSL_LSCH3_2
+	bool
+
 config FSL_MC_ENET
 	bool "Management Complex network"
 	depends on ARCH_LS2080A || ARCH_LS1088A
@@ -175,6 +232,7 @@ config FSL_PCIE_COMPAT
 	default "fsl,ls1046a-pcie" if ARCH_LS1046A
 	default "fsl,ls2080a-pcie" if ARCH_LS2080A
 	default "fsl,ls1088a-pcie" if ARCH_LS1088A
+	default "fsl,ls1028a-pcie" if ARCH_LS1028A
 	help
 	  This compatible is used to find pci controller node in Kernel DT
 	  to complete fixup.
@@ -267,8 +325,12 @@ config SYS_FSL_ERRATUM_A010315
 config SYS_FSL_ERRATUM_A010539
 	bool "Workaround for PIN MUX erratum A010539"
 
+config SYS_FSL_ERRATUM_A010078
+	bool "Workaround for USB3 superspeed Transmitter Far End RMS Random jitter Test fail"
+
 config MAX_CPUS
 	int "Maximum number of CPUs permitted for Layerscape"
+	default 2 if ARCH_LS1028A
 	default 4 if ARCH_LS1043A
 	default 4 if ARCH_LS1046A
 	default 16 if ARCH_LS2080A
@@ -293,10 +355,19 @@ config QSPI_AHB_INIT
 	  But some QSPI flash size up to 64MBytes, so initialize the QSPI AHB
 	  bus for those flashes to support the full QSPI flash size.
 
+config FSPI_AHB_EN_4BYTE
+	bool "Enable 4-byte Fast Read cmd for AHB mode"
+	depends on NXP_FSPI
+	default n
+	help
+	  The default setting for FSPI AHB bus just supports 3-byte addressing.
+	  But some FSPI flash sizes are up to 64MBytes.
+	  This flag enables fast read cmd for AHB mode and modifies required
+	  LUT to support full FSPI flash.
 config SYS_CCI400_OFFSET
 	hex "Offset for CCI400 base"
 	depends on SYS_FSL_HAS_CCI400
-	default 0x3090000 if ARCH_LS1088A
+	default 0x3090000 if ARCH_LS1088A || ARCH_LS1028A
 	default 0x180000 if FSL_LSCH2
 	help
 	  Offset for CCI400 base
@@ -354,6 +425,7 @@ config CLUSTER_CLK_FREQ
 
 config SYS_FSL_PCLK_DIV
 	int "Platform clock divider"
+	default 1 if ARCH_LS1028A
 	default 1 if ARCH_LS1043A
 	default 1 if ARCH_LS1046A
 	default 1 if ARCH_LS1088A

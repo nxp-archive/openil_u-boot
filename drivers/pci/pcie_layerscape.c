@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 NXP
+ * Copyright 2017-2019 NXP
  * Copyright 2014-2015 Freescale Semiconductor, Inc.
  * Layerscape PCIe driver
  *
@@ -404,7 +404,12 @@ static void ls_pcie_ep_setup_bars(void *bar_base)
 
 static void ls_pcie_ep_enable_cfg(struct ls_pcie *pcie)
 {
-	ctrl_writel(pcie, PCIE_CONFIG_READY, PCIE_PF_CONFIG);
+	u32 cur_status;
+
+	cur_status = ctrl_readl(pcie,  PCIE_PF_CONFIG);
+	cur_status |= PCIE_CONFIG_READY;
+	ctrl_writel(pcie, cur_status, PCIE_PF_CONFIG);
+
 }
 
 static void ls_pcie_setup_ep(struct ls_pcie *pcie)
@@ -464,7 +469,6 @@ static int ls_pcie_probe(struct udevice *dev)
 		printf("PCIe%d: %s disabled\n", pcie->idx, dev->name);
 		return 0;
 	}
-
 	pcie->dbi = map_physmem(pcie->dbi_res.start,
 				fdt_resource_size(&pcie->dbi_res),
 				MAP_NOCACHE);
@@ -560,7 +564,7 @@ static const struct udevice_id ls_pcie_ids[] = {
 };
 
 U_BOOT_DRIVER(pci_layerscape) = {
-	.name = "pci_layerscape",
+	.name = PCI_LS_DRV_NAME,
 	.id = UCLASS_PCI,
 	.of_match = ls_pcie_ids,
 	.ops = &ls_pcie_ops,

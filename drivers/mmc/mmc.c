@@ -1,5 +1,6 @@
 /*
  * Copyright 2008, Freescale Semiconductor, Inc
+ * Copyright 2018-2019 NXP
  * Andy Fleming
  *
  * Based vaguely on the Linux code

@@ -60,3 +60,4 @@ obj-${CONFIG_VIDEO_STM32} += stm32/
 
 obj-y += bridge/
 obj-y += sunxi/
+obj-y += imx/

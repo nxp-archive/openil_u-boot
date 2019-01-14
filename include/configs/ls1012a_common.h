@@ -1,5 +1,6 @@
 /*
  * Copyright 2016 Freescale Semiconductor
+ * Copyright 2018-2019 NXP
  *
  * SPDX-License-Identifier:	GPL-2.0+
  */
@@ -77,9 +78,6 @@
 
 /* I2C */
 #define CONFIG_SYS_I2C
-#define CONFIG_SYS_I2C_MXC
-#define CONFIG_SYS_I2C_MXC_I2C1		/* enable I2C bus 1 */
-#define CONFIG_SYS_I2C_MXC_I2C2		/* enable I2C bus 2 */
 
 #define CONFIG_CONS_INDEX       1
 #define CONFIG_SYS_NS16550_SERIAL
