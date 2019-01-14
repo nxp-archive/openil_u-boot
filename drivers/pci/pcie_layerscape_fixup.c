@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 NXP
+ * Copyright 2017-2019 NXP
  * Copyright 2014-2015 Freescale Semiconductor, Inc.
  * Layerscape PCIe driver
  *
@@ -190,6 +190,10 @@ static void fdt_fixup_pcie(void *blob)
 	     pci_find_next_device(&dev)) {
 		for (bus = dev; device_is_on_pci_bus(bus);)
 			bus = bus->parent;
+		/* check that this is the LS PCI controller */
+		if (strcmp(bus->driver->name, PCI_LS_DRV_NAME))
+			continue;
+
 		pcie = dev_get_priv(bus);
 
 		streamid = ls_pcie_next_streamid();

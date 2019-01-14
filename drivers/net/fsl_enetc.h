@@ -61,6 +61,21 @@
 #define PCI_EA_PF_SIZE(x) ((x) & ~0x3)
 #define PCI_EA_PF_BASE_REG_IS_64BIT(x) ((x) & 0x2)
 
+/* LS1028 - IEPs use stream IDs starting from 0x4000 */
+#define ENETC_IERB_STREAMID_START 0x4000
+#define ENETC_IERB_STREAMID_END   0x400e
+
+/* IERB reg info */
+#define ENETC_IERB_ADDR 0x1F0800000
+#define ENETC_IERB_SIZE 0x4000000
+#define ENETC_NUM_PFS 7
+#define ENETC_IERB_PFAMQ(pf, si) ((void *)(ENETC_IERB_ADDR + 0x800 + \
+					(pf) * 0x1000 + (si) * 4))
+#define ENETC_IERB_MSICAR	((void *)ENETC_IERB_ADDR + 0xa400)
+#define ENETC_MSICAR_VALUE	0x30
+#define ENETC_IERB_PMAR(i, port, s) ((void *)(ENETC_IERB_ADDR + 0x8000 + \
+					(i) * 4 + (port) * 0x100 + (si) * 8))
+
 /* PCI Root Complex info */
 struct enetc_rcie {
 	const char *name;

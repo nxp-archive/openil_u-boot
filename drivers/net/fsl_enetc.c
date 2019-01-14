@@ -19,6 +19,83 @@
 
 DECLARE_GLOBAL_DATA_PTR;
 
+/* number of VFs per PF; only the first two PFs contain VFs */
+static u8 enetc_vfs[ENETC_NUM_PFS] = { 2, 2 };
+
+/* number of station interfaces per port */
+static u8 enetc_ports[] = {3, 3, 1, 1};
+
+/* ENETC IERB MAC address registers accept big-endian format */
+static inline void enetc_set_ierb_primary_mac(u8 port, u8 si, u8 *addr)
+{
+	u16 lower = *(const u16 *)(addr + 4);
+	u32 upper = *(const u32 *)addr;
+
+	enetc_write_reg(ENETC_IERB_PMAR(0, port, si), upper);
+	enetc_write_reg(ENETC_IERB_PMAR(1, port, si), lower);
+}
+
+/* configure MAC addresses for all station interfaces on all ports */
+static void enetc_setup_port_macs(void)
+{
+	u8 pnum = ARRAY_SIZE(enetc_ports) - 1;
+	u8 ethno, p, si, vsin = 0;
+	u8 addr[6] = {0};
+
+	for (p = 0; p <= pnum; p++)
+		for (si = 0; si < enetc_ports[p]; si++) {
+			/* virtual SIs */
+			ethno = si ? pnum + vsin++ : p;
+			eth_env_get_enetaddr_by_index("eth", ethno, addr);
+			if (is_zero_ethaddr(addr))
+				continue;
+			enetc_set_ierb_primary_mac(p, si, addr);
+			memset(addr, 0, sizeof(addr));
+		}
+}
+
+void enetc_setup(void *blob)
+{
+	int streamid, sid_base, off;
+	int pf, vf, vfnn = 1;
+	u32 iommu_map[4];
+	int err;
+
+	debug("configuring ENETC AMQs, MACs..\n");
+	/* find integrated endpoints, we should only have one node */
+	off = fdt_node_offset_by_compatible(blob, 0, "pci-host-ecam-generic");
+	if (off < 0) {
+		debug("ENETC IEP node not found\n");
+		goto enetc_resume_setup;
+	}
+
+	err = fdtdec_get_int_array(blob, off, "iommu-map", iommu_map, 4);
+	if (err) {
+		debug("\"iommu-map\" not found, using default SID base %04x\n",
+		      ENETC_IERB_STREAMID_START);
+		sid_base = ENETC_IERB_STREAMID_START;
+	} else {
+		sid_base = iommu_map[2];
+	}
+	/* set up AMQs for all IEPs */
+	for (pf = 0; pf < ENETC_NUM_PFS; pf++) {
+		streamid = sid_base + pf;
+		enetc_write_reg(ENETC_IERB_PFAMQ(pf, 0), streamid);
+
+		/* set up AMQs for VFs, if any */
+		for (vf = 0; vf < enetc_vfs[pf]; vf++, vfnn++) {
+			streamid = sid_base + ENETC_NUM_PFS + vfnn;
+			enetc_write_reg(ENETC_IERB_PFAMQ(pf, vf + 1), streamid);
+		}
+	}
+
+enetc_resume_setup:
+	/* set MSI cache attributes */
+	enetc_write_reg(ENETC_IERB_MSICAR, ENETC_MSICAR_VALUE);
+	/* initialize MAC addresses */
+	enetc_setup_port_macs();
+}
+
 static struct pci_device_id enetc_ids[] = {
 	{ PCI_DEVICE(PCI_VENDOR_ID_FREESCALE, 0xe100) },
 	{}
