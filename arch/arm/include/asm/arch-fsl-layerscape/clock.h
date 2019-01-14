@@ -1,5 +1,6 @@
 /*
  * Copyright 2015 Freescale Semiconductor, Inc.
+ * Copyright 2018-2019 NXP
  *
  * SPDX-License-Identifier:	GPL-2.0+
  *
@@ -15,6 +16,7 @@ enum mxc_clock {
 	MXC_BUS_CLK,
 	MXC_UART_CLK,
 	MXC_ESDHC_CLK,
+	MXC_ESDHC2_CLK,
 	MXC_I2C_CLK,
 	MXC_DSPI_CLK,
 };

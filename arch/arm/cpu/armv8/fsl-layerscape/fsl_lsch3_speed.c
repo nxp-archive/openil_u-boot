@@ -218,6 +218,7 @@ unsigned int mxc_get_clock(enum mxc_clock clk)
 		return get_dspi_freq(0);
 #if defined(CONFIG_FSL_ESDHC)
 	case MXC_ESDHC_CLK:
+	case MXC_ESDHC2_CLK:
 		return get_sdhc_freq(0);
 #endif
 	default:

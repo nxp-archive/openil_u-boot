@@ -74,9 +74,7 @@ int board_init(void)
 
 #ifndef CONFIG_SYS_EARLY_PCI_INIT
 	/* run PCI init to kick off ENETC */
-#if 1
 	pci_init();
-#endif
 #endif
 
 	return 0;
@@ -409,13 +407,6 @@ void setup_QSGMII(void)
 	ext_bus = miiphy_get_dev_by_name(mdio_name);
 	if (!ext_bus) {
 		PCS_ERR("couldn't find MDIO bus, skipping external PHY config\n");
-		return;
-	}
-
-	/* set up VSC PHY - this works on RDB only for now*/
-	ext_bus = miiphy_get_dev_by_name(mdio_name);
-	if (!ext_bus) {
-		printf("couldn't find MDIO bus, ignoring the PHY\n");
 		return;
 	}
 
