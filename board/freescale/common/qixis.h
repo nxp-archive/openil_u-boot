@@ -2,6 +2,7 @@
  * Copyright 2011 Freescale Semiconductor
  * Author: Shengzhou Liu <Shengzhou.Liu@freescale.com>
  *
+ * Copyright 2017-2019 NXP
  * SPDX-License-Identifier:	GPL-2.0+
  *
  * This file provides support for the QIXIS of some Freescale reference boards.
@@ -91,7 +92,9 @@ struct qixis {
 
 u8 qixis_read(unsigned int reg);
 void qixis_write(unsigned int reg, u8 value);
+bool qixis_read_released(void);
 u16 qixis_read_minor(void);
+char *qixis_read_date(char *buf);
 char *qixis_read_time(char *result);
 char *qixis_read_tag(char *buf);
 const char *byte_to_binary_mask(u8 val, u8 mask, char *buf);

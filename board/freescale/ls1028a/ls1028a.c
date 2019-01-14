@@ -747,82 +747,45 @@ int last_stage_init(void)
 }
 #endif
 
-#ifdef CONFIG_TARGET_LS1028AQDS
+#ifdef CONFIG_FSL_QIXIS
 int checkboard(void)
 {
-#ifdef CONFIG_FSL_QIXIS
-	char buf[64];
-#ifndef CONFIG_SD_BOOT
-	u8 sw;
-#endif
-#endif
-
-	puts("Board: LS1028AQDS, boot from ");
-
-#ifdef CONFIG_FSL_QIXIS
-#ifdef CONFIG_SD_BOOT
-	puts("SD\n");
-#elif defined(CONFIG_EMMC_BOOT)
-	puts("eMMC card\n");
-#else
-
-	sw = QIXIS_READ(brdcfg[0]);
-
-	switch (sw) {
-	case 0x00:
-		printf("Serial NOR flash\n");
-		break;
-	case 0x20:
-		printf("Serial NAND flash\n");
-		break;
-	case 0x60:
-		printf("QSPI Emulator\n");
-		break;
-	default:
-		printf("invalid setting of SW: 0x%x\n", sw);
-		break;
-	}
-#endif
-
-	printf("Sys ID: 0x%02x, Sys Ver: 0x%02x\n",
-	       QIXIS_READ(id), QIXIS_READ(arch));
-
-	printf("FPGA:  v%d (%s), build %d\n",
-	       (int)QIXIS_READ(scver), qixis_read_tag(buf),
-	       (int)qixis_read_minor());
-#endif
-
-	return 0;
-}
-#endif
-
-
-
-#ifdef CONFIG_TARGET_LS1028ARDB
-int checkboard(void)
-{
-	static const char *freq[2] = {"100.00", "Reserved"};
-
-	char buf[64];
 	u8 sw;
 	int clock;
+	char *board;
+	char buf[64] = {0};
+	static const char *freq[6] = {"100.00", "125.00", "156.25",
+					"161.13", "322.26", "100.00 SS"};
 
-	printf("Board: LS1028A-RDB, ");
+	cpu_name(buf);
+	/* find the board details */
+	sw = QIXIS_READ(id);
+	switch (sw) {
+	case 0x46:
+		board = "QDS";
+		break;
+	case 0x47:
+		board = "RDB";
+		break;
+	case 0x49:
+		board = "HSSI";
+		break;
+	default:
+		board = "unknown";
+		break;
+	}
 
-#ifdef CONFIG_FSL_QIXIS
 	sw = QIXIS_READ(arch);
-	printf("Board Arch: V%d, ", sw >> 4);
-	printf("Board version: %c, boot from ", (sw & 0xf) + 'A' - 1);
-
-	memset((u8 *)buf, 0x00, ARRAY_SIZE(buf));
+	printf("Board: %s-%s, Version: %c, boot from ",
+	       buf, board, (sw & 0xf) + 'A' - 1);
 
 	sw = QIXIS_READ(brdcfg[0]);
 	sw = (sw & QIXIS_LBMAP_MASK) >> QIXIS_LBMAP_SHIFT;
 
 #ifdef CONFIG_SD_BOOT
-	puts("SD card\n");
+	puts("SD\n");
 #elif defined(CONFIG_EMMC_BOOT)
-	puts("eMMC card\n");
+	puts("eMMC\n");
 #else
 	switch (sw) {
 	case 0:
@@ -832,7 +795,9 @@ int checkboard(void)
 	case 1:
 		printf("NAND\n");
 		break;
+#ifndef CONFIG_TARGET_LS1028AQDS
 	case 2:
+#endif
 	case 3:
 		printf("EMU\n");
 		break;
@@ -842,15 +807,26 @@ int checkboard(void)
 	}
 #endif
 
-	printf("FPGA: v%d.%d\n", QIXIS_READ(scver), QIXIS_READ(tagdata));
+	printf("FPGA: v%d (%s: %s_%s)\n", QIXIS_READ(scver),
+	       !qixis_read_released()  ? "INTERIM" : "RELEASED",
+			board, qixis_read_date(buf));
 
 	puts("SERDES1 Reference : ");
 	sw = QIXIS_READ(brdcfg[2]);
+#ifdef CONFIG_TARGET_LS1028ARDB
 	clock = (sw >> 6) & 3;
-	printf("Clock1 = %sMHz ", freq[clock]);
-	clock = (sw >> 4) & 3;
-	printf("Clock2 = %sMHz\n", freq[clock]);
+#else
+	clock = (sw >> 4) & 0xf;
 #endif
+
+	printf("Clock1 = %sMHz ", freq[clock]);
+#ifdef CONFIG_TARGET_LS1028ARDB
+	clock = (sw >> 4) & 3;
+#else
+	clock = sw & 0xf;
+#endif
+	printf("Clock2 = %sMHz\n", freq[clock]);
+
 	return 0;
 }
 #endif

@@ -59,6 +59,17 @@ void qixis_write(unsigned int reg, u8 value)
 }
 #endif
 
+bool qixis_read_released(void)
+{
+	bool released;
+
+	/* this data is in little endian */
+	QIXIS_WRITE(tagdata, 0xc);
+	released = QIXIS_READ(tagdata);
+
+	return released;
+}
+
 u16 qixis_read_minor(void)
 {
 	u16 minor;
@@ -70,6 +81,27 @@ u16 qixis_read_minor(void)
 	minor += QIXIS_READ(tagdata) << 8;
 
 	return minor;
+}
+
+char *qixis_read_date(char *buf)
+{
+	int i;
+	time_t time = 0;
+	struct tm t;
+	char *ptr = buf;
+
+	/* timestamp is in 32-bit big endian */
+	for (i = 8; i <= 11; i++) {
+		QIXIS_WRITE(tagdata, i);
+		time =  (time << 8) + QIXIS_READ(tagdata);
+	}
+
+	localtime_r(&time, &t);
+	sprintf(ptr, "%4d_%02d%02d_%02d%02d",
+			t.tm_year + 1900,
+			t.tm_mon + 1, t.tm_mday, t.tm_hour, t.tm_min);
+
+	return buf;
 }
 
 char *qixis_read_time(char *result)
