@@ -21,6 +21,7 @@
 #endif
 #include <fsl_immap.h>
 #include <netdev.h>
+#include <video_fb.h>
 
 #include "../common/qixis.h"
 
@@ -195,4 +196,7 @@ int checkboard(void)
 }
 #endif
 
+void *video_hw_init(void)
+{
+}
 
