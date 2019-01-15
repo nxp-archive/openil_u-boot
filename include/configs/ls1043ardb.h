@@ -9,13 +9,18 @@
 #define __LS1043ARDB_H__
 
 #include "ls1043a_common.h"
+#include "ls1043ardb_config.h"
 
-#ifdef CONFIG_BAREMETAL
-#define CONFIG_MP
-#define CONFIG_SYS_DDR_SDRAM_SLAVE_SIZE        (256 * 1024 * 1024)
+#define CONFIG_ICC
+
 #define CONFIG_MASTER_CORE                     0
-#define CONFIG_SYS_DDR_SDRAM_MASTER_SIZE       (512 * 1024 * 1024)
-#endif
+
+#define CONFIG_SYS_DDR_SDRAM_SHARE_BASE \
+	(CONFIG_SYS_DDR_SDRAM_BASE + CONFIG_SYS_DDR_SDRAM_MASTER_SIZE \
+	+ CONFIG_SYS_DDR_SDRAM_SLAVE_SIZE * (CONFIG_MAX_CPUS - 1))
+
+#define CONFIG_SYS_DDR_SDRAM_SHARE_RESERVE_BASE \
+	(CONFIG_SYS_DDR_SDRAM_SHARE_BASE + CONFIG_SYS_DDR_SDRAM_SHARE_SIZE)
 
 #define CONFIG_SYS_CLK_FREQ		100000000
 #define CONFIG_DDR_CLK_FREQ		100000000
@@ -281,12 +286,31 @@
 #endif
 #endif
 
+#undef CONFIG_EXTRA_ENV_SETTINGS
+#define CONFIG_EXTRA_ENV_SETTINGS		\
+			"ipaddr=192.168.1.1\0" \
+			"eth1addr=00:04:9F:04:F0:F1\0" \
+			"eth2addr=00:1F:7B:63:35:E9\0" \
+			"eth3addr=00:04:9F:04:F0:F3\0" \
+			"eth4addr=00:04:9F:04:F0:F4\0" \
+			"eth5addr=00:04:9F:04:F0:F5\0" \
+			"eth6addr=00:04:9F:04:F0:F6\0" \
+			"eth7addr=68:05:ca:35:cc:61\0" \
+			"ethact=FM1@DTSEC3\0"			\
+
 /* QE */
 #ifndef SPL_NO_QE
 #if !defined(CONFIG_NAND_BOOT) && !defined(CONFIG_QSPI_BOOT)
 #define CONFIG_U_QE
 #endif
 #endif
+
+/*
+ * GPIO
+ */
+#define CONFIG_MPC8XXX_GPIO
+#define CONFIG_DM_GPIO
+#define SHARED_GPIO_REQUEST_INFO
 
 /* SATA */
 #ifndef SPL_NO_SATA
@@ -302,6 +326,9 @@
 #define CONFIG_SCSI_DEV_LIST {SCSI_VEND_ID, SCSI_DEV_ID}
 
 #endif
+
+#define CONFIG_ENABLE_COREID_DEBUG
+#define CONFIG_ENABLE_WRITE_LOCK
 
 #include <asm/fsl_secure_boot.h>
 

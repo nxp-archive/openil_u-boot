@@ -78,6 +78,54 @@
 			interrupts = <0 43 0x4>;
 		};
 
+		gpio0: gpio@2300000 {
+			compatible = "fsl,pq3-gpio";
+			reg = <0x0 0x2300000 0x0 0x10000>;
+			interrupts = <0 66 0x4>;
+			gpio-controller;
+			ngpios = <32>;
+			#gpio-cells = <2>;
+			interrupt-controller;
+			#interrupt-cells = <2>;
+			status = "disabled";
+		};
+
+		gpio1: gpio@2310000 {
+			compatible = "fsl,pq3-gpio";
+			reg = <0x0 0x2310000 0x0 0x10000>;
+			interrupts = <0 67 0x4>;
+			gpio-controller;
+			ngpios = <32>;
+			#gpio-cells = <2>;
+			interrupt-controller;
+			#interrupt-cells = <2>;
+			status = "disabled";
+		};
+
+		gpio2: gpio@2320000 {
+			compatible = "fsl,pq3-gpio";
+			reg = <0x0 0x2320000 0x0 0x10000>;
+			interrupts = <0 68 0x4>;
+			gpio-controller;
+			ngpios = <32>;
+			#gpio-cells = <2>;
+			interrupt-controller;
+			#interrupt-cells = <2>;
+			status = "disabled";
+		};
+
+		gpio3: gpio@2330000 {
+			compatible = "fsl,pq3-gpio";
+			reg = <0x0 0x2330000 0x0 0x10000>;
+			interrupts = <0 134 0x4>;
+			gpio-controller;
+			ngpios = <32>;
+			#gpio-cells = <2>;
+			interrupt-controller;
+			#interrupt-cells = <2>;
+			status = "disabled";
+		};
+
 		i2c0: i2c@2180000 {
 			compatible = "fsl,vf610-i2c";
 			#address-cells = <1>;
@@ -220,6 +268,7 @@
 			reg = <0x0 0x2f00000 0x0 0x10000>;
 			interrupts = <0 60 0x4>;
 			dr_mode = "host";
+			status = "disabled";
 		};
 
 		usb1: usb3@3000000 {
@@ -227,6 +276,7 @@
 			reg = <0x0 0x3000000 0x0 0x10000>;
 			interrupts = <0 61 0x4>;
 			dr_mode = "host";
+			status = "disabled";
 		};
 
 		usb2: usb3@3100000 {
@@ -234,6 +284,7 @@
 			reg = <0x0 0x3100000 0x0 0x10000>;
 			interrupts = <0 63 0x4>;
 			dr_mode = "host";
+			status = "disabled";
 		};
 
 		pcie@3400000 {
@@ -249,6 +300,7 @@
 			bus-range = <0x0 0xff>;
 			ranges = <0x81000000 0x0 0x00000000 0x40 0x00020000 0x0 0x00010000   /* downstream I/O */
 				  0x82000000 0x0 0x40000000 0x40 0x40000000 0x0 0x40000000>; /* non-prefetchable memory */
+			status = "disabled";
 		};
 
 		pcie@3500000 {
@@ -265,6 +317,7 @@
 			bus-range = <0x0 0xff>;
 			ranges = <0x81000000 0x0 0x00000000 0x48 0x00020000 0x0 0x00010000   /* downstream I/O */
 				  0x82000000 0x0 0x40000000 0x48 0x40000000 0x0 0x40000000>; /* non-prefetchable memory */
+			status = "disabled";
 		};
 
 		pcie@3600000 {
@@ -280,6 +333,7 @@
 			bus-range = <0x0 0xff>;
 			ranges = <0x81000000 0x0 0x00000000 0x50 0x00020000 0x0 0x00010000   /* downstream I/O */
 				  0x82000000 0x0 0x40000000 0x50 0x40000000 0x0 0x40000000>; /* non-prefetchable memory */
+			status = "disabled";
 		};
 	};
 };

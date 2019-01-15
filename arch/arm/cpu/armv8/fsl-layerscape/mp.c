@@ -1,5 +1,6 @@
 /*
  * Copyright 2014-2015 Freescale Semiconductor, Inc.
+ * Copyright 2018-2019 NXP
  *
  * SPDX-License-Identifier:	GPL-2.0+
  */
@@ -175,7 +176,7 @@ int fsl_layerscape_wake_seconday_cores(void)
 }
 
 
-int fsl_layerscape_wakeup_fixed_core(u32 coreid, u64 addr)
+int fsl_layerscape_wakeup_fixed_core(u32 coreid)
 {
 	struct ccsr_gur __iomem *gur = (void *)(CONFIG_SYS_FSL_GUTS_ADDR);
 #ifdef CONFIG_FSL_LSCH3
@@ -185,7 +186,7 @@ int fsl_layerscape_wakeup_fixed_core(u32 coreid, u64 addr)
 #endif
 	u32 core_mask;
 	u64 *table = get_spin_tbl_addr();
-	unsigned long relocaddr = addr;
+	unsigned long relocaddr = CONFIG_SYS_TEXT_BASE;
 
 #ifdef COUNTER_FREQUENCY_REAL
 	/* update for secondary cores */

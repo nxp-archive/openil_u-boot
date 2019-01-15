@@ -2,6 +2,7 @@
  * Freescale ls1021a SOC common device tree source
  *
  * Copyright 2013-2015 Freescale Semiconductor, Inc.
+ * Copyright 2018-2019 NXP
  *
  * SPDX-License-Identifier:	GPL-2.0+
  */
@@ -301,6 +302,54 @@
 			status = "disabled";
 		};
 
+		gpio0: gpio@2300000 {
+			compatible = "fsl,pq3-gpio";
+			reg = <0x2300000 0x1000>;
+			interrupts = <GIC_SPI 98 IRQ_TYPE_LEVEL_HIGH>;
+			gpio-controller;
+			ngpios = <32>;
+			#gpio-cells = <2>;
+			interrupt-controller;
+			#interrupt-cells = <2>;
+			status = "disabled";
+		};
+
+		gpio1: gpio@2310000 {
+			compatible = "fsl,pq3-gpio";
+			reg = <0x2310000 0x1000>;
+			interrupts = <GIC_SPI 99 IRQ_TYPE_LEVEL_HIGH>;
+			gpio-controller;
+			ngpios = <32>;
+			#gpio-cells = <2>;
+			interrupt-controller;
+			#interrupt-cells = <2>;
+			status = "disabled";
+		};
+
+		gpio2: gpio@2320000 {
+			compatible = "fsl,pq3-gpio";
+			reg = <0x2320000 0x1000>;
+			interrupts = <GIC_SPI 100 IRQ_TYPE_LEVEL_HIGH>;
+			gpio-controller;
+			ngpios = <32>;
+			#gpio-cells = <2>;
+			interrupt-controller;
+			#interrupt-cells = <2>;
+			status = "disabled";
+		};
+
+		gpio3: gpio@2330000 {
+			compatible = "fsl,pq3-gpio";
+			reg = <0x2330000 0x1000>;
+			interrupts = <GIC_SPI 166 IRQ_TYPE_LEVEL_HIGH>;
+			gpio-controller;
+			ngpios = <32>;
+			#gpio-cells = <2>;
+			interrupt-controller;
+			#interrupt-cells = <2>;
+			status = "disabled";
+		};
+
 		wdog0: watchdog@2ad0000 {
 			compatible = "fsl,imx21-wdt";
 			reg = <0x2ad0000 0x10000>;
@@ -373,6 +422,7 @@
 			reg = <0x3100000 0x10000>;
 			interrupts = <GIC_SPI 93 IRQ_TYPE_LEVEL_HIGH>;
 			dr_mode = "host";
+			status = "disabled";
 		};
 
 		pcie@3400000 {
@@ -388,6 +438,7 @@
 			bus-range = <0x0 0xff>;
 			ranges = <0x81000000 0x0 0x00000000 0x24020000 0x0 0x00010000   /* downstream I/O */
 				  0x82000000 0x0 0x28000000 0x28000000 0x0 0x08000000>; /* non-prefetchable memory */
+			status = "disabled";
 		};
 
 		pcie@3500000 {
@@ -404,6 +455,7 @@
 			bus-range = <0x0 0xff>;
 			ranges = <0x81000000 0x0 0x00000000 0x34020000 0x0 0x00010000   /* downstream I/O */
 				  0x82000000 0x0 0x38000000 0x38000000 0x0 0x08000000>; /* non-prefetchable memory */
+			status = "disabled";
 		};
 	};
 };

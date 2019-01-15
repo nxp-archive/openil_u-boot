@@ -1,0 +1,27 @@
+#
+# flexcan subsystem configuration
+#
+
+menu "CAN support"
+
+config FS_FLEXCAN
+	bool "Support for Freescale FLEXCAN based chips"
+	default n
+	help
+	  Say Y here if you want to support for Freescale FlexCAN.
+
+config CANFESTIVAL
+	bool "Support for canfestival"
+	default y
+	depends on FS_FLEXCAN
+	help
+	  Say Y here if you want to support for canfestival(CANopen protocol).
+
+config CANFESTIVAL_LSS
+	bool "Support for LSS"
+	default n
+	depends on CANFESTIVAL
+	help
+	  Say Y here if you want to support for LSS(Layer setting services).
+
+endmenu

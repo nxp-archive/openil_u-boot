@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 Freescale Semiconductor, Inc.
+ * Copyright 2018-2019 NXP.
  *
  * SPDX-License-Identifier:	GPL-2.0+
  */
@@ -13,13 +13,11 @@
 
 DECLARE_GLOBAL_DATA_PTR;
 
-int fsl_layerscape_wakeup_fixed_core(u32 coreid, u32 addr)
+int fsl_layerscape_wakeup_fixed_core(u32 coreid)
 {
 	struct ccsr_gur __iomem *gur = (void *)(CONFIG_SYS_FSL_GUTS_ADDR);
 
-	 printf("%s cores %d, addr=0x%x, gd->reloc_addr 0x%x\n",
-		__func__, coreid, addr, gd->relocaddr);
-	out_be32(&gur->scratchrw[0], addr);
+	out_be32(&gur->scratchrw[0], CONFIG_SYS_TEXT_BASE);
 	out_be32(&gur->brrl, 0x2);
 
 	/*

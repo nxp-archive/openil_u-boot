@@ -1,5 +1,6 @@
 /*
  * Copyright 2016 Freescale Semiconductor, Inc.
+ * Copyright 2018-2019 NXP
  *
  * SPDX-License-Identifier:	GPL-2.0+
  */
@@ -7,9 +8,18 @@
 #ifndef __CONFIG_H
 #define __CONFIG_H
 
+#include "ls1021aiot_config.h"
+
+#define CONFIG_USE_IRQ
+#define CONFIG_STACKSIZE_IRQ  (4*1024)
+#define CONFIG_STACKSIZE_FIQ  (4*1024)
+
 #define CONFIG_ARMV7_SECURE_BASE OCRAM_BASE_S_ADDR
 
 #define CONFIG_SYS_FSL_CLK
+
+#define CONFIG_MP
+#define CONFIG_ICC
 
 #ifdef CONFIG_ARMV7_TEE
 #define SYS_TEE_RAM_SIZE	0x04000000
@@ -25,7 +35,6 @@
 /*
  * Size of malloc() pool
  */
-#define CONFIG_SYS_MALLOC_LEN	(CONFIG_ENV_SIZE + 16 * 1024 * 1024)
 
 #define CONFIG_SYS_INIT_RAM_ADDR	OCRAM_BASE_ADDR
 #define CONFIG_SYS_INIT_RAM_SIZE	OCRAM_SIZE
@@ -70,13 +79,8 @@
 #endif
 
 #ifdef CONFIG_SD_BOOT
-#ifdef CONFIG_BAREMETAL
-#define CONFIG_SYS_FSL_PBL_RCW  \
-	board/freescale/ls1021aiot/ls102xa_rcw_sd_uart2.cfg
-#else
 #define CONFIG_SYS_FSL_PBL_RCW	\
 	board/freescale/ls1021aiot/ls102xa_rcw_sd.cfg
-#endif
 #define CONFIG_SPL_LIBCOMMON_SUPPORT
 #define CONFIG_SPL_LIBGENERIC_SUPPORT
 #define CONFIG_SPL_ENV_SUPPORT
@@ -105,20 +109,28 @@
 #define CONFIG_SYS_DDR_SDRAM_BASE	0x80000000UL
 #define CONFIG_SYS_SDRAM_BASE		CONFIG_SYS_DDR_SDRAM_BASE
 
-#ifdef CONFIG_BAREMETAL
-#define CONFIG_MP
-#define CONFIG_SYS_DDR_SDRAM_SLAVE_SIZE	(256 * 1024 * 1024)
 #define CONFIG_MASTER_CORE			0
-#define CONFIG_SYS_DDR_SDRAM_MASTER_SIZE	(512 * 1024 * 1024)
-#endif
+
+#define CONFIG_SYS_DDR_SDRAM_SHARE_BASE \
+	(CONFIG_SYS_DDR_SDRAM_BASE + CONFIG_SYS_DDR_SDRAM_MASTER_SIZE \
+	+ CONFIG_SYS_DDR_SDRAM_SLAVE_SIZE * (CONFIG_MAX_CPUS - 1))
+
+#define CONFIG_SYS_DDR_SDRAM_SHARE_RESERVE_BASE \
+	(CONFIG_SYS_DDR_SDRAM_SHARE_BASE + CONFIG_SYS_DDR_SDRAM_SHARE_SIZE)
 
 /*
  * Serial Port
  */
-#define CONFIG_CONS_INDEX		1
+#define CONFIG_CONS_INDEX		2
 #define CONFIG_SYS_NS16550_SERIAL
 #define CONFIG_SYS_NS16550_REG_SIZE	1
 #define CONFIG_SYS_NS16550_CLK		get_serial_clock()
+
+/*
+ * GPIO
+ */
+#define CONFIG_MPC8XXX_GPIO
+#define CONFIG_DM_GPIO
 
 /*
  * I2C
@@ -126,9 +138,6 @@
 #define CONFIG_CMD_I2C
 #define CONFIG_SYS_I2C
 #define CONFIG_SYS_I2C_MXC
-#define CONFIG_SYS_I2C_MXC_I2C1		/* enable I2C bus 1 */
-#define CONFIG_SYS_I2C_MXC_I2C2		/* enable I2C bus 2 */
-#define CONFIG_SYS_I2C_MXC_I2C3		/* enable I2C bus 3 */
 
 /* EEPROM */
 #define CONFIG_ID_EEPROM
@@ -137,12 +146,7 @@
 #define CONFIG_SYS_I2C_EEPROM_ADDR		0x51
 #define CONFIG_SYS_I2C_EEPROM_ADDR_LEN	2
 
-/*
- * MMC
- */
-#define CONFIG_CMD_MMC
-#define CONFIG_FSL_ESDHC
-
+#if 0
 /* SATA */
 #define CONFIG_SCSI_AHCI_PLAT
 #ifndef PCI_DEVICE_ID_FREESCALE_AHCI
@@ -155,6 +159,7 @@
 #define CONFIG_SYS_SCSI_MAX_LUN		1
 #define CONFIG_SYS_SCSI_MAX_DEVICE	(CONFIG_SYS_SCSI_MAX_SCSI_ID * \
 		CONFIG_SYS_SCSI_MAX_LUN)
+#endif
 
 /* SPI */
 #if defined(CONFIG_QSPI_BOOT) || defined(CONFIG_SD_BOOT_QSPI)
@@ -174,6 +179,7 @@
 #define CONFIG_DM_SPI_FLASH
 #endif
 
+#if 0
 /*
  * eTSEC
  */
@@ -204,17 +210,21 @@
 #define CONFIG_HAS_ETH1
 #define CONFIG_HAS_ETH2
 #endif
+#endif
 
 /* PCIe */
 #define CONFIG_PCIE1		/* PCIE controler 1 */
 #define CONFIG_PCIE2		/* PCIE controler 2 */
 
 #define FSL_PCIE_COMPAT		"fsl,ls1021a-pcie"
-
+#ifndef CONFIG_PCI
+#define CONFIG_PCI
+#endif
 #ifdef CONFIG_PCI
 #define CONFIG_PCI_SCAN_SHOW
 #endif
 
+#define CONFIG_CMD_PING
 #define CONFIG_CMD_MII
 
 #define CONFIG_CMDLINE_TAG

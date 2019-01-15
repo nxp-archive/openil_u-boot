@@ -56,6 +56,9 @@
 #include <linux/compiler.h>
 #include <linux/err.h>
 #include <efi_loader.h>
+#include <asm/interrupt-gic.h>
+#include <flexcan.h>
+#include <flextimer.h>
 
 DECLARE_GLOBAL_DATA_PTR;
 
@@ -73,6 +76,11 @@ __weak int board_flash_wp_on(void)
 
 __weak void cpu_secondary_init_r(void)
 {
+}
+
+__weak int get_core_id(void)
+{
+	return 0;
 }
 
 static int initr_secondary_cpu(void)
@@ -472,6 +480,20 @@ static int initr_env(void)
 	return 0;
 }
 
+static int initr_default_env(void)
+{
+	/* initialize environment */
+	set_default_env(NULL);
+#ifdef CONFIG_OF_CONTROL
+	env_set_addr("fdtcontroladdr", gd->fdt_blob);
+#endif
+
+	/* Initialize from environment */
+	load_addr = env_get_ulong("loadaddr", 16, load_addr);
+
+	return 0;
+}
+
 #ifdef CONFIG_SYS_BOOTPARAMS_LEN
 static int initr_malloc_bootparams(void)
 {
@@ -507,6 +529,18 @@ static int initr_enable_interrupts(void)
 	return 0;
 }
 #endif
+
+static int initr_gic_init(void)
+{
+#ifdef CONFIG_ARM64
+	gic_set_offset();
+#endif
+	if (get_core_id() == CONFIG_SLAVE_FIRST_CORE)
+		gic_set_pri_common();
+	gic_set_pri_per_cpu();
+	gic_enable_dist();
+	return 0;
+}
 
 #ifdef CONFIG_CMD_NET
 static int initr_ethaddr(void)
@@ -576,11 +610,15 @@ static int initr_bbmii(void)
 #ifdef CONFIG_CMD_NET
 static int initr_net(void)
 {
-	puts("Net:   ");
-	eth_initialize();
+#ifdef CONFIG_FMAN1_COREID
+	if (get_core_id() == CONFIG_FMAN_FMAN1_COREID) {
+		puts("Net:   ");
+		eth_initialize();
 #if defined(CONFIG_RESET_PHY_R)
-	debug("Reset Ethernet PHY\n");
-	reset_phy();
+		debug("Reset Ethernet PHY\n");
+		reset_phy();
+#endif
+	}
 #endif
 	return 0;
 }
@@ -658,9 +696,30 @@ static int run_main_loop(void)
 #ifdef CONFIG_SANDBOX
 	sandbox_main_loop_init();
 #endif
+	u32 coreid = get_core_id();
+	if (coreid == CONFIG_MASTER_CORE) {
+		puts("Core[0] in the loop...\n");
 	/* main_loop() can return to retry autoboot, if so just run it again */
-	for (;;)
-		main_loop();
+		for (;;)
+			main_loop();
+	} else if (coreid == 1) {
+		puts("Core[1] in the loop...\n");
+		core1_main();
+		for (;;)
+			main_loop();
+			;
+	} else if (coreid == 2) {
+		puts("Core[2] in the loop...\n");
+		core2_main();
+		for (;;)
+			;
+	} else if (coreid == 3) {
+		puts("Core[3] in the loop...\n");
+		core3_main();
+		for (;;)
+			;
+	}
+
 	return 0;
 }
 
@@ -894,6 +953,124 @@ void board_init_r(gd_t *new_gd, ulong dest_addr)
 #endif
 
 	if (initcall_run_list(init_sequence_r))
+		hang();
+
+	/* NOTREACHED - run_main_loop() does not return */
+	hang();
+}
+
+init_fnc_t init_sequence_r_slave[] = {
+	initr_trace,
+	initr_reloc,
+	/* TODO: could x86/PPC have this also perhaps? */
+#ifdef CONFIG_ARM
+	/* TODO: initr_caches can not be added on ls1043a, need add it */
+	initr_caches,
+
+	/* Note: For Freescale LS2 SoCs, new MMU table is created in DDR.
+	 *	 A temporary mapping of IFC high region is since removed,
+	 *	 so environmental variables in NOR flash is not availble
+	 *	 until board_init() is called below to remap IFC to high
+	 *	 region.
+	 */
+#endif
+	initr_reloc_global_data,
+
+	fdt_baremetal_setup,
+
+#if defined(CONFIG_SYS_INIT_RAM_LOCK) && defined(CONFIG_E500)
+	initr_unlock_ram_in_cache,
+#endif
+	initr_barrier,
+	initr_malloc,
+	initr_default_env,
+	initr_console_record,
+#ifdef CONFIG_SYS_NONCACHED_MEMORY
+	initr_noncached,
+#endif
+	bootstage_relocate,
+#ifdef CONFIG_DM
+	initr_dm,
+#endif
+	initr_bootstage,
+	stdio_init_tables,
+	initr_serial,
+	initr_announce,
+	INIT_FUNC_WATCHDOG_RESET
+#if defined(CONFIG_PCI) && defined(CONFIG_SYS_EARLY_PCI_INIT)
+	/*
+	 * Do early PCI configuration _before_ the flash gets initialised,
+	 * because PCU ressources are crucial for flash access on some boards.
+	 */
+	initr_pci,
+#endif
+#ifdef CONFIG_FMAN_COREID_SET
+	eth_early_init_r,
+#endif
+#if defined(CONFIG_ID_EEPROM) || defined(CONFIG_SYS_I2C_MAC_OFFSET)
+	mac_read_from_eeprom,
+#endif
+
+	INIT_FUNC_WATCHDOG_RESET
+#if defined(CONFIG_PCI) && !defined(CONFIG_SYS_EARLY_PCI_INIT)
+	/*
+	 * Do pci configuration
+	 */
+	initr_pci,
+#endif
+	stdio_add_devices,
+	initr_jumptable,
+	console_init_r,		/* fully init console as a device */
+	INIT_FUNC_WATCHDOG_RESET
+	/* PPC has a udelay(20) here dating from 2002. Why? */
+
+	interrupt_init,
+#if defined(CONFIG_ARM) || defined(CONFIG_AVR32)
+	initr_enable_interrupts,
+#endif
+#ifndef CONFIG_ARCH_LS1028A
+	initr_gic_init,
+	icc_init,
+#endif
+#ifdef CONFIG_CMD_NET
+	initr_ethaddr,
+#endif
+#ifdef CONFIG_CMD_NET
+	INIT_FUNC_WATCHDOG_RESET
+	/* TODO: need add initr_net after add ethernet feature */
+	/* initr_net,
+	 */
+#ifdef CONFIG_FMAN_COREID_SET
+	initr_net,
+#endif
+#endif
+#if CONFIG_FS_FLEXCAN
+	flexcan_init,
+	flextimer_init,
+#endif
+	run_main_loop,
+};
+
+void board_init_r_slave(gd_t *new_gd, ulong dest_addr)
+{
+#ifdef CONFIG_NEEDS_MANUAL_RELOC
+	int i;
+#endif
+
+#ifdef CONFIG_AVR32
+	mmu_init_r(dest_addr);
+#endif
+
+#if !defined(CONFIG_X86) && !defined(CONFIG_ARM) && !defined(CONFIG_ARM64)
+	gd = new_gd;
+#endif
+
+#ifdef CONFIG_NEEDS_MANUAL_RELOC
+	for (i = 0; i < ARRAY_SIZE(init_sequence_r_slave); i++)
+		init_sequence_r_slave[i] += gd->reloc_off;
+#endif
+
+	if (initcall_run_list(init_sequence_r_slave))
 		hang();
 
 	/* NOTREACHED - run_main_loop() does not return */
