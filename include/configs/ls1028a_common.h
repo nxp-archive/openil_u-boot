@@ -167,6 +167,8 @@
 		"&& sf read $kernelheader_addr_r $kernelheader_start "	\
 		"$kernelheader_size && esbc_validate ${kernelheader_addr_r}; " \
 		"bootm $load_addr#$board\0"		\
+	"qspi_hdploadcmd=echo Trying load HDP firmware from flexspi..;"      \
+		"hdp load 0x20900000 0x2000\0"		\
 	"sd_bootcmd=echo Trying load from SD ..;"	\
 		"mmcinfo; mmc read $load_addr "		\
 		"$kernel_addr_sd $kernel_size_sd && "	\
@@ -174,24 +176,30 @@
 		"$kernelhdr_addr_sd $kernelhdr_size_sd "		\
 		" && esbc_validate ${kernelheader_addr_r};"	\
 		"bootm $load_addr#$board\0"		\
+	"sd_hdploadcmd=echo Trying load HDP firmware from SD..;"      \
+		"mmcinfo;mmc read $load_addr 0x4800 0x200 "		\
+		"&& hdp load $load_addr 0x2000\0"	\
 	"emmc_bootcmd=echo Trying load from EMMC ..;"	\
 		"mmcinfo; mmc dev 1; mmc read $load_addr "		\
 		"$kernel_addr_sd $kernel_size_sd && "	\
 		"env exists secureboot && mmc read $kernelheader_addr_r " \
 		"$kernelhdr_addr_sd $kernelhdr_size_sd "		\
 		" && esbc_validate ${kernelheader_addr_r};"	\
-		"bootm $load_addr#$board\0"
+		"bootm $load_addr#$board\0"			\
+	"emmc_hdploadcmd=echo Trying load HDP firmware from EMMC..;"      \
+		"mmc dev 1;mmcinfo;mmc read $load_addr 0x4800 0x200 "		\
+		"&& hdp load $load_addr 0x2000\0"
 
 #undef CONFIG_BOOTCOMMAND
 #if defined(CONFIG_SD_BOOT)
-#define CONFIG_BOOTCOMMAND "run distro_bootcmd;run sd_bootcmd; "	\
+#define CONFIG_BOOTCOMMAND "run sd_hdploadcmd; run distro_bootcmd;run sd_bootcmd; "	\
 			   "env exists secureboot && esbc_halt;"
 #elif defined(CONFIG_EMMC_BOOT)
-#define CONFIG_BOOTCOMMAND "run distro_bootcmd;run emmc_bootcmd; "	\
+#define CONFIG_BOOTCOMMAND "run emmc_hdploadcmd; run distro_bootcmd;run emmc_bootcmd; "	\
 			   "env exists secureboot && esbc_halt;"
 #else
-#define CONFIG_BOOTCOMMAND "run distro_bootcmd; run qspi_bootcmd; "	\
-			   "env exists secureboot && esbc_halt;;"
+#define CONFIG_BOOTCOMMAND "run qspi_hdploadcmd; run distro_bootcmd; run qspi_bootcmd; "	\
+			   "env exists secureboot && esbc_halt;"
 #endif
 #endif
 #endif
