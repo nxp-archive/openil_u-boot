@@ -872,6 +872,22 @@ int checkboard(void)
 }
 #endif
 
+void qixis_dump_switch(void)
+{
+#ifdef CONFIG_FSL_QIXIS
+	int i, nr_of_cfgsw;
+
+	QIXIS_WRITE(cms[0], 0x00);
+	nr_of_cfgsw = QIXIS_READ(cms[1]);
+
+	puts("DIP switch settings dump:\n");
+	for (i = 1; i <= nr_of_cfgsw; i++) {
+		QIXIS_WRITE(cms[0], i);
+		printf("SW%d = (0x%02x)\n", i, QIXIS_READ(cms[1]));
+	}
+#endif
+}
+
 void *video_hw_init(void)
 {
 	return;
