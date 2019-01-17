@@ -365,22 +365,18 @@ void setup_4xSGMII(void)
 	u16 value;
 	int i, to;
 
-	if (serdes_protocol != 0x9999)
-		return;
-
-	PCS_INF("trying to set up 4xSGMII, this is hardcoded for SERDES 9999!!!!\n");
-
-	out_le32(NETC_PCS_SGMIICR1(0), 0x00000000);
-	out_le32(NETC_PCS_SGMIICR1(1), 0x08000000);
-	out_le32(NETC_PCS_SGMIICR1(2), 0x10000000);
-	out_le32(NETC_PCS_SGMIICR1(3), 0x18000000);
+	PCS_INF("trying to set up 4xSGMII, this is hardcoded for SERDES 9999/99xx!!!!\n");
 
 	/* turn on PCI function */
 	out_le16(NETC_PF5_ECAM_BASE + 4, 0xffff);
-
 	bus.priv = (void *)NETC_PF5_BAR0_BASE + 0x8030;
 
 	for (i = 0; i < 4; i++) {
+		if (((serdes_protocol >> (i*4)) & 0xf) != 0x9)
+			continue;
+
+		out_le32(NETC_PCS_SGMIICR1(i), 0x00000800 + 0x08000000 * i);
+
 		value = PHY_SGMII_IF_MODE_SGMII | PHY_SGMII_IF_MODE_AN;
 		enetc_imdio_write(&bus, i, MDIO_DEVAD_NONE, 0x14, value);
 		/* Dev ability according to SGMII specification */
@@ -389,18 +385,22 @@ void setup_4xSGMII(void)
 		/* Adjust link timer for SGMII */
 		enetc_imdio_write(&bus, i, MDIO_DEVAD_NONE, 0x13, 0x0003);
 		enetc_imdio_write(&bus, i, MDIO_DEVAD_NONE, 0x12, 0x06a0);
-	}
-	for (i = 0; i < 4; i++) {
+
+		/* restart AN */
+		value = PHY_SGMII_CR_DEF_VAL | PHY_SGMII_CR_RESET_AN;
+		enetc_imdio_write(&bus, i, MDIO_DEVAD_NONE, 0x00, value);
+
+		/* wait for link */
 		to = 1000;
 		do {
-			value = enetc_imdio_read(&bus, i, MDIO_DEVAD_NONE, 1);
-			if ((value & 0x24) == 0x24)
+			value = enetc_imdio_read(&bus, i, MDIO_DEVAD_NONE, 0x01);
+			if ((value & 0x0024) == 0x0024)
 				break;
 		} while (--to);
-		PCS_INF("BMSR: %04x\n", value);
-		if ((value & 0x24) != 0x24) {
+		PCS_INF("BMSR[%d]: %04x\n", i, value);
+		if ((value & 0x0024) != 0x0024) {
 			PCS_ERR("PCS[%d] didn't link up, giving up.\n", i);
-			break;
+			continue;
 		}
 	}
 #endif
@@ -608,6 +608,9 @@ void setup_QSXGMII(void)
 
 	bus.priv = (void *)NETC_PF5_BAR0_BASE + 0x8030;
 
+	/* set up transit equalization control on lane 1*/
+	out_le32(0x1ea0000 + 0x818 + 0x40, 0x00003000);
+
 	/*reset lane */
 	enetc_imdio_write(&bus, 0, 0x03, 0, 0x8000);
 	to = 1000;
@@ -662,7 +665,7 @@ static void setup_1xSGMII(void)
 {
 	#define NETC_PF0_BAR0_BASE	0x1f8010000
 	#define NETC_PF0_ECAM_BASE	0x1F0000000
-	//#define NETC_PCS_SGMIICR1(n)	(0x001ea1804 + (n) * 0x10)
+	#define NETC_PCS_SGMIICR1(n)	(0x001ea1804 + (n) * 0x10)
 	struct mii_dev bus = {0};
 	u16 value;
 	int to;
@@ -672,8 +675,7 @@ static void setup_1xSGMII(void)
 
 	PCS_INF("trying to set up SGMII, this is hardcoded for SERDES 8xxx!!!!\n");
 
-	//out_le32(NETC_PCS_SGMIICR1(0), 0x00000000);
-	// writing this kills the link for some reason
+	out_le32(NETC_PCS_SGMIICR1(0), 0x00000800);
 
 	/* turn on PCI function */
 	out_le16(NETC_PF0_ECAM_BASE + 4, 0xffff);
