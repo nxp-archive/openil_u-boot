@@ -490,28 +490,29 @@ int enetc_imdio_write(struct mii_dev *bus, int port, int dev, int reg, u16 val)
 
 int enetc_imdio_read(struct mii_dev *bus, int port, int dev, int reg)
 {
-	if (dev == MDIO_DEVAD_NONE) {
+	if (dev == MDIO_DEVAD_NONE)
 		out_le32(bus->priv + 0, 0x00001408);
-		dev = reg & 0x1f;
-	} else
+	else
 		out_le32(bus->priv + 0, 0x00001448);
 
 	while (in_le32(bus->priv+0) & 1)
 		;
-	out_le32(bus->priv+4, (port << 5) + dev);
-	while (in_le32(bus->priv+0) & 1)
-		;
-	udelay(100);
-	if (dev != MDIO_DEVAD_NONE)
+	if (dev == MDIO_DEVAD_NONE) {
+		out_le32(bus->priv+4, (port << 5) + reg + 0x8000);
+	} else {
+		out_le32(bus->priv+4, (port << 5) + dev);
+		while (in_le32(bus->priv+0) & 1)
+			;
 		out_le32(bus->priv + 0xc, reg);
-	udelay(100);
-	out_le32(bus->priv+4, (port << 5) + dev + 0x8000);
+		while (in_le32(bus->priv+0) & 1)
+			;
+		out_le32(bus->priv+4, (port << 5) + dev + 0x8000);
+	}
 
 	while (in_le32(bus->priv+0) & 1)
 		;
 	if (in_le32(bus->priv+0) & 2)
 		return -1;
-	udelay(100);
 	return in_le32(bus->priv+8);
 }
 
