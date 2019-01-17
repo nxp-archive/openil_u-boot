@@ -1,5 +1,6 @@
 /*
  * Copyright 2016 Freescale Semiconductor, Inc.
+ * Copyright 2019 NXP
  *
  * SPDX-License-Identifier:	GPL-2.0+
  */
@@ -71,8 +72,13 @@
 
 #ifdef CONFIG_SD_BOOT
 #ifdef CONFIG_BAREMETAL
+#ifdef CONFIG_BM_GPIO
+#define CONFIG_SYS_FSL_PBL_RCW  \
+	board/freescale/ls1021aiot/ls102xa_rcw_sd_uart2_gpio.cfg
+#else
 #define CONFIG_SYS_FSL_PBL_RCW  \
 	board/freescale/ls1021aiot/ls102xa_rcw_sd_uart2.cfg
+#endif
 #else
 #define CONFIG_SYS_FSL_PBL_RCW	\
 	board/freescale/ls1021aiot/ls102xa_rcw_sd.cfg
