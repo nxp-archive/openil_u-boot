@@ -151,8 +151,8 @@
 	"console=ttyS0,115200\0"                \
 	"mtdparts=" CONFIG_MTDPARTS_DEFAULT "\0"	\
 	BOOTENV					\
-	"boot_scripts=ls1028ardb_boot.scr\0"    \
-	"boot_script_hdr=hdr_ls1028ardb_bs.out\0"	\
+	"boot_scripts=ls1028aqds_boot.scr\0"    \
+	"boot_script_hdr=hdr_ls1028aqds_bs.out\0"	\
 	"scan_dev_for_boot_part="               \
 		"part list ${devtype} ${devnum} devplist; "   \
 		"env exists devplist || setenv devplist 1; "  \
