@@ -500,6 +500,65 @@ void setup_QSGMII(void)
 	}
 }
 
+static void setup_switch(void)
+{
+
+#define L2SW_PORTS	5
+
+#define L2SW_BASE				0x1fc000000
+#define L2SW_SYS				(L2SW_BASE + 0x010000)
+#define L2SW_ES0				(L2SW_BASE + 0x040000)
+#define L2SW_IS1				(L2SW_BASE + 0x050000)
+#define L2SW_IS2				(L2SW_BASE + 0x060000)
+#define L2SW_GMII(i)				(L2SW_BASE + 0x100000 + (i)*0x10000)
+#define L2SW_QSYS				(L2SW_BASE + 0x200000)
+
+#define L2SW_SYS_SYSTEM				(L2SW_SYS + 0x00000E00)
+#define L2SW_SYS_RAM_CTRL			(L2SW_SYS + 0x00000F24)
+
+#define L2SW_ES0_TCAM_CTRL			(L2SW_ES0 + 0x000003C0)
+#define L2SW_IS1_TCAM_CTRL			(L2SW_IS1 + 0x000003C0)
+#define L2SW_IS2_TCAM_CTRL			(L2SW_IS2 + 0x000003C0)
+
+#define L2SW_GMII_CLOCK_CFG(i)			(L2SW_GMII(i) + 0x00000000)
+#define L2SW_GMII_MAC_ENA_CFG(i)		(L2SW_GMII(i) + 0x0000001C)
+#define L2SW_GMII_MAC_IFG_CFG(i)		(L2SW_GMII(i) + 0x0000001C + 0x14)
+
+#define L2SW_QSYS_SYSTEM			(L2SW_QSYS + 0x0000F460)
+#define L2SW_QSYS_SYSTEM_SWITCH_PORT_MODE(i)	(L2SW_QSYS_SYSTEM + 0x20 + (i)*4)
+
+
+	int to, i;
+
+	PCS_INF("trying to set up L2 switch\n");
+	// Core memories
+	out_le32(L2SW_SYS_RAM_CTRL, 0x2);
+	to = 100;
+	while (--to && (in_le32(L2SW_SYS_RAM_CTRL) & 0x2))
+		udelay(1);
+	if (in_le32(L2SW_SYS_RAM_CTRL) & 0x2)
+		PCS_ERR("TO waiting for switch memories init\n");
+
+	// Switch Core
+	out_le32(L2SW_SYS_SYSTEM, 0x00000001);
+
+	/* ES0 */
+	out_le32(L2SW_ES0_TCAM_CTRL, 0x00000001);
+	/* IS1 */
+	out_le32(L2SW_IS1_TCAM_CTRL, 0x00000001);
+	/* IS2 */
+	out_le32(L2SW_IS2_TCAM_CTRL, 0x00000001);
+	udelay(20);
+
+	// Initialize the ports of the L2 switch
+	for (i = 0; i < L2SW_PORTS; i++) {
+		// MAC Tx and Rx
+		out_le32(L2SW_GMII_MAC_ENA_CFG(i), 0x00000011);
+		out_le32(L2SW_GMII_CLOCK_CFG(i), 0x00000001);
+		out_le32(L2SW_QSYS_SYSTEM_SWITCH_PORT_MODE(i), 0x00004a00);
+		out_le32(L2SW_GMII_MAC_IFG_CFG(i), 0x00000515);
+	}
+}
 
 #define DEV_ABILITY_RSVD1	0x4000
 #define DEV_ABILITY_DUP		0x1000
@@ -757,7 +816,7 @@ phy_err:
 #include "dm/device.h"
 #include "../drivers/net/fsl_enetc.h"
 extern void register_imdio(struct udevice *dev);
-void setup_switch(void)
+void setup_switch_mdio(void)
 {
 	struct udevice dev;
 	struct enetc_devfn hw;
@@ -776,7 +835,7 @@ int last_stage_init(void)
 	setup_mdio_mux();
 #endif
 
-	setup_switch();
+	setup_switch_mdio();
 
 	setup_1xSGMII();
 	setup_4xSGMII();
@@ -786,6 +845,7 @@ int last_stage_init(void)
 #if 1
 	setup_QSXGMII();
 #endif
+	setup_switch();
 	return 0;
 }
 #endif
