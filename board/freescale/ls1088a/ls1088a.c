@@ -20,6 +20,7 @@
 #include <hwconfig.h>
 #include <asm/arch/fsl_serdes.h>
 #include <asm/arch/soc.h>
+#include <asm/arch-fsl-layerscape/fsl_icid.h>
 
 #include "../common/qixis.h"
 #include "ls1088a_qixis.h"
@@ -967,6 +968,9 @@ int ft_board_setup(void *blob, bd_t *bd)
 #ifdef CONFIG_FSL_MC_ENET
 	fdt_fixup_board_enet(blob);
 #endif
+
+	fdt_fixup_icid(blob);
+
 	if (is_pb_board())
 		fixup_ls1088ardb_pb_banner(blob);
 
