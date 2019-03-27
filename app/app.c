@@ -40,6 +40,10 @@ void core1_main(void)
 #if CONFIG_FS_FLEXCAN
 	test_flexcan();
 #endif
+#else
+#ifdef CONFIG_ENETC_COREID_SET
+	test_net();
+#endif
 #endif
 	return;
 }
