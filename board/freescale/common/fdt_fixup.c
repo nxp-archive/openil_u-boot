@@ -106,6 +106,38 @@ int fdt_baremetal_setup_pcie(void)
 }
 #endif
 
+#ifdef CONFIG_ENETC_COREID_SET
+int fdt_baremetal_setup_enetc(void)
+{
+	void *blob = gd->fdt_blob;
+	int node_offset;
+	int start_offset = -1;
+	int i;
+	int enetc_core[CONFIG_ENETC_CTL_NUM];
+	int ret;
+
+	if (CONFIG_ENETC_CTL_NUM >= 1)
+		enetc_core[0] = CONFIG_ENETC_ENETC1_COREID;
+
+	for (i = 0; i < CONFIG_ENETC_CTL_NUM; i++) {
+		node_offset = fdt_node_offset_by_compatible(blob,
+				start_offset, "fsl,ls-enetc-rcie");
+		if (node_offset > 0) {
+			if (get_core_id() != enetc_core[i])
+				ret = fdt_set_node_status(blob, node_offset,
+					FDT_STATUS_DISABLED, 0);
+			else
+				ret = fdt_set_node_status(blob, node_offset,
+					FDT_STATUS_OKAY, 0);
+
+			start_offset = node_offset;
+		} else
+			break;
+	}
+	return ret;
+}
+#endif
+
 int fdt_baremetal_setup(void)
 {
 	int ret;
@@ -115,6 +147,10 @@ int fdt_baremetal_setup(void)
 
 #ifdef CONFIG_PCIE_COREID_SET
 	ret = fdt_baremetal_setup_pcie();
+#endif
+
+#ifdef CONFIG_ENETC_COREID_SET
+	fdt_baremetal_setup_enetc();
 #endif
 
 	return 0;

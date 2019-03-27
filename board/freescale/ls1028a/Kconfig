@@ -60,6 +60,25 @@ config SYS_TEXT_BASE
 	default 0x82000000 if TFABOOT
 	default 0x20100000
 
+config BAREMETAL
+   bool "Enable baremetal"
+   default y
+
+config ENETC_COREID_SET
+   bool "Enable ENETC for baremetal"
+   default y
+   depends on BAREMETAL
+
+config ENETC_ENETC1_COREID
+   int "Enetc1 is assigned to core1"
+   default "1"
+   depends on ENETC_COREID_SET
+
+config ENETC_CTL_NUM
+   int "ENETC controller numbers"
+   default "1"
+   depends on ENETC_COREID_SET
+
 source "board/freescale/common/Kconfig"
 
 endif
