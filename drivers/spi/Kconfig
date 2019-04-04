@@ -338,6 +338,20 @@ config FSL_QSPI
 	  used to access the SPI NOR flash on platforms embedding this
 	  Freescale IP core.
 
+config NXP_FSPI
+	bool "NXP FLEXSPI driver"
+	help
+	  Enable the NXP FlexSPI driver. This driver can be used to
+	  access SPI NOR flash on platforms embedding this NXP FlexSPI
+          IP.
+
+config SYS_NXP_FSPI_AHB
+	bool "Flash read and write via AHB mode"
+	depends on NXP_FSPI
+	default n
+	help
+	  Enable flash read and write via AHB mode instead of IPS mode.
+
 config DAVINCI_SPI
 	bool "Davinci & Keystone SPI driver"
 	depends on ARCH_DAVINCI || ARCH_KEYSTONE
