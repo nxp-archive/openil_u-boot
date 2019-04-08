@@ -394,14 +394,12 @@ void setup_4xSGMII(void)
 	u16 value;
 	int i, to;
 
-	PCS_INF("trying to set up 4xSGMII, this is hardcoded for SERDES 9999/99xx!!!!\n");
-
 	/* turn on PCI function */
 	out_le16(NETC_PF5_ECAM_BASE + 4, 0xffff);
 	bus.priv = (void *)NETC_PF5_BAR0_BASE + 0x8030;
 
 	for (i = 0; i < 4; i++) {
-		if (((serdes_protocol >> (i*4)) & 0xf) != 0x9)
+		if (((serdes_protocol >> (i * 4)) & 0xf) != 0x9)
 			continue;
 
 		out_le32(NETC_PCS_SGMIICR1(i), 0x00000800 + 0x08000000 * i);
@@ -422,7 +420,8 @@ void setup_4xSGMII(void)
 		/* wait for link */
 		to = 1000;
 		do {
-			value = enetc_imdio_read(&bus, i, MDIO_DEVAD_NONE, 0x01);
+			value = enetc_imdio_read(&bus, i,
+						 MDIO_DEVAD_NONE, 0x01);
 			if ((value & 0x0024) == 0x0024)
 				break;
 		} while (--to);
