@@ -389,7 +389,7 @@ void setup_4xSGMII(void)
 #if defined(CONFIG_TARGET_LS1028AQDS)
 	#define NETC_PF5_BAR0_BASE	0x1f8140000
 	#define NETC_PF5_ECAM_BASE	0x1F0005000
-	#define NETC_PCS_SGMIICR1(n)	(0x001ea1804 + (n) * 0x10)
+	#define NETC_PCS_SGMIICR1(n)	(0x001ea1804L + (n) * 0x10)
 	struct mii_dev bus = {0};
 	u16 value;
 	int i, to;
@@ -427,7 +427,7 @@ void setup_4xSGMII(void)
 		} while (--to);
 		PCS_INF("BMSR[%d]: %04x\n", i, value);
 		if ((value & 0x0024) != 0x0024) {
-			PCS_ERR("PCS[%d] didn't link up, giving up.\n", i);
+			PCS_ERR("PCS[%d] didn't link up yet.\n", i);
 			continue;
 		}
 	}
@@ -447,8 +447,6 @@ void setup_QSGMII(void)
 		return;
 
 	PCS_INF("trying to set up QSGMII, this is hardcoded for SERDES x5xx!!!!\n");
-
-	//out_le32(NETC_PCS_QSGMIICR1, 0x20000000);
 
 	/* turn on PCI function */
 	out_le16(NETC_PF5_ECAM_BASE + 4, 0xffff);
@@ -522,7 +520,7 @@ void setup_QSGMII(void)
 		} while (--to);
 		PCS_INF("BMSR: %04x\n", value);
 		if ((value & 0x24) != 0x24) {
-			PCS_ERR("PCS[%d] didn't link up, giving up.\n", i);
+			PCS_ERR("PCS[%d] didn't link up yet.\n", i);
 			break;
 		}
 	}
@@ -600,7 +598,6 @@ static void setup_SXGMII(void)
 	#define NETC_PF0_BAR0_BASE	0x1f8010000
 	#define NETC_PF0_ECAM_BASE	0x1F0000000
 	#define NETC_IERB_BASE		0x1F0800000
-	//#define NETC_PCS_SGMIICR1(n)	(0x001ea1804 + (n) * 0x10)
 	struct mii_dev bus = {0}, *ext_bus;
 	u16 value;
 	int to;
@@ -609,9 +606,6 @@ static void setup_SXGMII(void)
 		return;
 
 	PCS_INF("trying to set up SXGMII, this is hardcoded for SERDES 1xxx!!!!\n");
-
-	// writing this kills the link for some reason
-	//out_le32(NETC_PCS_SGMIICR1(0), 0x00000000);
 
 	/* turn on PCI function */
 	out_le16(NETC_PF0_ECAM_BASE + 4, 0xffff);
@@ -642,7 +636,6 @@ static void setup_SXGMII(void)
 	value =  CONTROL_AN_EN | CONTROL_RESTART_AN;
 	enetc_imdio_write(&bus, 0, 0x1f, 0x0, value);
 
-//#if Aquantia config?
 	int phy_addr = 2;
 	char *mdio_name = "mdio@40";
 
@@ -660,8 +653,8 @@ static void setup_SXGMII(void)
 		PCS_ERR("unknown PHY, no init done on it\n");
 	}
 
-//#if wait_for_linkup?
-	to = 10000;
+	// wait_for_linkup?
+	to = 20000;
 	do {
 		value = enetc_imdio_read(&bus, 0, 0x1f, 0x1);
 		if ((value & 0x24) == 0x24)
@@ -669,20 +662,20 @@ static void setup_SXGMII(void)
 	} while (--to);
 	PCS_INF("BMSR: %04x\n", value);
 	if ((value & 0x24) != 0x24)
-		PCS_ERR("PCS[0] didn't link up, giving up.\n");
+		PCS_ERR("PCS[0] didn't link up yet.\n");
 #endif
 }
 
 /* tested with loopback card */
 void setup_QSXGMII(void)
 {
+#if defined(CONFIG_TARGET_LS1028AQDS)
 	#define NETC_PF5_BAR0_BASE	0x1f8140000
 	#define NETC_PF5_ECAM_BASE	0x1F0005000
 	struct mii_dev bus = {0}, *ext_bus;
 	u16 value;
 	int to, i;
 
-#if defined(CONFIG_TARGET_LS1028AQDS)
 	if ((serdes_protocol & 0xf0) != 0x0030)
 		return;
 
@@ -722,9 +715,6 @@ void setup_QSXGMII(void)
 			PCS_ERR("PHY[1:%d] reset timeout\n", i);
 	}
 
-#endif
-
-//#if Aquantia config
 	int phy_addr = 0;
 	char *mdio_name = "mdio@50";
 
@@ -745,7 +735,7 @@ void setup_QSXGMII(void)
 	}
 
 	for (i = 0; i < 4; i++) {
-		to = 1000;
+		to = 20000;
 		do {
 			value = enetc_imdio_read(&bus, i, 0x1f, 1);
 			if ((value & 0x24) == 0x24)
@@ -753,7 +743,7 @@ void setup_QSXGMII(void)
 		} while (--to);
 		PCS_INF("BMSR %04x\n", value);
 		if ((value & 0x24) != 0x24) {
-			PCS_ERR("PCS[1:%d] didn't link up, giving up.\n", i);
+			PCS_ERR("PCS[1:%d] didn't link up yet.\n", i);
 			break;
 		}
 	}
@@ -765,7 +755,7 @@ static void setup_1xSGMII(void)
 {
 	#define NETC_PF0_BAR0_BASE	0x1f8010000
 	#define NETC_PF0_ECAM_BASE	0x1F0000000
-	#define NETC_PCS_SGMIICR1(n)	(0x001ea1804 + (n) * 0x10)
+	#define NETC_PCS_SGMIICR1(n)	(0x001ea1804L + (n) * 0x10)
 	struct mii_dev bus = {0};
 	u16 value;
 	int to;
@@ -804,7 +794,7 @@ static void setup_1xSGMII(void)
 	} while (--to);
 	PCS_INF("BMSR %04x\n", value);
 	if ((value & 0x0024) != 0x0024)
-		PCS_ERR("PCS[0] didn't link up, giving up.\n");
+		PCS_ERR("PCS[0] didn't link up yet.\n");
 }
 
 
@@ -852,8 +842,6 @@ phy_err:
 #endif
 }
 
-
-
 #include "dm/device.h"
 #include "../drivers/net/fsl_enetc.h"
 extern void register_imdio(struct udevice *dev);
@@ -883,9 +871,7 @@ int last_stage_init(void)
 	setup_QSGMII();
 	setup_SXGMII();
 	setup_RGMII();
-#if 1
 	setup_QSXGMII();
-#endif
 	setup_switch();
 	return 0;
 }
