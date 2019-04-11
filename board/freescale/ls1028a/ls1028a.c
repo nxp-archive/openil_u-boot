@@ -706,9 +706,24 @@ void setup_QSXGMII(void)
 
 	/* set capabilities for AN  and restart AN*/
 	for (i = 0; i < 4; i++) {
-		enetc_imdio_write(&bus, i, 0x1f, 4, 0xd801);
-		enetc_imdio_write(&bus, i, 0x1f, 0, 0x1200);
+		value = DEV_ABILITY_RSVD1 | DEV_ABILITY_DUP | DEV_ABILITY_ABIL0;
+		enetc_imdio_write(&bus, i, 0x1f, 4, value);
+		value = CONTROL_RESET | CONTROL_AN_EN | CONTROL_RESTART_AN;
+		enetc_imdio_write(&bus, i, 0x1f, 0, value);
+		enetc_imdio_write(&bus, i, 0x1f, 0x13, 0x0003);
+		enetc_imdio_write(&bus, i, 0x1f, 0x12, 0x06a0);
+		to = 1000;
+		do {
+			value = enetc_imdio_read(&bus, i, 0x1f, 0x0);
+			if (!(value & 0x8000))
+				break;
+		} while (--to);
+		if (value & 0x8000)
+			PCS_ERR("PHY[1:%d] reset timeout\n", i);
 	}
+
+#endif
+
 //#if Aquantia config
 	int phy_addr = 0;
 	char *mdio_name = "mdio@50";
