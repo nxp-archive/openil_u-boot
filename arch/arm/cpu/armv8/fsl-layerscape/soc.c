@@ -139,7 +139,8 @@ static void erratum_a008997(void)
 	out_be16((phy) + SCFG_USB_PHY_RX_OVRD_IN_HI, USB_PHY_RX_EQ_VAL_3);	\
 	out_be16((phy) + SCFG_USB_PHY_RX_OVRD_IN_HI, USB_PHY_RX_EQ_VAL_4)
 
-#elif defined(CONFIG_ARCH_LS2080A) || defined(CONFIG_ARCH_LS1088A)
+#elif defined(CONFIG_ARCH_LS2080A) || defined(CONFIG_ARCH_LS1088A) || \
+	defined(CONFIG_ARCH_LX2160A)
 
 #define PROGRAM_USB_PHY_RX_OVRD_IN_HI(phy)	\
 	out_le16((phy) + DCSR_USB_PHY_RX_OVRD_IN_HI, USB_PHY_RX_EQ_VAL_1); \
@@ -171,6 +172,15 @@ static void erratum_a009007(void)
 #endif /* CONFIG_SYS_FSL_ERRATUM_A009007 */
 }
 
+static void erratum_a050106(void)
+{
+#if defined(CONFIG_ARCH_LX2160A)
+	void __iomem *dcsr = (void __iomem *)DCSR_BASE;
+
+	PROGRAM_USB_PHY_RX_OVRD_IN_HI(dcsr + DCSR_USB_PHY1);
+	PROGRAM_USB_PHY_RX_OVRD_IN_HI(dcsr + DCSR_USB_PHY2);
+#endif
+}
 #if defined(CONFIG_FSL_LSCH3)
 /*
  * This erratum requires setting a value to eddrtqcr1 to
@@ -323,6 +333,7 @@ void fsl_lsch3_early_init_f(void)
 	erratum_a009798();
 	erratum_a008997();
 	erratum_a009007();
+	erratum_a050106();
 #ifdef CONFIG_CHAIN_OF_TRUST
 	/* In case of Secure Boot, the IBR configures the SMMU
 	* to allow only Secure transactions.

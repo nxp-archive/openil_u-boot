@@ -230,8 +230,13 @@
 #define DCSR_USB_PHY_RX_OVRD_IN_HI	0x200C
 #define USB_PHY_RX_EQ_VAL_1		0x0000
 #define USB_PHY_RX_EQ_VAL_2		0x0080
+#if defined(CONFIG_ARCH_LS2080A) || defined(CONFIG_ARCH_LS1088A)
 #define USB_PHY_RX_EQ_VAL_3		0x0380
 #define USB_PHY_RX_EQ_VAL_4		0x0b80
+#elif defined(CONFIG_ARCH_LX2160A)
+#define USB_PHY_RX_EQ_VAL_3		0x0080
+#define USB_PHY_RX_EQ_VAL_4		0x0880
+#endif
 
 #define TP_ITYP_AV		0x00000001	/* Initiator available */
 #define TP_ITYP_TYPE(x)	(((x) & 0x6) >> 1)	/* Initiator Type */
