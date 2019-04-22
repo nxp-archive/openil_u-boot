@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0+
 /*
  * Copyright 2016 Freescale Semiconductor, Inc.
+ * Copyright 2019 NXP
  */
 
 #include <common.h>
@@ -33,6 +34,7 @@ static struct serdes_config serdes1_cfg_tbl[] = {
 		  SGMII_FM1_DTSEC6} },
 	{0x2223, {SGMII_2500_FM1_DTSEC9, SGMII_2500_FM1_DTSEC10,
 		  SGMII_2500_FM1_DTSEC5, SGMII_FM1_DTSEC6} },
+	{0x3040, {NONE, NONE, QSGMII_FM1_A, NONE} },
 	{}
 };
 
