@@ -486,6 +486,9 @@ int phy_init(void)
 #ifdef CONFIG_PHY_ET1011C
 	phy_et1011c_init();
 #endif
+#ifdef CONFIG_PHY_INPHI
+	phy_in112525_init();
+#endif
 #ifdef CONFIG_PHY_LXT
 	phy_lxt_init();
 #endif
@@ -756,6 +759,15 @@ static struct phy_device *get_phy_device_by_mask(struct mii_dev *bus,
 		if (phydev)
 			return phydev;
 	}
+
+/* For IN112525 Phy, phy id is located in MDIO_MMD_VEND1 device space */
+#ifdef CONFIG_PHY_INPHI
+	phydev = create_phy_by_mask(bus, phy_mask, MDIO_MMD_VEND1, interface);
+	if (IS_ERR(phydev))
+		return NULL;
+	if (phydev)
+		return phydev;
+#endif
 
 	debug("\n%s PHY: ", bus->name);
 	while (phy_mask) {

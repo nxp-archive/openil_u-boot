@@ -106,6 +106,46 @@ config PHY_DAVICOM
 config PHY_ET1011C
 	bool "LSI TruePHY ET1011C support"
 
+config PHY_INPHI
+	bool "Inphi IN112525 Ethernet PHYs support"
+	help
+		This enables the IN112525 Retimer support
+		This can support 10G/40G/100G traffic.
+		The default is 10G.
+		Phy initialization sequence differs depending
+		on target configurations: 10G or 25G.
+		The driver also uses a microcode firmware in
+		the form of address-data tuples for phy
+		initialization
+
+config INPHI_25G
+	bool "Enable 25Gbps speed for the INPHI112525"
+	depends on PHY_INPHI
+	help
+		Enable the 25Gpbs initialization sequence in
+		the IN112525_S03 driver.
+
+choice
+	prompt "speed for the INPHI112525_S05"
+	depends on PHY_INPHI
+	default INPHI112525_S05_100G
+	help
+		This configures the IN112525_S05 driver for different speeds
+
+config INPHI112525_S05_100G
+	bool "100Gbps"
+	help
+		Enable the 100Gpbs initialization sequence in
+		the IN112525_S05 driver.
+
+config INPHI112525_S05_10G
+	bool "10Gbps"
+	help
+		Enable the 10Gpbs initialization sequence in
+		the IN112525_S05 driver.
+
+endchoice
+
 config PHY_LXT
 	bool "LXT971 Ethernet PHY support"
 

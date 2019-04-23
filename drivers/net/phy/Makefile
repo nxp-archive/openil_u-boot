@@ -16,6 +16,7 @@ obj-$(CONFIG_PHY_BROADCOM) += broadcom.o
 obj-$(CONFIG_PHY_CORTINA) += cortina.o cortina_api.o
 obj-$(CONFIG_PHY_DAVICOM) += davicom.o
 obj-$(CONFIG_PHY_ET1011C) += et1011c.o
+obj-$(CONFIG_PHY_INPHI) += in112525.o
 obj-$(CONFIG_PHY_LXT) += lxt.o
 obj-$(CONFIG_PHY_MARVELL) += marvell.o
 obj-$(CONFIG_PHY_MICREL_KSZ8XXX) += micrel_ksz8xxx.o
