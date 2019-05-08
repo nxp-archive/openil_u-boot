@@ -119,8 +119,9 @@ config PHY_INPHI
 		initialization
 
 config INPHI_25G
-	bool "Enable 25Gbps speed for the INPHI112525"
+	bool "Enable 25Gbps speed for the INPHI IN112525-S03"
 	depends on PHY_INPHI
+	default y
 	help
 		Enable the 25Gpbs initialization sequence in
 		the IN112525_S03 driver.
