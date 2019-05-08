@@ -172,6 +172,7 @@ static void erratum_a009007(void)
 #endif /* CONFIG_SYS_FSL_ERRATUM_A009007 */
 }
 
+#if defined(CONFIG_FSL_LSCH3)
 static void erratum_a050106(void)
 {
 #if defined(CONFIG_ARCH_LX2160A)
@@ -181,7 +182,6 @@ static void erratum_a050106(void)
 	PROGRAM_USB_PHY_RX_OVRD_IN_HI(dcsr + DCSR_USB_PHY2);
 #endif
 }
-#if defined(CONFIG_FSL_LSCH3)
 /*
  * This erratum requires setting a value to eddrtqcr1 to
  * optimal the DDR performance.
