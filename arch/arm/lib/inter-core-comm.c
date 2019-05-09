@@ -131,7 +131,11 @@ void icc_block_free(unsigned long block)
 
 void icc_set_sgi(int core_mask, unsigned int hw_irq)
 {
+#if defined(CONFIG_GICV3)
+	gic_send_sgi_test(hw_irq, core_mask);
+#else
 	gic_set_sgi(core_mask, hw_irq);
+#endif
 }
 
 int icc_set_block(int core_mask, unsigned int byte_count, unsigned long block)
