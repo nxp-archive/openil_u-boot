@@ -999,8 +999,8 @@ init_fnc_t init_sequence_r_slave[] = {
 #endif
 #ifndef CONFIG_ARCH_LS1028A
 	initr_gic_init,
-	icc_init,
 #endif
+	icc_init,
 #ifdef CONFIG_CMD_NET
 	initr_ethaddr,
 #endif

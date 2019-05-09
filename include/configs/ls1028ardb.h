@@ -10,6 +10,10 @@
 #include "ls1043ardb_config.h"
 
 #define CONFIG_ICC
+#define CONFIG_USE_IRQ
+#define CONFIG_STACKSIZE_IRQ  (4*1024)
+#define CONFIG_STACKSIZE_FIQ  (4*1024)
+
 
 #define CONFIG_MASTER_CORE                     0
 

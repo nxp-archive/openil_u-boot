@@ -41,6 +41,7 @@ void core1_main(void)
 	test_flexcan();
 #endif
 #else
+	test_icc_func_init();
 #ifdef CONFIG_ENETC_COREID_SET
 	test_net();
 #endif
