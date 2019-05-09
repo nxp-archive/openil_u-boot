@@ -265,7 +265,7 @@
 	};
 
 	fspi: flexspi@20c0000 {
-		compatible = "nxp,lx2160a-fspi";
+		compatible = "nxp,dn-fspi";
 		#address-cells = <1>;
 		#size-cells = <0>;
 		reg = <0x0 0x20C0000 0x0 0x10000>,
