@@ -127,15 +127,24 @@
 			"${scripthdraddr} ${prefix}${boot_script_hdr} " \
 			"&& esbc_validate ${scripthdraddr};"    \
 		"source ${scriptaddr}\0"	  \
-	"sd_bootcmd=echo Trying load from SD ..;"	\
+		"xspi_bootcmd=echo Trying load from FlexSPI flash ...;" \
+		"sf probe 0:0 && sf read $load_addr " \
+		"$kernel_start $kernel_size ; env exists secureboot &&" \
+		"sf read $kernelheader_addr_r $kernelheader_start " \
+		"$kernelheader_size && esbc_validate ${kernelheader_addr_r}; "\
+		" bootm $load_addr#$board\0" \
+	"sd_bootcmd=echo Trying load from SD ...;" \
 		"mmcinfo; mmc read $load_addr "		\
 		"$kernel_addr_sd $kernel_size_sd && "	\
 		"env exists secureboot && mmc read $kernelheader_addr_r " \
 		"$kernelhdr_addr_sd $kernelhdr_size_sd "		\
 		" && esbc_validate ${kernelheader_addr_r};"	\
 		"bootm $load_addr#$board\0"		\
-	"sd_hdploadcmd=echo Trying load HDP firmware from SD..;"      \
-		"mmcinfo;mmc read $load_addr 0x4800 0x200 "		\
+		"xspi_hdploadcmd=echo Trying load HDP firmware from FlexSPI...;" \
+		"sf probe 0:0 && sf read $load_addr 0x940000 0x30000 " \
+		"&& hdp load $load_addr 0x2000\0"			\
+	"sd_hdploadcmd=echo Trying load HDP firmware from SD..;"        \
+		"mmcinfo;mmc read $load_addr 0x4a00 0x200 "             \
 		"&& hdp load $load_addr 0x2000\0"	\
 	"emmc_bootcmd=echo Trying load from EMMC ..;"	\
 		"mmcinfo; mmc dev 1; mmc read $load_addr "		\
@@ -145,7 +154,7 @@
 		" && esbc_validate ${kernelheader_addr_r};"	\
 		"bootm $load_addr#$board\0"			\
 	"emmc_hdploadcmd=echo Trying load HDP firmware from EMMC..;"      \
-		"mmc dev 1;mmcinfo;mmc read $load_addr 0x4800 0x200 "	\
+		"mmc dev 1;mmcinfo;mmc read $load_addr 0x4a00 0x200 "	\
 		"&& hdp load $load_addr 0x2000\0"
 
 #undef CONFIG_BOOTCOMMAND
