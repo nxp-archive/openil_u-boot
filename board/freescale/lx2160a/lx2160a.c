@@ -20,6 +20,8 @@
 #include <efi_loader.h>
 #include <asm/arch/mmu.h>
 #include <hwconfig.h>
+#include <asm/arch/clock.h>
+#include <asm/arch/config.h>
 #include <asm/arch/fsl_serdes.h>
 #include <asm/arch/soc.h>
 #include "../common/qixis.h"
@@ -120,6 +122,73 @@ int board_early_init_f(void)
 	fsl_lsch3_early_init_f();
 	return 0;
 }
+
+#ifdef CONFIG_OF_BOARD_FIXUP
+int board_fix_fdt(void *fdt)
+{
+	char *reg_name, *old_str, *new_str;
+	const char *reg_names;
+	int names_len, old_str_len, new_str_len, remaining_str_len;
+	struct str_map {
+		char *old_str;
+		char *new_str;
+	} reg_names_map[] = {
+		{ "ccsr", "dbi" },
+		{ "pf_ctrl", "ctrl" }
+	};
+	int off = -1, i;
+
+	if (IS_SVR_REV(get_svr(), 1, 0))
+		return 0;
+
+	off = fdt_node_offset_by_compatible(fdt, -1, "fsl,lx2160a-pcie");
+	while (off != -FDT_ERR_NOTFOUND) {
+		fdt_setprop(fdt, off, "compatible", "fsl,ls-pcie",
+			    strlen("fsl,ls-pcie") + 1);
+
+		reg_names = fdt_getprop(fdt, off, "reg-names", &names_len);
+		if (!reg_names)
+			continue;
+
+		reg_name = (char *)reg_names;
+		remaining_str_len = names_len - (reg_name - reg_names);
+		i = 0;
+		while ((i < ARRAY_SIZE(reg_names_map)) && remaining_str_len) {
+			old_str = reg_names_map[i].old_str;
+			new_str = reg_names_map[i].new_str;
+			old_str_len = strlen(old_str);
+			new_str_len = strlen(new_str);
+			if (memcmp(reg_name, old_str, old_str_len) == 0) {
+				/* first only leave required bytes for new_str
+				 * and copy rest of the string after it
+				 */
+				memcpy(reg_name + new_str_len,
+				       reg_name + old_str_len,
+				       remaining_str_len - old_str_len);
+				/* Now copy new_str */
+				memcpy(reg_name, new_str, new_str_len);
+				names_len -= old_str_len;
+				names_len += new_str_len;
+				i++;
+			}
+
+			reg_name = memchr(reg_name, '\0', remaining_str_len);
+			if (!reg_name)
+				break;
+
+			reg_name += 1;
+
+			remaining_str_len = names_len - (reg_name - reg_names);
+		}
+
+		fdt_setprop(fdt, off, "reg-names", reg_names, names_len);
+		off = fdt_node_offset_by_compatible(fdt, off,
+						    "fsl,lx2160a-pcie");
+	}
+
+	return 0;
+}
+#endif
 
 #if defined(CONFIG_TARGET_LX2160AQDS)
 void esdhc_dspi_status_fixup(void *blob)
