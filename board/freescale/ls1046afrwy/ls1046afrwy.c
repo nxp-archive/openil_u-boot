@@ -25,7 +25,7 @@
 #define LS1046A_PORSR1_REG 0x1EE0000
 #define BOOT_SRC_SD        0x20000000
 #define BOOT_SRC_MASK	   0xFF800000
-#define BOARD_REV_GPIO		13
+#define BOARD_REV_GPIO_SHIFT	17
 #define USB2_SEL_MASK	   0x00000100
 
 #define BYTE_SWAP_32(word)  ((((word) & 0xff000000) >> 24) |  \
@@ -90,9 +90,15 @@ int board_early_init_f(void)
 static inline uint8_t get_board_version(void)
 {
 	u8 val;
+	u32 gpio_val;
 	struct ccsr_gpio *pgpio = (void *)(GPIO2_BASE_ADDR);
 
-	val = (in_le32(&pgpio->gpdat) >> BOARD_REV_GPIO) & 0x03;
+	/* GPIO 13 and GPIo 14 are use for Board Rev */
+	/* shift 31-14=17 position right and extract two bit info */
+	gpio_val = (in_be32(&pgpio->gpdat) >> BOARD_REV_GPIO_SHIFT);
+
+	/* GPIO's are 0..31 in Big Endiness, swap GPIO 13 and GPIO 14 */
+	val = ((gpio_val >> 1) | (gpio_val << 1)) & 0x03;
 
 	return val;
 }
