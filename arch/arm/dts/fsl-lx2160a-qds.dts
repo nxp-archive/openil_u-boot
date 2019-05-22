@@ -13,6 +13,34 @@
 / {
 	model = "NXP Layerscape LX2160AQDS Board";
 	compatible = "fsl,lx2160aqds", "fsl,lx2160a";
+
+	aliases {
+		spi0 = &fspi;
+	};
+};
+
+&fspi {
+	bus-num = <0>;
+	status = "okay";
+	fspi-has-second-chip;
+
+	qflash0: mt35xu512g@0 {
+		#address-cells = <1>;
+		#size-cells = <1>;
+		compatible = "spi-flash";
+		spi-max-frequency = <20000000>;
+		reg = <0>;
+		/* The following setting enables 1-1-8 (CMD-ADDR-DATA) mode */
+		fspi-rx-bus-width = <8>; /* 8 FSPI Rx lines */
+		fspi-tx-bus-width = <1>; /* 1 FSPI Tx line */
+	};
+
+	/*
+	 * MCR2[SAMEDEVICEEN] bit is enabled in FlexSPI controller for
+	 * LX2160ARDB and LX2160AQDS board. Both these has same type of flash
+	 * slave devices connected on both A0 and A1.
+	 * No need to provide node info for second flash device.
+	 */
 };
 
 &sata0 {
