@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0+
 /*
  * Copyright 2013-2015 Freescale Semiconductor, Inc.
+ * Copyright 2019 NXP
  *
  * Freescale Quad Serial Peripheral Interface (QSPI) driver
  */
@@ -27,6 +28,7 @@ DECLARE_GLOBAL_DATA_PTR;
 #endif
 
 #define OFFSET_BITS_MASK	GENMASK(27, 0)
+#define OFFSET_BITS_MASK24	GENMASK(23, 0)
 
 #define FLASH_STATUS_WEL	0x02
 
@@ -811,8 +813,9 @@ int qspi_xfer(struct fsl_qspi_priv *priv, unsigned int bitlen,
 		}
 
 		if ((priv->cur_seqid == QSPI_CMD_FAST_READ) ||
-		    (priv->cur_seqid == QSPI_CMD_FAST_READ_4B) ||
 		    (priv->cur_seqid == QSPI_CMD_RDAR)) {
+			priv->sf_addr = swab32(txbuf) & OFFSET_BITS_MASK24;
+		} else if (priv->cur_seqid == QSPI_CMD_FAST_READ_4B) {
 			priv->sf_addr = swab32(txbuf) & OFFSET_BITS_MASK;
 		} else if ((priv->cur_seqid == QSPI_CMD_SE) ||
 			   priv->cur_seqid == QSPI_CMD_SE_4B ||
@@ -820,8 +823,9 @@ int qspi_xfer(struct fsl_qspi_priv *priv, unsigned int bitlen,
 			priv->sf_addr = swab32(txbuf) & OFFSET_BITS_MASK;
 			qspi_op_erase(priv);
 		} else if (priv->cur_seqid == QSPI_CMD_PP ||
-			   priv->cur_seqid == QSPI_CMD_PP_4B ||
 			   priv->cur_seqid == QSPI_CMD_WRAR) {
+			wr_sfaddr = swab32(txbuf) & OFFSET_BITS_MASK24;
+		} else if (priv->cur_seqid == QSPI_CMD_PP_4B) {
 			wr_sfaddr = swab32(txbuf) & OFFSET_BITS_MASK;
 		} else if ((priv->cur_seqid == QSPI_CMD_BRWR) ||
 			   (priv->cur_seqid == QSPI_CMD_WREAR)) {
