@@ -408,8 +408,8 @@
 			compatible = "fsl,ls1021a-ahci";
 			/* ccsr sata base */
 			/* ecc sata addr*/
-			reg = <0x0 0x3200000 0x0 0x10000
-			       0x0 0x20220520 0x0 0x4>;
+			reg = <0x3200000 0x10000
+			       0x20220520 0x4>;
 			reg-names = "sata-base", "ecc-addr";
 			interrupts = <0 101 4>;
 			status = "disabled";
