@@ -320,8 +320,8 @@
 	"mmcinfo;mmc read 0x80000000 0x5000 0x800;"		\
 	"mmc read 0x80100000 0x7000 0x800;"				\
 	"env exists secureboot && "			\
-	"mmc read 0x80700000 0x3800 0x10 && "		\
-	"mmc read 0x80740000 0x3A00 0x10 && "		\
+	"mmc read 0x80700000 0x3800 0x20 && "		\
+	"mmc read 0x80740000 0x3A00 0x20 && "		\
 	"esbc_validate 0x80700000 && "			\
 	"esbc_validate 0x80740000 ;"			\
 	"fsl_mc start mc 0x80000000 0x80100000\0"
@@ -342,8 +342,8 @@
 	"mcinitcmd=mmcinfo;mmc read 0x80000000 0x5000 0x800;"		\
 	"mmc read 0x80100000 0x7000 0x800;"				\
 	"env exists secureboot && "			\
-	"mmc read 0x80700000 0x3800 0x10 && "		\
-	"mmc read 0x80740000 0x3A00 0x10 && "		\
+	"mmc read 0x80700000 0x3800 0x20 && "		\
+	"mmc read 0x80740000 0x3A00 0x20 && "		\
 	"esbc_validate 0x80700000 && "			\
 	"esbc_validate 0x80740000 ;"			\
 	"fsl_mc start mc 0x80000000 0x80100000\0"	\
@@ -377,7 +377,7 @@
 	"load_addr=0xa0000000\0"		\
 	"kernel_size=0x2800000\0"		\
 	"kernel_size_sd=0x14000\0"		\
-	"kernelhdr_size_sd=0x10\0"		\
+	"kernelhdr_size_sd=0x20\0"		\
 	QSPI_MC_INIT_CMD			\
 	"mcmemsize=0x70000000\0"		\
 	BOOTENV					\
@@ -446,7 +446,7 @@
 	"load_addr=0xa0000000\0"		\
 	"kernel_size=0x2800000\0"		\
 	"kernel_size_sd=0x14000\0"		\
-	"kernelhdr_size_sd=0x10\0"		\
+	"kernelhdr_size_sd=0x20\0"		\
 	MC_INIT_CMD				\
 	BOOTENV					\
 	"boot_scripts=ls1088ardb_boot.scr\0"	\
@@ -493,7 +493,7 @@
 #undef CONFIG_BOOTCOMMAND
 #ifdef CONFIG_TFABOOT
 #define QSPI_NOR_BOOTCOMMAND					\
-		"sf read 0x80001000 0xd00000 0x100000;"		\
+	"sf read 0x80001000 0xd00000 0x100000;"		\
 		"env exists mcinitcmd && env exists secureboot "	\
 		" && sf read 0x80780000 0x780000 0x100000 "	\
 		"&& esbc_validate 0x80780000;env exists mcinitcmd "	\
@@ -504,7 +504,7 @@
 		"env exists mcinitcmd && mmcinfo; "		\
 		"mmc read 0x80001000 0x6800 0x800; "		\
 		"env exists mcinitcmd && env exists secureboot "	\
-		" && mmc read 0x80780000 0x3C00 0x10 "		\
+		" && mmc read 0x80780000 0x3C00 0x20 "		\
 		"&& esbc_validate 0x80780000;env exists mcinitcmd "	\
 		"&& fsl_mc lazyapply dpl 0x80001000;"		\
 		"run distro_bootcmd;run sd_bootcmd;"		\
@@ -527,7 +527,7 @@
 		"env exists mcinitcmd && mmcinfo; "		\
 		"mmc read 0x80001000 0x6800 0x800; "		\
 		"env exists mcinitcmd && env exists secureboot "	\
-		" && mmc read 0x80780000 0x3C00 0x10 "		\
+		" && mmc read 0x80780000 0x3C00 0x20 "		\
 		"&& esbc_validate 0x80780000;env exists mcinitcmd "	\
 		"&& fsl_mc lazyapply dpl 0x80001000;"		\
 		"run distro_bootcmd;run sd_bootcmd;"		\

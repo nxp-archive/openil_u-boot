@@ -216,8 +216,8 @@ int select_i2c_ch_pca9547_sec(unsigned char ch);
 	"mmc read 0x80a00000 0x5000 0x1200;"	\
 	"mmc read 0x80e00000 0x7000 0x800;"	\
 	"env exists secureboot && "		\
-	"mmc read 0x80700000 0x3800 0x10 && "	\
-	"mmc read 0x80740000 0x3A00 0x10 && "	\
+	"mmc read 0x80700000 0x3800 0x20 && "	\
+	"mmc read 0x80740000 0x3A00 0x20 && "	\
 	"esbc_validate 0x80700000 && "		\
 	"esbc_validate 0x80740000 ;"		\
 	"fsl_mc start mc 0x80a00000 0x80e00000\0"
@@ -243,7 +243,7 @@ int select_i2c_ch_pca9547_sec(unsigned char ch);
 	"kernel_addr_sd=0x8000\0"		\
 	"kernelhdr_addr_sd=0x3E00\0"            \
 	"kernel_size_sd=0x1d000\0"              \
-	"kernelhdr_size_sd=0x10\0"              \
+	"kernelhdr_size_sd=0x20\0"              \
 	"console=ttyAMA0,38400n8\0"		\
 	BOOTENV					\
 	"mcmemsize=0x70000000\0"		\
@@ -281,7 +281,7 @@ int select_i2c_ch_pca9547_sec(unsigned char ch);
 		"env exists mcinitcmd && mmcinfo; "		\
 		"mmc read 0x80d00000 0x6800 0x800; "		\
 		"env exists mcinitcmd && env exists secureboot "	\
-		" && mmc read 0x80780000 0x3C00 0x10 "		\
+		" && mmc read 0x80780000 0x3C00 0x20 "		\
 		"&& esbc_validate 0x80780000;env exists mcinitcmd "	\
 		"&& fsl_mc lazyapply dpl 0x80d00000;"		\
 		"run distro_bootcmd;run sd_bootcmd;"		\
