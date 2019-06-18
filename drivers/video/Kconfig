@@ -557,7 +557,7 @@ config VIDEO_IPUV3
 config VIDEO_IMX_HDP_LOAD
 	bool "i.MX8 HDMI/DP firmware loading"
 	default y
-	depends on VIDEO && ARCH_LS1028A
+	depends on ARCH_LS1028A
 	help
 	  Support for HDMI/DP firmware loading for i.MX8QM and LS1028A
 	  processors. The firmware is copied from system memory to the
