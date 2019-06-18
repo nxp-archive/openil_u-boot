@@ -50,21 +50,12 @@ unsigned char get_qsfp_compat0(void)
 	char mfgdt[20] = {0};
 
 	memset(&qsfp, 0, sizeof(qsfp));
-#ifndef CONFIG_DM_I2C
 	ret = i2c_read(I2C_SFP_EEPROM_ADDR,
 		       0,
 		       I2C_SFP_EEPROM_ADDR_LEN,
 		       (void *)&qsfp,
 		       sizeof(qsfp));
 
-#else
-	struct udevice *dev;
-
-	ret = i2c_get_chip_for_busnum(0, I2C_SFP_EEPROM_ADDR,
-				      I2C_SFP_EEPROM_ADDR_LEN, &dev);
-	if (!ret)
-		ret = dm_i2c_read(dev, 0, (void *)&qsfp, sizeof(qsfp));
-#endif
 	if (ret != 0) {
 		debug("\nQSFP: no module detected\n");
 		return 0;
