@@ -67,6 +67,7 @@
 
 #define BOOT_TARGET_DEVICES(func) \
 	func(MMC, mmc, 0) \
+	func(MMC, mmc, 1) \
 	func(USB, usb, 0)
 #include <config_distro_bootcmd.h>
 
@@ -127,12 +128,15 @@
 			"${scripthdraddr} ${prefix}${boot_script_hdr} " \
 			"&& esbc_validate ${scripthdraddr};"    \
 		"source ${scriptaddr}\0"	  \
-		"xspi_bootcmd=echo Trying load from FlexSPI flash ...;" \
+	"xspi_bootcmd=echo Trying load from FlexSPI flash ...;" \
 		"sf probe 0:0 && sf read $load_addr " \
 		"$kernel_start $kernel_size ; env exists secureboot &&" \
 		"sf read $kernelheader_addr_r $kernelheader_start " \
 		"$kernelheader_size && esbc_validate ${kernelheader_addr_r}; "\
 		" bootm $load_addr#$board\0" \
+	"xspi_hdploadcmd=echo Trying load HDP firmware from FlexSPI...;" \
+		"sf probe 0:0 && sf read $load_addr 0x940000 0x30000 " \
+		"&& hdp load $load_addr 0x2000\0"			\
 	"sd_bootcmd=echo Trying load from SD ...;" \
 		"mmcinfo; mmc read $load_addr "		\
 		"$kernel_addr_sd $kernel_size_sd && "	\
@@ -140,9 +144,6 @@
 		"$kernelhdr_addr_sd $kernelhdr_size_sd "		\
 		" && esbc_validate ${kernelheader_addr_r};"	\
 		"bootm $load_addr#$board\0"		\
-		"xspi_hdploadcmd=echo Trying load HDP firmware from FlexSPI...;" \
-		"sf probe 0:0 && sf read $load_addr 0x940000 0x30000 " \
-		"&& hdp load $load_addr 0x2000\0"			\
 	"sd_hdploadcmd=echo Trying load HDP firmware from SD..;"        \
 		"mmcinfo;mmc read $load_addr 0x4a00 0x200 "             \
 		"&& hdp load $load_addr 0x2000\0"	\
@@ -160,10 +161,13 @@
 #undef CONFIG_BOOTCOMMAND
 
 #define XSPI_NOR_BOOTCOMMAND	\
-	"run qspi_hdploadcmd; run distro_bootcmd; run qspi_bootcmd; " \
+	"run xspi_hdploadcmd; run distro_bootcmd; run xspi_bootcmd; " \
 	"env exists secureboot && esbc_halt;;"
 #define SD_BOOTCOMMAND	\
 	"run sd_hdploadcmd; run distro_bootcmd;run sd_bootcmd; " \
+	"env exists secureboot && esbc_halt;"
+#define SD2_BOOTCOMMAND	\
+	"run emmc_hdploadcmd; run distro_bootcmd;run emmc_bootcmd; " \
 	"env exists secureboot && esbc_halt;"
 
 /* Monitor Command Prompt */
