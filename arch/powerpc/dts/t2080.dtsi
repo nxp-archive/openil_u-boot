@@ -89,6 +89,16 @@
 			reg = <0x211000 0x1000>;
 			phy_type = "utmi";
 		};
+
+		espi0: spi@110000 {
+			#address-cells = <1>;
+			#size-cells = <0>;
+			compatible = "fsl,mpc8536-espi";
+			reg = <0x110000 0x1000>;
+			interrupts = <53 0x2 0 0>;
+			fsl,espi-num-chipselects = <4>;
+			status = "disabled";
+		};
 	};
 
 	pcie@ffe240000 {
