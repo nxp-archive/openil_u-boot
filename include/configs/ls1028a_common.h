@@ -41,9 +41,6 @@
 /* Size of malloc() pool */
 #define CONFIG_SYS_MALLOC_LEN		(CONFIG_ENV_SIZE + 2048 * 1024)
 
-/* I2C */
-#define CONFIG_SYS_I2C
-
 /* Serial Port */
 #define CONFIG_CONS_INDEX       1
 #define CONFIG_SYS_NS16550_SERIAL
