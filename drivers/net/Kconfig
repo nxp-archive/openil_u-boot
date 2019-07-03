@@ -552,4 +552,11 @@ config MEDIATEK_ETH
 	  This Driver support MediaTek Ethernet GMAC
 	  Say Y to enable support for the MediaTek Ethernet GMAC.
 
+config FSL_ENETC
+	bool "NXP ENETC Ethernet controller"
+	depends on DM_PCI && DM_ETH
+	help
+	  This driver supports the NXP ENETC Ethernet controller found on some
+	  of the NXP SoCs.
+
 endif # NETDEVICES
