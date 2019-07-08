@@ -818,8 +818,10 @@ int qspi_xfer(struct fsl_qspi_priv *priv, unsigned int bitlen,
 		} else if (priv->cur_seqid == QSPI_CMD_FAST_READ_4B) {
 			priv->sf_addr = swab32(txbuf) & OFFSET_BITS_MASK;
 		} else if ((priv->cur_seqid == QSPI_CMD_SE) ||
-			   priv->cur_seqid == QSPI_CMD_SE_4B ||
 			   priv->cur_seqid == QSPI_CMD_BE_4K) {
+			priv->sf_addr = swab32(txbuf) & OFFSET_BITS_MASK24;
+			qspi_op_erase(priv);
+		} else if (priv->cur_seqid == QSPI_CMD_SE_4B) {
 			priv->sf_addr = swab32(txbuf) & OFFSET_BITS_MASK;
 			qspi_op_erase(priv);
 		} else if (priv->cur_seqid == QSPI_CMD_PP ||
