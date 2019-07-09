@@ -41,6 +41,12 @@
 #define LTSSM_L0_REV3			0x11
 #define LTSSM_L0			0x16
 
+#ifdef ARCH_P4080
+#define P4080_SERDES_ADDR		CONFIG_SYS_FSL_CORENET_SERDES_ADDR
+#else
+#define P4080_SERDES_ADDR		0
+#endif
+
 struct fsl_pcie {
 	int idx;
 	struct udevice *bus;
