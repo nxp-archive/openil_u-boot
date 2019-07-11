@@ -275,6 +275,7 @@ choice
 	prompt "FSL Layerscape PPA firmware loading-media select"
 	depends on FSL_LS_PPA
 	default SYS_LS_PPA_FW_IN_MMC if SD_BOOT
+	default SYS_LS_PPA_FW_IN_MMC if EMMC_BOOT
 	default SYS_LS_PPA_FW_IN_NAND if NAND_BOOT
 	default SYS_LS_PPA_FW_IN_XIP
 
