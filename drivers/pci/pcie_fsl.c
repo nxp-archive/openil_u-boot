@@ -503,12 +503,21 @@ static int fsl_pcie_fixup_classcode(struct fsl_pcie *pcie)
 	ccsr_fsl_pci_t *regs = pcie->regs;
 	u32 val;
 
-	setbits_be32(&regs->dbi_ro_wr_en, 0x01);
-	fsl_pcie_hose_read_config_dword(pcie, PCI_CLASS_REVISION, &val);
+	if (pcie->block_rev >= PEX_IP_BLK_REV_3_0) {
+		setbits_be32(&regs->dbi_ro_wr_en, 0x01);
+		fsl_pcie_hose_read_config_dword(pcie, PCI_CLASS_REVISION, &val);
+		val &= 0xff;
+		val |= PCI_CLASS_BRIDGE_PCI << 16;
+		fsl_pcie_hose_write_config_dword(pcie, PCI_CLASS_REVISION, val);
+		clrbits_be32(&regs->dbi_ro_wr_en, 0x01);
+
+		return 0;
+	}
+
+	fsl_pcie_hose_read_config_dword(pcie, CSR_CLASSCODE, &val);
 	val &= 0xff;
 	val |= PCI_CLASS_BRIDGE_PCI << 16;
-	fsl_pcie_hose_write_config_dword(pcie, PCI_CLASS_REVISION, val);
-	clrbits_be32(&regs->dbi_ro_wr_en, 0x01);
+	fsl_pcie_hose_write_config_dword(pcie, CSR_CLASSCODE, val);
 
 	return 0;
 }
