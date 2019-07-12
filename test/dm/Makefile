@@ -61,4 +61,5 @@ obj-$(CONFIG_TEE) += tee.o
 obj-$(CONFIG_VIRTIO_SANDBOX) += virtio.o
 obj-$(CONFIG_DMA) += dma.o
 obj-$(CONFIG_DM_MDIO) += mdio.o
+obj-$(CONFIG_DM_MDIO_MUX) += mdio_mux.o
 endif
