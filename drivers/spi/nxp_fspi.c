@@ -54,6 +54,7 @@ DECLARE_GLOBAL_DATA_PTR;
 #define SEQID_BE_4K		8
 #define SEQID_RDFSR		9
 #define SEQID_ENTR4BYTE		10
+#define SEQID_OCTAL_READ	19
 #ifdef CONFIG_SPI_NAND_FLASH
 #define SEQID_RDID_NAND		11
 #define SEQID_GET_FEATURE_NAND	12
@@ -74,6 +75,13 @@ DECLARE_GLOBAL_DATA_PTR;
 #define FSPI_CMD_PRGRM_EXEC	0x10	/* Write data from cache to NAND */
 #define FSPI_CMD_SET_FEATURE	0x1f	/* Set NAND flash configuration */
 #endif
+
+/* Number of SPI lines supported for Rx and Tx lines */
+#define FSPI_SINGLE_MODE	0x1
+#define FSPI_OCTAL_MODE		0x8
+#define FSPI_CMD_OCTAL_READ_4B	0x7c	/* Octal Read (CMD-ADDR-DATA : 1-1-8) */
+#define NXP_FSPI_DEFAULT_SPI_RX_BUS_WIDTH	FSPI_SINGLE_MODE
+#define NXP_FSPI_DEFAULT_SPI_TX_BUS_WIDTH	FSPI_SINGLE_MODE
 
 #ifdef CONFIG_DM_SPI
 
@@ -104,6 +112,8 @@ struct nxp_fspi_platdata {
 	u32 flash_num;
 	u32 num_chipselect;
 	u32 flash_type[4];
+	u32 fspi_rx_bus_width;
+	u32 fspi_tx_bus_width;
 };
 
 /**
@@ -136,6 +146,8 @@ struct nxp_fspi_priv {
 	u32 memmap_phy;
 	u32 current_cs;
 	u32 flash_type[4];
+	u32 fspi_rx_bus_width;
+	u32 fspi_tx_bus_width;
 	struct nxp_fspi_regs *regs;
 };
 
@@ -366,6 +378,21 @@ static void fspi_set_lut(struct nxp_fspi_priv *priv)
 	fspi_write32(priv->flags, &regs->lut[lut_base + 3], 0);
 #endif
 
+	/* 8-Bit Read */
+	lut_base = SEQID_OCTAL_READ * 4;
+	fspi_write32(priv->flags, &regs->lut[lut_base],
+		     OPRND0(FSPI_CMD_OCTAL_READ_4B) |
+		     PAD0(LUT_PAD1) | INSTR0(LUT_CMD) |
+		     OPRND1(ADDR32BIT) | PAD1(LUT_PAD1) |
+		     INSTR1(LUT_ADDR));
+
+	fspi_write32(priv->flags, &regs->lut[lut_base + 1],
+		     OPRND0(8) | PAD0(LUT_PAD8) | INSTR0(LUT_DUMMY) |
+		     OPRND1(0) | PAD1(LUT_PAD8) |
+		     INSTR1(LUT_READ));
+	fspi_write32(priv->flags, &regs->lut[lut_base + 2], 0);
+	fspi_write32(priv->flags, &regs->lut[lut_base + 3], 0);
+
 	/* Lock the LUT */
 	fspi_lut_lock(priv, 1);
 }
@@ -466,7 +493,7 @@ static inline void fspi_ahb_write(struct nxp_fspi_priv *priv, void *txbuf, u32 l
 		tx_addr = (void *)((char *)tx_addr + tx_size);
 		txbuf = (void *)((char *)txbuf + tx_size);
 		len -= tx_size;
-		udelay(100);
+		udelay(105);
 	}
 }
 
@@ -515,11 +542,20 @@ static void fspi_init_ahb(struct nxp_fspi_priv *priv)
 	 * Set default lut sequence for AHB Read, bit[4-0] in flsha1cr2 reg.
 	 * Parallel mode is disabled.
 	 */
-	fspi_write32(priv->flags, &regs->flsha1cr2, SEQID_FAST_READ <<
+	if (priv->fspi_rx_bus_width == FSPI_OCTAL_MODE) {
+		/* Flash supports octal read */
+		fspi_write32(priv->flags, &regs->flsha1cr2, SEQID_OCTAL_READ <<
 			FSPI_FLSHXCR2_ARDSEQID_SHIFT | SEQID_WREN <<
 			FSPI_FLSHXCR2_AWRSEQID_SHIFT |
 			AHBWR_ADDITIONAL_LUT <<
 			FSPI_FLSHXCR2_AWRSEQNUM_SHIFT);
+	} else {
+		fspi_write32(priv->flags, &regs->flsha1cr2, SEQID_FAST_READ <<
+			FSPI_FLSHXCR2_ARDSEQID_SHIFT | SEQID_WREN <<
+			FSPI_FLSHXCR2_AWRSEQID_SHIFT |
+			AHBWR_ADDITIONAL_LUT <<
+			FSPI_FLSHXCR2_AWRSEQNUM_SHIFT);
+	}
 }
 #endif
 
@@ -606,9 +642,17 @@ static void fspi_op_read(struct nxp_fspi_priv *priv, u32 *rxbuf, u32 len)
 
 		rx_size = (len > RX_IPBUF_SIZE) ? RX_IPBUF_SIZE : len;
 
-		fspi_write32(priv->flags, &regs->ipcr1,
-			     (SEQID_FAST_READ << FSPI_IPCR1_ISEQID_SHIFT) |
-			     (u16)rx_size);
+		if (priv->fspi_rx_bus_width == FSPI_OCTAL_MODE) {
+			/* Flash supports octal read */
+			fspi_write32(priv->flags, &regs->ipcr1,
+				     (SEQID_OCTAL_READ <<
+				      FSPI_IPCR1_ISEQID_SHIFT) | (u16)rx_size);
+		} else {
+			/* Flash supports single bit read */
+			fspi_write32(priv->flags, &regs->ipcr1,
+				     (SEQID_FAST_READ <<
+				      FSPI_IPCR1_ISEQID_SHIFT) | (u16)rx_size);
+		}
 
 		to_or_from += rx_size;
 		len -= rx_size;
@@ -1292,7 +1336,8 @@ static int nxp_fspi_probe(struct udevice *bus)
 	priv->memmap_phy = plat->memmap_phy;
 	priv->flash_num = plat->flash_num;
 	priv->num_chipselect = plat->num_chipselect;
-
+	priv->fspi_rx_bus_width = plat->fspi_rx_bus_width;
+	priv->fspi_tx_bus_width = plat->fspi_tx_bus_width;
 	for (int i = 0; i < plat->flash_num; i++)
 		priv->flash_type[i] = plat->flash_type[i];
 
@@ -1302,9 +1347,11 @@ static int nxp_fspi_probe(struct udevice *bus)
 	      (u64)priv->amba_base[0],
 	      (u64)priv->amba_total_size);
 
-	debug("max-frequency=%d,flags=0x%x\n",
+	debug("max-frequency=%d, flags=0x%x, rx_width=0x%x, tx_width=0x%x\n",
 	      priv->speed_hz,
-	      plat->flags);
+	      plat->flags,
+	      priv->fspi_rx_bus_width,
+	      priv->fspi_tx_bus_width);
 
 	/*Send Software Reset to controller*/
 	fspi_write32(priv->flags, &priv->regs->mcr0,
@@ -1402,7 +1449,14 @@ static int nxp_fspi_ofdata_to_platdata(struct udevice *bus)
 			plat->flash_type[flash_num] = 1;
 		else
 			plat->flash_type[flash_num] = 0;
-
+		plat->fspi_rx_bus_width =
+			fdtdec_get_int(blob, subnode,
+				       "fspi-rx-bus-width",
+				       NXP_FSPI_DEFAULT_SPI_RX_BUS_WIDTH);
+		plat->fspi_tx_bus_width =
+			fdtdec_get_int(blob, subnode,
+				       "fspi-tx-bus-width",
+				       NXP_FSPI_DEFAULT_SPI_TX_BUS_WIDTH);
 		++flash_num;
 	}
 
@@ -1419,7 +1473,7 @@ static int nxp_fspi_ofdata_to_platdata(struct udevice *bus)
 	plat->reg_base = res_regs.start;
 	plat->amba_base = 0;
 	plat->memmap_phy = res_mem.start;
-	plat->amba_total_size = res_mem.end;
+	plat->amba_total_size = res_mem.end - res_mem.start + 1;
 	plat->flash_num = flash_num;
 
 	debug("%s: regs=<0x%llx> <0x%llx, 0x%llx>\n",
@@ -1428,7 +1482,7 @@ static int nxp_fspi_ofdata_to_platdata(struct udevice *bus)
 	      (u64)plat->amba_base,
 	      (u64)plat->amba_total_size);
 
-	debug("max-frequency=%d, endianess=%s\n",
+	debug("max-frequency=%d, endianness=%s\n",
 	      plat->speed_hz,
 	      plat->flags & FSPI_FLAG_REGMAP_ENDIAN_BIG ? "be" : "le");
 
