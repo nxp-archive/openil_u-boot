@@ -1208,6 +1208,7 @@ config TARGET_LS1028AQDS
 	select ARM64
 	select ARMV8_MULTIENTRY
 	select BOARD_LATE_INIT
+	select ARCH_MISC_INIT
 	help
 	  Support for Freescale LS1028AQDS platform
 	  The LS1028A Development System (QDS) is a high-performance
