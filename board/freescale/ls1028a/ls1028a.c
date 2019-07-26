@@ -13,6 +13,7 @@
 #include <linux/libfdt.h>
 #include <environment.h>
 #include <asm/arch-fsl-layerscape/soc.h>
+#include <asm/arch-fsl-layerscape/fsl_icid.h>
 #include <i2c.h>
 #include <asm/arch/soc.h>
 #ifdef CONFIG_FSL_LS_PPA
@@ -217,6 +218,8 @@ int ft_board_setup(void *blob, bd_t *bd)
 #endif
 
 	fdt_fixup_memory_banks(blob, base, size, 2);
+
+	fdt_fixup_icid(blob);
 
 	setup_ecam_amq(blob);
 	setup_ecam_cacheattr();
