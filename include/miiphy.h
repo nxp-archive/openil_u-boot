@@ -165,6 +165,18 @@ struct phy_device *dm_mdio_phy_connect(struct udevice *dev, int addr,
 				       struct udevice *ethdev,
 				       phy_interface_t interface);
 
+/**
+ * dm_eth_phy_connect - Connect an Eth device to a PHY based on device tree
+ *
+ * Picks up the DT phy-handle/mdio-handle and phy-mode from ethernet device node
+ * and connects the ethernet device to the linked PHY.
+ *
+ * @dev: ethernet device
+ *
+ * @return pointer to phy_device, or 0 on error
+ */
+struct phy_device *dm_eth_phy_connect(struct udevice *dev);
+
 #endif
 
 #ifdef CONFIG_DM_MDIO_MUX
