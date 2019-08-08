@@ -2,6 +2,8 @@
 /*
  * Copyright (C) 2012 Freescale Semiconductor, Inc.
  *
+ * Copyright 2018-2019 NXP
+ *
  * Configuration settings for the Freescale i.MX6Q SabreSD board.
  */
 
@@ -19,6 +21,14 @@
 #define CONFIG_SUPPORT_EMMC_BOOT /* eMMC specific */
 
 #include "mx6sabre_common.h"
+
+#ifdef CONFIG_BAREMETAL
+#define CONFIG_MAX_CPUS 4
+#define CONFIG_MP
+#define CONFIG_SYS_DDR_SDRAM_SLAVE_SIZE	(128 * 1024 * 1024)
+#define CONFIG_MASTER_CORE			0
+#define CONFIG_SYS_DDR_SDRAM_MASTER_SIZE	(512 * 1024 * 1024)
+#endif
 
 /* Falcon Mode */
 #define CONFIG_SPL_FS_LOAD_ARGS_NAME	"args"

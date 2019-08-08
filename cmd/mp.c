@@ -19,6 +19,9 @@ int cpu_bringup_all(unsigned long addr)
 		if (is_core_valid(cpuid))
 			fsl_layerscape_wakeup_fixed_core(cpuid, addr);
 		mdelay(300);
+#ifdef CONFIG_TARGET_MX6SABRESD
+		mdelay(500);
+#endif
 	}
 
 	/*
