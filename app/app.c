@@ -14,6 +14,7 @@
 
 void core1_main(void)
 {
+#ifndef CONFIG_TARGET_MX6SABRESD
 #ifndef CONFIG_TARGET_LS1028ARDB
 	test_i2c();
 	test_irq_init();
@@ -44,6 +45,7 @@ void core1_main(void)
 	test_icc_func_init();
 #ifdef CONFIG_ENETC_COREID_SET
 	test_net();
+#endif
 #endif
 #endif
 	return;

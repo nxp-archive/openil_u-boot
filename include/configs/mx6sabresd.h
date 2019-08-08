@@ -1,6 +1,8 @@
 /*
  * Copyright (C) 2012 Freescale Semiconductor, Inc.
  *
+ * Copyright 2018-2019 NXP
+ *
  * Configuration settings for the Freescale i.MX6Q SabreSD board.
  *
  * SPDX-License-Identifier:	GPL-2.0+
@@ -13,8 +15,26 @@
 #include "imx6_spl.h"
 #endif
 
+#include "mx6sabresd_config.h"
+
+#define CONFIG_ICC
+#define CONFIG_USE_IRQ
+#define CONFIG_STACKSIZE_IRQ  (4*1024)
+#define CONFIG_STACKSIZE_FIQ  (4*1024)
+
+#define CONFIG_MP
+#define CONFIG_MASTER_CORE                     0
+
+#define CONFIG_SYS_DDR_SDRAM_BASE CONFIG_SYS_SDRAM_BASE
+#define CONFIG_SYS_DDR_SDRAM_SHARE_BASE \
+	(CONFIG_SYS_DDR_SDRAM_BASE + CONFIG_SYS_DDR_SDRAM_MASTER_SIZE \
+	+ CONFIG_SYS_DDR_SDRAM_SLAVE_SIZE * (CONFIG_MAX_CPUS - 1))
+
+#define CONFIG_SYS_DDR_SDRAM_SHARE_RESERVE_BASE \
+	(CONFIG_SYS_DDR_SDRAM_SHARE_BASE + CONFIG_SYS_DDR_SDRAM_SHARE_SIZE)
+
 #define CONFIG_MACH_TYPE	3980
-#define CONFIG_MXC_UART_BASE	UART1_BASE
+#define CONFIG_MXC_UART_BASE	UART3_BASE
 #define CONSOLE_DEV		"ttymxc0"
 
 #define CONFIG_SUPPORT_EMMC_BOOT /* eMMC specific */

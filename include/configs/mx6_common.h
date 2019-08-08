@@ -1,6 +1,8 @@
 /*
  * Copyright (c) 2013, NVIDIA CORPORATION.  All rights reserved.
  *
+ * Copyright 2018-2019 NXP
+ *
  * SPDX-License-Identifier:	GPL-2.0
  */
 
@@ -16,7 +18,6 @@
 #define CONFIG_SYS_PL310_BASE	L2_PL310_BASE
 #endif
 
-#define CONFIG_MP
 #endif
 #define CONFIG_BOARD_POSTCLK_INIT
 #define CONFIG_MXC_GPT_HCLK

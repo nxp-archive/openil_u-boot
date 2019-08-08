@@ -28,8 +28,13 @@
 
 DECLARE_GLOBAL_DATA_PTR;
 
+#ifdef CONFIG_TARGET_MX6SABRESD
+#define GICD_BASE       0x00A01000
+#define GICC_BASE       0x00A02000
+#else
 #define GICD_BASE       0x01401000
 #define GICC_BASE       0x01402000
+#endif
 #define GIC_CPU_CTRL			0x00
 #define GIC_CPU_PRIMASK			0x04
 #define GIC_CPU_BINPOINT		0x08
