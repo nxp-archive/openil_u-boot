@@ -256,8 +256,10 @@ static int aquantia_upload_firmware(struct phy_device *phydev)
 
 int aquantia_config(struct phy_device *phydev)
 {
+	int if_type = phydev->interface;
 	u32 val, id, rstatus, fault;
 	u32 reg_val1 = 0;
+	int usx_an = 0;
 
 	id = phy_read(phydev, MDIO_MMD_VEND1, GLOBAL_FIRMWARE_ID);
 	rstatus = phy_read(phydev, MDIO_MMD_VEND1, GLOBAL_RSTATUS_1);
@@ -278,17 +280,35 @@ int aquantia_config(struct phy_device *phydev)
 		if (ret != 0)
 			return ret;
 	}
+	/*
+	 * for backward compatibility convert XGMII into either XFI or USX based
+	 * on FW config
+	 */
+	if (if_type == PHY_INTERFACE_MODE_XGMII) {
+		reg_val1 = phy_read(phydev, MDIO_MMD_PHYXS,
+				    AQUANTIA_SYSTEM_INTERFACE_SR);
+		if ((reg_val1 & AQUANTIA_SI_IN_USE_MASK) == AQUANTIA_SI_USXGMII)
+			if_type = PHY_INTERFACE_MODE_USXGMII;
+		else
+			if_type = PHY_INTERFACE_MODE_XFI;
+	}
+
 
 	val = phy_read(phydev, MDIO_MMD_PMAPMD, MII_BMCR);
 
-	if (phydev->interface == PHY_INTERFACE_MODE_SGMII) {
+	switch (if_type) {
+	case PHY_INTERFACE_MODE_SGMII:
 		/* 1000BASE-T mode */
 		phydev->advertising = SUPPORTED_1000baseT_Full;
 		phydev->supported = phydev->advertising;
 
 		val = (val & ~AQUNTIA_SPEED_LSB_MASK) | AQUNTIA_SPEED_MSB_MASK;
 		phy_write(phydev, MDIO_MMD_PMAPMD, MII_BMCR, val);
-	} else if (phydev->interface == PHY_INTERFACE_MODE_XGMII) {
+		break;
+	case PHY_INTERFACE_MODE_USXGMII:
+		usx_an = 1;
+		/* FALLTHROUGH */
+	case PHY_INTERFACE_MODE_XFI:
 		/* 10GBASE-T mode */
 		phydev->advertising = SUPPORTED_10000baseT_Full;
 		phydev->supported = phydev->advertising;
@@ -299,10 +319,8 @@ int aquantia_config(struct phy_device *phydev)
 				  AQUNTIA_SPEED_LSB_MASK |
 				  AQUNTIA_SPEED_MSB_MASK);
 
-		val = phy_read(phydev, MDIO_MMD_PHYXS,
-			       AQUANTIA_SYSTEM_INTERFACE_SR);
 		/* If SI is USXGMII then start USXGMII autoneg */
-		if ((val & AQUANTIA_SI_IN_USE_MASK) == AQUANTIA_SI_USXGMII) {
+		if (usx_an) {
 			reg_val1 =  phy_read(phydev, MDIO_MMD_PHYXS,
 					     AQUANTIA_VENDOR_PROVISIONING_REG);
 
@@ -317,22 +335,24 @@ int aquantia_config(struct phy_device *phydev)
 			printf("%s: system interface XFI\n",
 			       phydev->dev->name);
 		}
-
-	} else if (phydev->interface == PHY_INTERFACE_MODE_SGMII_2500) {
+		break;
+	case PHY_INTERFACE_MODE_SGMII_2500:
 		/* 2.5GBASE-T mode */
 		phydev->advertising = SUPPORTED_1000baseT_Full;
 		phydev->supported = phydev->advertising;
 
 		phy_write(phydev, MDIO_MMD_AN, AQUNTIA_10G_CTL, 1);
 		phy_write(phydev, MDIO_MMD_AN, AQUNTIA_VENDOR_P1, 0x9440);
-	} else if (phydev->interface == PHY_INTERFACE_MODE_MII) {
+		break;
+	case PHY_INTERFACE_MODE_MII:
 		/* 100BASE-TX mode */
 		phydev->advertising = SUPPORTED_100baseT_Full;
 		phydev->supported = phydev->advertising;
 
 		val = (val & ~AQUNTIA_SPEED_MSB_MASK) | AQUNTIA_SPEED_LSB_MASK;
 		phy_write(phydev, MDIO_MMD_PMAPMD, MII_BMCR, val);
-	}
+		break;
+	};
 
 	val = phy_read(phydev, MDIO_MMD_VEND1, AQUANTIA_RESERVED_STATUS);
 	reg_val1 = phy_read(phydev, MDIO_MMD_VEND1, AQUANTIA_FIRMWARE_ID);
