@@ -4,6 +4,9 @@
  * Gabriel Huau <contact@huau-gabriel.fr>
  *
  * (C) Copyright 2009 Freescale Semiconductor, Inc.
+ *
+ * Copyright 2018-2019 NXP
+ *
  */
 
 #include <common.h>
@@ -28,6 +31,18 @@ static uint32_t cpu_ctrl_mask[MAX_CPUS] = {
 	SRC_SCR_CORE_2_ENABLE_MASK,
 	SRC_SCR_CORE_3_ENABLE_MASK
 };
+
+int get_core_id(void)
+{
+	unsigned long aff;
+
+	asm volatile("mrc p15, 0, %0, c0, c0, 5\n"
+			: "=r" (aff)
+			:
+			: "memory");
+
+	return aff & 0x3;
+}
 
 int cpu_reset(u32 nr)
 {

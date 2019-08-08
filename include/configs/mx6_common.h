@@ -1,6 +1,9 @@
 /* SPDX-License-Identifier: GPL-2.0 */
 /*
  * Copyright (c) 2013, NVIDIA CORPORATION.  All rights reserved.
+ *
+ * Copyright 2018-2019 NXP
+ *
  */
 
 #ifndef __MX6_COMMON_H
