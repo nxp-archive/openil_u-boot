@@ -4,6 +4,9 @@
  * Gabriel Huau <contact@huau-gabriel.fr>
  *
  * (C) Copyright 2009 Freescale Semiconductor, Inc.
+ *
+ * Copyright 2018-2020 NXP
+ *
  */
 
 #include <common.h>
@@ -28,6 +31,46 @@ static uint32_t cpu_ctrl_mask[MAX_CPUS] = {
 	SRC_SCR_CORE_2_ENABLE_MASK,
 	SRC_SCR_CORE_3_ENABLE_MASK
 };
+
+DECLARE_GLOBAL_DATA_PTR;
+
+int fsl_layerscape_wakeup_fixed_core(u32 coreid, u32 addr)
+{
+
+	printf("%s cores %d, addr=0x%x, gd->reloc_addr 0x%x\n",
+		__func__, coreid, addr, gd->relocaddr);
+	switch (coreid) {
+	case 1:
+		src->gpr3 = addr;
+		break;
+	case 2:
+		src->gpr5 = addr;
+		break;
+	case 3:
+		src->gpr7 = addr;
+		break;
+	default:
+		return 1;
+	}
+
+	/* CPU N is ready to start */
+	src->scr |= cpu_ctrl_mask[coreid];
+	src->scr |= cpu_reset_mask[coreid];
+
+	return 0;
+}
+
+int get_core_id(void)
+{
+	unsigned long aff;
+
+	asm volatile("mrc p15, 0, %0, c0, c0, 5\n"
+			: "=r" (aff)
+			:
+			: "memory");
+
+	return aff & 0x3;
+}
 
 int cpu_reset(u32 nr)
 {
