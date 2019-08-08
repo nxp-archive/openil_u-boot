@@ -102,6 +102,9 @@ struct phy_driver {
 	int (*writeext)(struct phy_device *phydev, int addr, int devad, int reg,
 			u16 val);
 	struct list_head list;
+
+	/* driver private data */
+	ulong data;
 };
 
 struct phy_device {
