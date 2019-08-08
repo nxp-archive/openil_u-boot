@@ -1,6 +1,8 @@
 /*
  * Copyright 2008-2009 Freescale Semiconductor, Inc.
  *
+ * Copyright 2018-2019 NXP
+ *
  * SPDX-License-Identifier:	GPL-2.0+
  */
 
@@ -19,6 +21,9 @@ int cpu_bringup_all(unsigned long addr)
 		if (is_core_valid(cpuid))
 			fsl_layerscape_wakeup_fixed_core(cpuid, addr);
 		udelay(300000);
+#ifdef CONFIG_TARGET_MX6SABRESD
+		mdelay(500);
+#endif
 	}
 
 	/* use fsl_layerscape_wakeup_fixed_core(cpuid, gd->relocaddr)
