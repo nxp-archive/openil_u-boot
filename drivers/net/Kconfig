@@ -589,4 +589,11 @@ config MDIO_MUX_I2CREG
 	  an I2C chip.  The board it was developed for uses a mux controlled by
 	  on-board FPGA which in turn is accessed as a chip over I2C.
 
+config FSL_FELIX
+	bool "LS1028 Felix Ethernet switch"
+	depends on DM_PCI && DM_ETH && DM_MDIO
+	help
+	  This driver supports the Ethernet switch integrated in LS1028A NXP
+	  SoC.
+
 endif # NETDEVICES
