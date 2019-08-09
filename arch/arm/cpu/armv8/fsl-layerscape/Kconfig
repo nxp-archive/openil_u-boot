@@ -25,6 +25,7 @@ config ARCH_LS1028A
 	select ARMV8_SET_SMPEN
 	select FSL_LSCH3
 	select FSL_LSCH3_2
+	select NXP_LSCH3_2
 	select SYS_FSL_HAS_CCI400
 	select SYS_FSL_SRDS_1
 	select SYS_HAS_SERDES
