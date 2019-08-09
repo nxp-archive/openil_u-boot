@@ -132,6 +132,67 @@ void detail_board_ddr_info(void)
 }
 
 #ifdef CONFIG_OF_BOARD_SETUP
+
+/*
+ * Hardware default stream IDs are 0x4000 + PCI function #, but that's outside
+ * the acceptable range for SMMU.  Use Linux DT values instead or at least
+ * smaller defaults.
+ */
+#define ECAM_NUM_PFS			7
+#define ECAM_IERB_BASE			0x1F0800000
+#define ECAM_PFAMQ(pf, vf)		((ECAM_IERB_BASE + 0x800 + (pf) * \
+					  0x1000 + (vf) * 4))
+/* cache related transaction attributes for PCIe functions */
+#define ECAM_IERB_MSICAR		(ECAM_IERB_BASE + 0xa400)
+#define ECAM_IERB_MSICAR_VALUE		0x30
+
+/* number of VFs per PF, VFs have their own AMQ settings */
+static const u8 enetc_vfs[ECAM_NUM_PFS] = { 2, 2 };
+
+void setup_ecam_amq(void *blob)
+{
+	int streamid, sid_base, off;
+	int pf, vf, vfnn = 1;
+	u32 iommu_map[4];
+	int err;
+
+	/*
+	 * Look up the stream ID settings in the DT, if found apply the values
+	 * to HW, otherwise use HW values shifted down by 4.
+	 */
+	off = fdt_node_offset_by_compatible(blob, 0, "pci-host-ecam-generic");
+	if (off < 0) {
+		debug("ECAM node not found\n");
+		return;
+	}
+
+	err = fdtdec_get_int_array(blob, off, "iommu-map", iommu_map, 4);
+	if (err) {
+		sid_base = in_le32(ECAM_PFAMQ(0, 0)) >> 4;
+		debug("\"iommu-map\" not found, using default SID base %04x\n",
+		      sid_base);
+	} else {
+		sid_base = iommu_map[2];
+	}
+	/* set up AMQs for all integrated PCI functions */
+	for (pf = 0; pf < ECAM_NUM_PFS; pf++) {
+		streamid = sid_base + pf;
+		out_le32(ECAM_PFAMQ(pf, 0), streamid);
+
+		/* set up AMQs for VFs, if any */
+		for (vf = 0; vf < enetc_vfs[pf]; vf++, vfnn++) {
+			streamid = sid_base + ECAM_NUM_PFS + vfnn;
+			out_le32(ECAM_PFAMQ(pf, vf + 1), streamid);
+		}
+	}
+}
+
+void setup_ecam_cacheattr(void)
+{
+	/* set MSI cache attributes */
+	out_le32(ECAM_IERB_MSICAR, ECAM_IERB_MSICAR_VALUE);
+}
+
 int ft_board_setup(void *blob, bd_t *bd)
 {
 	u64 base[CONFIG_NR_DRAM_BANKS];
@@ -156,6 +217,9 @@ int ft_board_setup(void *blob, bd_t *bd)
 #endif
 
 	fdt_fixup_memory_banks(blob, base, size, 2);
+
+	setup_ecam_amq(blob);
+	setup_ecam_cacheattr();
 
 	return 0;
 }
