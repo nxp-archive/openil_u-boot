@@ -1,7 +1,7 @@
+// SPDX-License-Identifier: GPL-2.0+
 /*
+ * Copyright 2019 NXP
  * Copyright 2013 Freescale Semiconductor, Inc.
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #include <common.h>
@@ -421,6 +421,9 @@ static int lpuart_serial_ofdata_to_platdata(struct udevice *dev)
 
 	plat->reg = (void *)addr;
 	plat->flags = dev_get_driver_data(dev);
+
+	if (fdtdec_get_bool(blob, node, "little-endian"))
+		plat->flags &= ~LPUART_FLAG_REGMAP_ENDIAN_BIG;
 
 	if (!fdt_node_check_compatible(blob, node, "fsl,ls1021a-lpuart"))
 		plat->devtype = DEV_LS1021A;
