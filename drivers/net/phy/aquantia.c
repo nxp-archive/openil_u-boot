@@ -69,6 +69,12 @@
 #define VERSION_STRING_OFFSET 0x0200
 #define HEADER_OFFSET 0x300
 
+/* driver private data */
+#define AQUANTIA_NA		0
+#define AQUANTIA_GEN1		1
+#define AQUANTIA_GEN2		2
+#define AQUANTIA_GEN3		3
+
 #pragma pack(1)
 struct fw_header {
 	u8 padding[4];
@@ -452,6 +458,7 @@ struct phy_driver aqr105_driver = {
 	.config = &aquantia_config,
 	.startup = &aquantia_startup,
 	.shutdown = &gen10g_shutdown,
+	.data = AQUANTIA_GEN1,
 };
 
 struct phy_driver aqr106_driver = {
@@ -478,6 +485,7 @@ struct phy_driver aqr107_driver = {
 	.config = &aquantia_config,
 	.startup = &aquantia_startup,
 	.shutdown = &gen10g_shutdown,
+	.data = AQUANTIA_GEN2,
 };
 
 struct phy_driver aqr112_driver = {
@@ -491,6 +499,7 @@ struct phy_driver aqr112_driver = {
 	.config = &aquantia_config,
 	.startup = &aquantia_startup,
 	.shutdown = &gen10g_shutdown,
+	.data = AQUANTIA_GEN3,
 };
 
 struct phy_driver aqr405_driver = {
@@ -504,6 +513,7 @@ struct phy_driver aqr405_driver = {
 	.config = &aquantia_config,
 	.startup = &aquantia_startup,
 	.shutdown = &gen10g_shutdown,
+	.data = AQUANTIA_GEN1,
 };
 
 struct phy_driver aqr412_driver = {
@@ -517,6 +527,7 @@ struct phy_driver aqr412_driver = {
 	.config = &aquantia_config,
 	.startup = &aquantia_startup,
 	.shutdown = &gen10g_shutdown,
+	.data = AQUANTIA_GEN3,
 };
 
 int phy_aquantia_init(void)
