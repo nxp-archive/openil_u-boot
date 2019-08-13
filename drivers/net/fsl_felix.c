@@ -383,8 +383,13 @@ static int felix_start(struct udevice *dev)
 	return -ENOTSUPP;
 }
 
+static void felix_stop(struct udevice *dev)
+{
+}
+
 static const struct eth_ops felix_port_ops = {
 	.start	= felix_start,
+	.stop = felix_stop,
 };
 
 U_BOOT_DRIVER(felix_port) = {
@@ -395,6 +400,7 @@ U_BOOT_DRIVER(felix_port) = {
 
 static const struct eth_ops felix_ethsw_ops = {
 	.start	= felix_start,
+	.stop = felix_stop,
 };
 
 U_BOOT_DRIVER(felix_ethsw) = {
