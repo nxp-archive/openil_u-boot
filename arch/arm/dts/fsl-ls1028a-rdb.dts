@@ -158,16 +158,16 @@
 		reg = <2>;
 	};
 
-	sw_phy0: phy@a {
-		reg = <0xa>;
+	sw_phy0: phy@10 {
+		reg = <0x10>;
 	};
-	sw_phy1: phy@b {
-		reg = <0xb>;
+	sw_phy1: phy@11 {
+		reg = <0x11>;
 	};
-	sw_phy2: phy@c {
-		reg = <0xc>;
+	sw_phy2: phy@12 {
+		reg = <0x12>;
 	};
-	sw_phy3: phy@d {
-		reg = <0xd>;
+	sw_phy3: phy@13 {
+		reg = <0x13>;
 	};
 };
