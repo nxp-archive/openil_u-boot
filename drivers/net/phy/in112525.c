@@ -208,7 +208,7 @@ static struct in112525_config inphi_s03_config[] = {
 
 static struct in112525_s03_vco_codes s03_vco_codes;
 
-#ifdef CONFIG_INPHI_25G
+#ifdef CONFIG_IN112525_S03_25G
 #define CURRENT_CONFIG (inphi_s03_config[INIT_25GE])
 #else
 #define CURRENT_CONFIG (inphi_s03_config[INIT_10GE])
@@ -256,7 +256,7 @@ int in112525_upload_firmware(struct phy_device *phydev)
 		while (*addr != 0xa) {
 			line_temp[i++] = *addr++;
 			if (i > 0x50) {
-				printf("Not found IN112525 PHY ucode at 0x%p\n",
+				printf("IN112525 ucode not found @ 0x%p\n",
 				       (char *)IN112525_FW_ADDR);
 				return -1;
 			}
@@ -267,9 +267,11 @@ int in112525_upload_firmware(struct phy_device *phydev)
 		column_cnt = i;
 		line_temp[column_cnt] = '\0';
 
-		if (line_cnt > IN112525_FW_LENGTH)
+		if (line_cnt > IN112525_FW_LENGTH) {
+			printf("IN112525 ucode not found @ 0x%p\n",
+			       (char *)IN112525_FW_ADDR);
 			return -1;
-
+		}
 		for (i = 0; i < column_cnt; i++) {
 			if (isspace(line_temp[i++]))
 				break;
@@ -282,6 +284,12 @@ int in112525_upload_firmware(struct phy_device *phydev)
 		fw_temp.reg_addr = (simple_strtoul(reg_addr, NULL, 0)) & 0xffff;
 		fw_temp.reg_value = (simple_strtoul(reg_data, NULL, 0)) &
 				     0xffff;
+		/* check if garbage is present at ucode location */
+		if (fw_temp.reg_addr < 0x700) {
+			printf("IN112525 ucode not found @ 0x%p\n",
+			       (char *)IN112525_FW_ADDR);
+			return -1;
+		}
 		phy_write(phydev, MDIO_MMD_VEND1, fw_temp.reg_addr,
 			  fw_temp.reg_value);
 	}
@@ -290,37 +298,43 @@ int in112525_upload_firmware(struct phy_device *phydev)
 
 int in112525_s05_phy_init(struct phy_device *phydev)
 {
-	u32 reg_value, reg_addr, ret;
-	u32 l0_vc0_code, l1_vc0_code, l2_vc0_code, l3_vc0_code;
+	u32 reg_value, ret;
+	u32 l0_vco_code, l1_vco_code, l2_vco_code, l3_vco_code;
 
 	phy_write(phydev, MDIO_MMD_VEND1, PHYMISC_REG11, 0);
+	phy_write(phydev, MDIO_MMD_VEND1, PHYMISC_REG11, IN112525_FORCE_PC);
+	phy_write(phydev, MDIO_MMD_VEND1, PHYMISC_REG11, IN112525_LOL_CTRL);
 
-	phy_write(phydev, MDIO_MMD_VEND1, PHYMISC_REG11,
-		  IN112525_FORCE_PC);
-
-	phy_write(phydev, MDIO_MMD_VEND1, PHYMISC_REG11,
-		  IN112525_LOL_CTRL);
+	/* The S05 retimer seems to work only when ALL lanes are locked.
+	 * Datapath is Lane0<->Lane1, Lane2<->Lane3.
+	 * For individual lane operation to work, pair 0-1 must be disabled
+	 */
+	phy_write(phydev, MDIO_MMD_VEND1, PHYCTRL_REG0,
+		  IN112525_MDIOINIT | IN112525_HRESET |
+#if defined(CONFIG_IN112525_S05_10G) || defined(CONFIG_IN112525_S05_25G)
+		  IN112525_LANE0_DISABLE | IN112525_LANE1_DISABLE |
+#endif
+		  IN112525_SRESET
+		 );
 
 	phy_write(phydev, MDIO_MMD_VEND1, PHYCTRL_REG0,
-		  (IN112525_MDIOINIT | IN112525_HRESET | IN112525_SRESET |
-		   IN112525_LANE0_RESET | IN112525_LANE1_RESET));
-
-	phy_write(phydev, MDIO_MMD_VEND1, PHYCTRL_REG0,
-		  (IN112525_HRESET | IN112525_SRESET | IN112525_LANE0_RESET |
-		   IN112525_LANE1_RESET));
+		  IN112525_HRESET |
+#if defined(CONFIG_IN112525_S05_10G) || defined(CONFIG_IN112525_S05_25G)
+		  IN112525_LANE0_DISABLE | IN112525_LANE1_DISABLE |
+#endif
+		  IN112525_SRESET
+		  );
 
 	phy_write(phydev, MDIO_MMD_VEND1, PHYMISC_REG3,
-		  IN112525_TX_RF_EN | IN112525_CTLE_10G);
+		  IN112525_EXT_REFCLK_EN | IN112525_CTLE_10G);
 
 	phy_write(phydev, MDIO_MMD_VEND1, PHYCTRL_REG0,
-		  (IN112525_SRESET | IN112525_LANE0_RESET |
-		   IN112525_LANE1_RESET));
-
-#if INPHI112525_S05_10G
-	mdelay(100);
-#else
-	mdelay(10);
+#if defined(CONFIG_IN112525_S05_10G) || defined(CONFIG_IN112525_S05_25G)
+		  IN112525_LANE0_DISABLE | IN112525_LANE1_DISABLE |
 #endif
+		  IN112525_SRESET);
+
+	mdelay(10);
 
 	reg_value = phy_read(phydev, MDIO_MMD_VEND1, IN112525_EFUSE_REG);
 	if (!(reg_value & IN112525_EFUSE_DONE)) {
@@ -328,14 +342,9 @@ int in112525_s05_phy_init(struct phy_device *phydev)
 		return -1;
 	}
 
-#if INPHI112525_S05_10G
 	udelay(100);
-#else
-	mdelay(10);
-#endif
 
-	reg_value = phy_read(phydev, MDIO_MMD_VEND1,
-			     PHYMISC_REG2);
+	reg_value = phy_read(phydev, MDIO_MMD_VEND1, PHYMISC_REG2);
 	if (!(reg_value & IN112525_CALIBRATION_DONE)) {
 		printf("IN112525 phy init failed: CAL DONE not set\n");
 		return -1;
@@ -346,14 +355,22 @@ int in112525_s05_phy_init(struct phy_device *phydev)
 		   IN112525_CORE_DATAPATH_RESET | IN112525_TX_SERDES_RESET));
 
 	phy_write(phydev, MDIO_MMD_VEND1, PHYCTRL_REG0,
-		  (IN112525_MANUALRESET_SELECT | IN112525_SRESET |
-		   IN112525_LANE0_RESET | IN112525_LANE1_RESET));
+		  IN112525_MANUALRESET_SELECT |
+#if defined(CONFIG_IN112525_S05_10G) || defined(CONFIG_IN112525_S05_25G)
+		  IN112525_LANE0_DISABLE | IN112525_LANE1_DISABLE |
+#endif
+		  IN112525_SRESET);
 
-	phy_write(phydev, MDIO_MMD_VEND1, PHYCTRL_REG15,
-		  PHYCTRL_REG15_VAL);
-	phy_write(phydev, MDIO_MMD_VEND1, PHYCTRL_REG17,
-		  PHYCTRL_REG17_VAL);
+#if defined(CONFIG_IN112525_S05_25G) || defined(CONFIG_IN112525_S05_50G)
+	phy_write(phydev, MDIO_MMD_VEND1, PHYCTRL_REG15, PHYCTRL_REG15_VAL);
+	phy_write(phydev, MDIO_MMD_VEND1, PHYCTRL_REG17, PHYCTRL_REG17_VAL);
+#else
+	/* 100G requires specific extended-range settings */
+	phy_write(phydev, MDIO_MMD_VEND1, PHYCTRL_REG15, PHYCTRL_REG15_VAL_EXT);
+	phy_write(phydev, MDIO_MMD_VEND1, PHYCTRL_REG17, PHYCTRL_REG17_VAL_EXT);
+#endif
 
+	/* chip internals */
 	phy_write(phydev, MDIO_MMD_VEND1, PHYCTRL_REG18, 0xff);
 	phy_write(phydev, MDIO_MMD_VEND1, PHYCTRL_REG19, 0x2d);
 	phy_write(phydev, MDIO_MMD_VEND1, PHYCTRL_REG19, 0x802d);
@@ -364,19 +381,17 @@ int in112525_s05_phy_init(struct phy_device *phydev)
 	phy_write(phydev, MDIO_MMD_VEND1, PHYCTRL_REG19, 0x8008);
 	phy_write(phydev, MDIO_MMD_VEND1, PHYCTRL_REG19, 0x0);
 
-	phy_write(phydev, MDIO_MMD_VEND1, PHYCTRL_REG16,
-		  (IN112525_TXPLL_MSDIV | IN112525_TXPLL_IQDIV));
+	phy_write(phydev, MDIO_MMD_VEND1, PHYCTRL_REG11,
+		  IN112525_TXPLL_MSDIV | IN112525_TXPLL_IQDIV);
 
-#if INPHI112525_S05_10G
+#if defined(CONFIG_IN112525_S05_10G) || defined(CONFIG_IN112525_S05_40G)
 	phy_write(phydev, MDIO_MMD_VEND1, PHYCTRL_REG14,
-		  (IN112525_RX_HALFRATE_EN));
+		  IN112525_RX_HALFRATE_EN);
 
-	phy_write(phydev, MDIO_MMD_VEND1, PHYCTRL_REG13,
-		  PHYCTRL_REG13_VAL);
-
+	phy_write(phydev, MDIO_MMD_VEND1, PHYCTRL_REG13, PHYCTRL_REG13_VAL);
 
 	phy_write(phydev, MDIO_MMD_VEND1, PHYCTRL_REG20,
-		  (IN112525_RX_LOS_EN | IN112525_RX_LOS_10G_THRESHOLD));
+		  IN112525_RX_LOS_EN | IN112525_RX_LOS_10G_THRESHOLD);
 
 	phy_write(phydev, MDIO_MMD_VEND1, PHYMISC_REG30,
 		  IN112525_RX_MISC_TRIM1_VAL);
@@ -385,65 +400,58 @@ int in112525_s05_phy_init(struct phy_device *phydev)
 		  PHYCTRL_REG13_VAL | IN112525_LOSD_HYSTERESIS_EN);
 
 	phy_write(phydev, MDIO_MMD_VEND1, PHYCTRL_REG20,
-		  (IN112525_RX_LOS_EN | IN112525_RX_LOS_100G_THRESHOLD));
+		  IN112525_RX_LOS_EN | IN112525_RX_LOS_100G_THRESHOLD);
+#endif
+	phy_write(phydev, MDIO_MMD_VEND1, PHYMISC_REG8, IN112525_FA_WIN_SIZE);
+
+#if !defined(CONFIG_IN112525_S05_10G) && !defined(CONFIG_IN112525_S05_40G)
+	/* specific stuff required when not in half-rate operation before
+	 * reading VCO codes
+	 */
+	phy_write(phydev, MDIO_MMD_VEND1, PHYCTRL_REG2, 0x5000);
+	phy_write(phydev, MDIO_MMD_VEND1, 0x501, 0x0200);
+	phy_write(phydev, MDIO_MMD_VEND1, 0x510, 0x001F);
+	phy_write(phydev, MDIO_MMD_VEND1, 0x517, 0x803F);
 #endif
 
-	phy_write(phydev, MDIO_MMD_VEND1, PHYMISC_REG8,
-		  IN112525_FA_WIN_SIZE);
+	/* actual VCO codes reading; save codes for later */
+	l0_vco_code = phy_read(phydev, MDIO_MMD_VEND1, PHYMISC_REG7);
+	l1_vco_code = phy_read(phydev, MDIO_MMD_VEND1, PHYMISC_REG7 + 0x100);
+	l2_vco_code = phy_read(phydev, MDIO_MMD_VEND1, PHYMISC_REG7 + 0x200);
+	l3_vco_code = phy_read(phydev, MDIO_MMD_VEND1, PHYMISC_REG7 + 0x300);
 
-#if INPHI112525_S05_10G
-	l0_vc0_code = 0.8 * phy_read(phydev, MDIO_MMD_VEND1,
-				     PHYMISC_REG7);
-	l1_vc0_code = 0.8 * phy_read(phydev, MDIO_MMD_VEND1,
-				     PHYMISC_REG7 + 0x100);
-	l2_vc0_code = 0.8 * phy_read(phydev, MDIO_MMD_VEND1,
-				     PHYMISC_REG7 + 0x200);
-	l3_vc0_code = 0.8 * phy_read(phydev, MDIO_MMD_VEND1,
-				     PHYMISC_REG7 + 0x300);
 
-#else
-	phy_write(phydev, MDIO_MMD_VEND1,
-		  PHYCTRL_REG2, 0x5000);
-	phy_write(phydev, MDIO_MMD_VEND1, 0X501, 0x0200);
-	phy_write(phydev, MDIO_MMD_VEND1, 0X510, 0x001F);
-	phy_write(phydev, MDIO_MMD_VEND1, 0X517, 0x803F);
+#if defined(CONFIG_IN112525_S05_10G) || defined(CONFIG_IN112525_S05_40G)
+	/* adjust VCOs with 20/25 ratio when in half-rate operation */
+	l0_vco_code *= 0.8;
+	l1_vco_code *= 0.8;
+	l2_vco_code *= 0.8;
+	l3_vco_code *= 0.8;
 
-	l0_vc0_code = phy_read(phydev, MDIO_MMD_VEND1,
-			       PHYMISC_REG7);
-	l1_vc0_code = phy_read(phydev, MDIO_MMD_VEND1,
-			       PHYMISC_REG7 + 0x100);
-	l2_vc0_code = phy_read(phydev, MDIO_MMD_VEND1,
-			       PHYMISC_REG7 + 0x200);
-	l3_vc0_code = phy_read(phydev, MDIO_MMD_VEND1,
-			       PHYMISC_REG7 + 0x300);
 #endif
 
 	ret = in112525_upload_firmware(phydev);
 	if (ret) {
-		printf("IN112525 phy init failed: upload firmware failed\n");
+		printf("IN112525: upload firmware failed\n");
 		return -1;
 	}
 
-	reg_addr = IN112525_US_DATA_MEM_ADDR;
-	phy_write(phydev, MDIO_MMD_VEND1, reg_addr, l3_vc0_code);
-	phy_write(phydev, MDIO_MMD_VEND1, (reg_addr - 1), l2_vc0_code);
-	phy_write(phydev, MDIO_MMD_VEND1, (reg_addr - 2), l1_vc0_code);
-	phy_write(phydev, MDIO_MMD_VEND1, (reg_addr - 3), l0_vc0_code);
+	phy_write(phydev, MDIO_MMD_VEND1, 0x73b, l0_vco_code);
+	phy_write(phydev, MDIO_MMD_VEND1, 0x73c, l1_vco_code);
+	phy_write(phydev, MDIO_MMD_VEND1, 0x73d, l2_vco_code);
+	phy_write(phydev, MDIO_MMD_VEND1, 0x73e, l3_vco_code);
 
-	phy_write(phydev, MDIO_MMD_VEND1, (reg_addr - 4),
-		  IN112525_PHASE_ADJUST_VAL);
-	phy_write(phydev, MDIO_MMD_VEND1, (reg_addr - 5),
-		  IN112525_PHASE_ADJUST_VAL);
-	phy_write(phydev, MDIO_MMD_VEND1, (reg_addr - 6),
-		  IN112525_PHASE_ADJUST_VAL);
-	phy_write(phydev, MDIO_MMD_VEND1, (reg_addr - 7),
-		  IN112525_PHASE_ADJUST_VAL);
+	phy_write(phydev, MDIO_MMD_VEND1, 0x737, IN112525_PHASE_ADJUST_VAL);
+	phy_write(phydev, MDIO_MMD_VEND1, 0x738, IN112525_PHASE_ADJUST_VAL);
+	phy_write(phydev, MDIO_MMD_VEND1, 0x739, IN112525_PHASE_ADJUST_VAL);
+	phy_write(phydev, MDIO_MMD_VEND1, 0x73a, IN112525_PHASE_ADJUST_VAL);
 
-	phy_write(phydev, MDIO_MMD_VEND1, PHYMISC_REG12,
-		  IN112525_USEQ_FL);
+	phy_write(phydev, MDIO_MMD_VEND1, PHYMISC_REG12, IN112525_USEQ_FL);
 
+	printf("IN112525: starting ucode...\n");
 	phy_write(phydev, MDIO_MMD_VEND1, PHYMISC_REG11,
-		  (IN112525_LOL_CTRL | IN112525_USEQ_EN));
+		  IN112525_LOL_CTRL | IN112525_USEQ_EN);
+
 	return 0;
 }
 
@@ -1010,8 +1018,11 @@ int in112525_s03_startup(struct phy_device *phydev)
 
 	phydev->link = 1;
 
-	/* For now just lie and say it's 10G all the time */
+#ifdef CONFIG_IN112525_S03_10G
 	phydev->speed = SPEED_10000;
+#else
+	phydev->speed = SPEED_25000;
+#endif
 	phydev->duplex = DUPLEX_FULL;
 
 	for (i = 0; i < ALL_LANES; i++) {
@@ -1029,9 +1040,15 @@ int in112525_s05_startup(struct phy_device *phydev)
 {
 	phydev->link = 1;
 
-#if INPHI112525_S05_10G
+#if defined(CONFIG_IN112525_S05_10G)
 	phydev->speed = SPEED_10000;
-#else
+#elif defined(CONFIG_IN112525_S05_25G)
+	phydev->speed = SPEED_25000;
+#elif defined(CONFIG_IN112525_S05_40G)
+	phydev->speed = SPEED_40000;
+#elif defined(CONFIG_IN112525_S05_50G)
+	phydev->speed = SPEED_50000;
+#elif defined(CONFIG_IN112525_S05_100G)
 	phydev->speed = SPEED_100000;
 #endif
 	phydev->duplex = DUPLEX_FULL;
