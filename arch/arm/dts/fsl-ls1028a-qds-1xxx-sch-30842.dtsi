@@ -1,0 +1,22 @@
+// SPDX-License-Identifier: GPL-2.0+ OR X11
+/*
+ * NXP ls1028AQDS device tree fragment for RCW 1xxx
+ *
+ * Copyright 2019 NXP
+ *
+ */
+
+/*
+ * This set-up is using a SCH-30842 card with AQR112 PHY in slot 1 for ENETC
+ * port 0 USXGMII.
+ */
+
+&slot1 {
+	#include "fsl-sch-30842.dtsi"
+};
+
+&enetc0 {
+	status = "okay";
+	phy-mode = "usxgmii";
+	phy-handle = <&{/i2c@2000000/fpga@66/mux-mdio@54/mdio@40/phy@02}>;
+};
