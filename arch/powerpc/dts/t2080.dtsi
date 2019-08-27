@@ -77,6 +77,18 @@
 			sata-number = <2>;
 			sata-fpdma = <0>;
 		};
+
+		usb@210000 {
+			compatible = "fsl-usb2-mph";
+			reg = <0x210000 0x1000>;
+			phy_type = "utmi";
+		};
+
+		usb@211000 {
+			compatible = "fsl-usb2-dr";
+			reg = <0x211000 0x1000>;
+			phy_type = "utmi";
+		};
 	};
 
 	pcie@ffe240000 {
