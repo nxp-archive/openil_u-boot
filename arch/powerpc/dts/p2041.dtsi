@@ -60,6 +60,12 @@
 			clock-frequency = <0x0>;
 		};
 
+		esdhc: esdhc@114000 {
+			compatible = "fsl,esdhc";
+			reg = <0x114000 0x1000>;
+			clock-frequency = <0>;
+		};
+
 		sata: sata@220000 {
 			compatible = "fsl,pq-sata-v2";
 			reg = <0x220000 0x1000>;
