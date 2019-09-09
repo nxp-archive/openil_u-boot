@@ -65,6 +65,15 @@
 			clock-frequency = <0>;
 		};
 
+		espi0: spi@110000 {
+			compatible = "fsl,mpc8536-espi";
+			#address-cells = <1>;
+			#size-cells = <0>;
+			reg = <0x110000 0x1000>;
+			fsl,espi-num-chipselects = <4>;
+			status = "disabled";
+		};
+
 		sata: sata@220000 {
 			compatible = "fsl,pq-sata-v2";
 			reg = <0x220000 0x1000>;
