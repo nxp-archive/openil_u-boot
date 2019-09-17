@@ -396,6 +396,7 @@ U_BOOT_DRIVER(felix_port) = {
 	.name		= FELIX_PORT_DRV_NAME,
 	.id		= UCLASS_ETH,
 	.ops		= &felix_port_ops,
+	.platdata_auto_alloc_size = sizeof(struct eth_pdata),
 };
 
 static const struct eth_ops felix_ethsw_ops = {
