@@ -788,7 +788,7 @@ int qspi_ahb_init(void)
 #ifdef CONFIG_BOARD_LATE_INIT
 int board_late_init(void)
 {
-#ifdef CONFIG_SCSI_AHCI_PLAT
+#if defined(CONFIG_SCSI_AHCI_PLAT) && !defined(CONFIG_ARCH_LS1028A)
 	sata_init();
 #endif
 #ifdef CONFIG_CHAIN_OF_TRUST
