@@ -327,10 +327,17 @@ static int aquantia_set_proto(struct phy_device *phydev, int if_type)
 	phy_write(phydev, MDIO_MMD_VEND1, AQUANTIA_VND1_GSTART_RATE,
 		  aquantia_syscfg[if_type].start_rate);
 
-	for (i = 0; i <= aquantia_syscfg[if_type].cnt; i++)
+	for (i = 0; i <= aquantia_syscfg[if_type].cnt; i++) {
+		u16 reg = phy_read(phydev, MDIO_MMD_VEND1,
+				   AQUANTIA_VND1_GSYSCFG_BASE + i);
+		/* skip this rate, if disabled by FW */
+		if (!reg)
+			continue;
+
 		phy_write(phydev, MDIO_MMD_VEND1,
 			  AQUANTIA_VND1_GSYSCFG_BASE + i,
 			  aquantia_syscfg[if_type].syscfg);
+	}
 	return 0;
 }
 
