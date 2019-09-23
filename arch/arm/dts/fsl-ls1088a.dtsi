@@ -2,7 +2,7 @@
 /*
  * NXP ls1088a SOC common device tree source
  *
- * Copyright 2017 NXP
+ * Copyright 2017, 2019 NXP
  */
 
 / {
