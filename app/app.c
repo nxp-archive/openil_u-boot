@@ -48,6 +48,9 @@ void core1_main(void)
 #endif
 #endif
 #endif
+#ifdef CONFIG_TARGET_MX6SABRESD
+	test_icc_func_init();
+#endif
 	return;
 }
 
