@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0+
 /*
  * Copyright 2016 Freescale Semiconductor, Inc.
+ * Copyright 2019 NXP
  * Author: Hongbo Zhang <hongbo.zhang@nxp.com>
  * This file implements LS102X platform PSCI SYSTEM-SUSPEND function
  */
@@ -73,8 +74,9 @@ static void __secure ls1_deepsleep_irq_cfg(void)
 	 * scrachpad register to be read, that is why we don't read it from
 	 * register ippdexpcr1 itself.
 	 */
-	ippdexpcr1 = in_le32(&scfg->sparecr[7]);
-	out_be32(&rcpm->ippdexpcr1, ippdexpcr1);
+	ippdexpcr1 = in_be32(&scfg->sparecr[7]);
+	/* Always not power down OCRAM1 */
+	out_be32(&rcpm->ippdexpcr1, ippdexpcr1 | RCPM_IPPDEXPCR1_OCRAM1);
 
 	if (ippdexpcr0 & RCPM_IPPDEXPCR0_ETSEC)
 		pmcintecr |= SCFG_PMCINTECR_ETSECRXG0 |
