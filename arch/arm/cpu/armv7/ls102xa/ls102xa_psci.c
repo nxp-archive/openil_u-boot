@@ -68,9 +68,10 @@ static void __secure ls1_deepsleep_irq_cfg(void)
 
 	ippdexpcr0 = in_be32(&rcpm->ippdexpcr0);
 	/*
-	 * Workaround: There is bug of register ippdexpcr1, when read it always
-	 * returns zero, so its value is saved to a scrachpad register to be
-	 * read, that is why we don't read it from register ippdexpcr1 itself.
+	 * Workaround of errata A-008646: There is bug of register ippdexpcr1,
+	 * when read it always returns zero, so its value is saved to a
+	 * scrachpad register to be read, that is why we don't read it from
+	 * register ippdexpcr1 itself.
 	 */
 	ippdexpcr1 = in_le32(&scfg->sparecr[7]);
 	out_be32(&rcpm->ippdexpcr1, ippdexpcr1);
