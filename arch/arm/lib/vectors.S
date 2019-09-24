@@ -162,13 +162,20 @@ IRQ_STACK_START_IN:
 /* IRQ stack memory (calculated at run-time) */
 .globl IRQ_STACK_START
 IRQ_STACK_START:
+#ifdef CONFIG_TARGET_MX6SABRESD
+	.word   0x0093FFF4
+#else
 	.word	0x0badc0de
+#endif
 
 /* IRQ stack memory (calculated at run-time) */
 .globl FIQ_STACK_START
 FIQ_STACK_START:
-	.word 0x0badc0de
-
+#ifdef CONFIG_TARGET_MX6SABRESD
+	.word   0x0093FFF8
+#else
+	.word 	0x0badc0de
+#endif
 #endif /* CONFIG_USE_IRQ */
 
 @
