@@ -74,7 +74,8 @@ static void __secure ls1_deepsleep_irq_cfg(void)
 	 * register ippdexpcr1 itself.
 	 */
 	ippdexpcr1 = in_be32(&scfg->sparecr[7]);
-	out_be32(&rcpm->ippdexpcr1, ippdexpcr1);
+	/* Always not power down OCRAM1 */
+	out_be32(&rcpm->ippdexpcr1, ippdexpcr1 | RCPM_IPPDEXPCR1_OCRAM1);
 
 	if (ippdexpcr0 & RCPM_IPPDEXPCR0_ETSEC)
 		pmcintecr |= SCFG_PMCINTECR_ETSECRXG0 |
