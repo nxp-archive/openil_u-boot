@@ -41,6 +41,9 @@
 #define GLOBAL_FAULT 0xc850
 #define GLOBAL_RSTATUS_1 0xc885
 
+#define GLOBAL_ALARM_1 0xcc00
+#define SYSTEM_READY_BIT 0x40
+
 #define GLOBAL_STANDARD_CONTROL 0x0
 #define SOFT_RESET BIT(15)
 #define LOW_POWER BIT(11)
@@ -415,6 +418,17 @@ int aquantia_config(struct phy_device *phydev)
 	u32 val, id, rstatus, fault;
 	u32 reg_val1 = 0;
 	int usx_an = 0;
+	int num_retries = 5;
+
+	/* check if the system is out of reset and init sequence completed.
+	 * chip-wide reset for gen1 quad phys takes longer
+	 */
+	while (--num_retries) {
+		rstatus = phy_read(phydev, MDIO_MMD_VEND1, GLOBAL_ALARM_1);
+		if (rstatus & SYSTEM_READY_BIT)
+			break;
+		mdelay(10);
+	}
 
 	id = phy_read(phydev, MDIO_MMD_VEND1, GLOBAL_FIRMWARE_ID);
 	rstatus = phy_read(phydev, MDIO_MMD_VEND1, GLOBAL_RSTATUS_1);
@@ -448,7 +462,12 @@ int aquantia_config(struct phy_device *phydev)
 			if_type = PHY_INTERFACE_MODE_XFI;
 	}
 
-	if (!aquantia_link_is_up(phydev)) {
+	/* some of the GEN1 phys do not recover after entering low-power mode in
+	 * certain conditions. bit 1e.c831.f will tell that an intensive-cpu
+	 * operation is ongoing.
+	 */
+	if (phydev->drv->data != AQUANTIA_GEN1 &&
+	    !aquantia_link_is_up(phydev)) {
 		/*
 		 * if link is up already we can just use it, otherwise configure
 		 * the protocols in the PHY.  If link is down set the system
