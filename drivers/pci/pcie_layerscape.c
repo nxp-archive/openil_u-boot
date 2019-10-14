@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0+
 /*
- * Copyright 2017 NXP
+ * Copyright 2017, 2019 NXP
  * Copyright 2014-2015 Freescale Semiconductor, Inc.
  * Layerscape PCIe driver
  */
@@ -15,6 +15,7 @@
 #if defined(CONFIG_FSL_LSCH2) || defined(CONFIG_FSL_LSCH3) || \
 	defined(CONFIG_ARM)
 #include <asm/arch/clock.h>
+#include <asm/arch/soc.h>
 #endif
 #include "pcie_layerscape.h"
 
@@ -56,7 +57,7 @@ static int ls_pcie_ltssm(struct ls_pcie *pcie)
 	uint svr;
 
 	svr = get_svr();
-	if (((svr >> SVR_VAR_PER_SHIFT) & SVR_LS102XA_MASK) == SVR_LS102XA) {
+	if ((SVR_DEV(svr) & SVR_LS102XA_MASK) == SVR_LS102XA) {
 		state = ctrl_readl(pcie, LS1021_PEXMSCPORTSR(pcie->idx));
 		state = (state >> LS1021_LTSSM_STATE_SHIFT) & LTSSM_STATE_MASK;
 	} else {
@@ -149,7 +150,7 @@ static void ls_pcie_setup_atu(struct ls_pcie *pcie)
 	uint svr;
 
 	svr = get_svr();
-	if (((svr >> SVR_VAR_PER_SHIFT) & SVR_LS102XA_MASK) == SVR_LS102XA) {
+	if ((SVR_DEV(svr) & SVR_LS102XA_MASK) == SVR_LS102XA) {
 		offset = LS1021_PCIE_SPACE_OFFSET +
 			 LS1021_PCIE_SPACE_SIZE * pcie->idx;
 	}
@@ -172,7 +173,8 @@ static void ls_pcie_setup_atu(struct ls_pcie *pcie)
 	idx = PCIE_ATU_REGION_INDEX1 + 1;
 
 	/* Fix the pcie memory map for LS2088A series SoCs */
-	svr = (svr >> SVR_VAR_PER_SHIFT) & 0xFFFFFE;
+#if defined(CONFIG_FSL_LAYERSCAPE)
+	svr = SVR_SOC_VER(svr);
 	if (svr == SVR_LS2088A || svr == SVR_LS2084A ||
 	    svr == SVR_LS2048A || svr == SVR_LS2044A ||
 	    svr == SVR_LS2081A || svr == SVR_LS2041A) {
@@ -192,6 +194,7 @@ static void ls_pcie_setup_atu(struct ls_pcie *pcie)
 					 LS2088A_PCIE1_PHYS_ADDR +
 					 LS2088A_PCIE_PHYS_SIZE * pcie->idx;
 	}
+#endif /* CONFIG_FSL_LAYERSCAPE */
 
 	if (io)
 		/* ATU : OUTBOUND : IO */
@@ -446,9 +449,7 @@ static int ls_pcie_probe(struct udevice *dev)
 	const void *fdt = gd->fdt_blob;
 	int node = dev_of_offset(dev);
 	u16 link_sta;
-	uint svr;
 	int ret;
-	fdt_size_t cfg_size;
 
 	pcie->bus = dev;
 
@@ -501,12 +502,14 @@ static int ls_pcie_probe(struct udevice *dev)
 		return ret;
 	}
 
+#if defined(CONFIG_FSL_LAYERSCAPE)
+	uint svr = SVR_SOC_VER(get_svr());
+	fdt_size_t cfg_size;
+
 	/*
 	 * Fix the pcie memory map address and PF control registers address
 	 * for LS2088A series SoCs
 	 */
-	svr = get_svr();
-	svr = (svr >> SVR_VAR_PER_SHIFT) & 0xFFFFFE;
 	if (svr == SVR_LS2088A || svr == SVR_LS2084A ||
 	    svr == SVR_LS2048A || svr == SVR_LS2044A ||
 	    svr == SVR_LS2081A || svr == SVR_LS2041A) {
@@ -516,6 +519,7 @@ static int ls_pcie_probe(struct udevice *dev)
 		pcie->cfg_res.end = pcie->cfg_res.start + cfg_size;
 		pcie->ctrl = pcie->lut + 0x40000;
 	}
+#endif /* CONFIG_FSL_LAYERSCAPE */
 
 	pcie->cfg0 = map_physmem(pcie->cfg_res.start,
 				 fdt_resource_size(&pcie->cfg_res),
