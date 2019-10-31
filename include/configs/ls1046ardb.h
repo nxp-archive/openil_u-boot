@@ -43,6 +43,8 @@
 #define CONFIG_SYS_SPL_ARGS_ADDR	0x90000000
 #endif
 
+#define CONFIG_LAST_STAGE_INIT
+
 #ifndef SPL_NO_IFC
 /* IFC */
 #define CONFIG_FSL_IFC
