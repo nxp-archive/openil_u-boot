@@ -70,8 +70,18 @@
 #endif
 
 #ifdef CONFIG_SD_BOOT
+#ifdef CONFIG_BAREMETAL
+#ifdef CONFIG_BM_GPIO
+#define CONFIG_SYS_FSL_PBL_RCW  \
+	board/freescale/ls1021aiot/ls102xa_rcw_sd_uart2_gpio.cfg
+#else
+#define CONFIG_SYS_FSL_PBL_RCW  \
+	board/freescale/ls1021aiot/ls102xa_rcw_sd_uart2.cfg
+#endif
+#else
 #define CONFIG_SYS_FSL_PBL_RCW	\
 	board/freescale/ls1021aiot/ls102xa_rcw_sd.cfg
+#endif
 #define CONFIG_SPL_LIBCOMMON_SUPPORT
 #define CONFIG_SPL_LIBGENERIC_SUPPORT
 #define CONFIG_SPL_ENV_SUPPORT
@@ -98,6 +108,13 @@
 #define CONFIG_SYS_SDRAM_BASE		CONFIG_SYS_DDR_SDRAM_BASE
 
 #define CONFIG_CHIP_SELECTS_PER_CTRL	4
+
+#ifdef CONFIG_BAREMETAL
+#define CONFIG_MP
+#define CONFIG_SYS_DDR_SDRAM_SLAVE_SIZE		(256 * 1024 * 1024)
+#define CONFIG_MASTER_CORE			0
+#define CONFIG_SYS_DDR_SDRAM_MASTER_SIZE	(512 * 1024 * 1024)
+#endif
 
 /*
  * Serial Port
