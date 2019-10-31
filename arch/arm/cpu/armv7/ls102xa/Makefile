@@ -1,7 +1,7 @@
+# SPDX-License-Identifier:      GPL-2.0+
 #
 # Copyright 2014 Freescale Semiconductor, Inc.
-#
-# SPDX-License-Identifier:      GPL-2.0+
+# Copyright 2019 NXP
 #
 
 obj-y	+= cpu.o
@@ -10,6 +10,7 @@ obj-y	+= timer.o
 obj-y	+= fsl_epu.o
 obj-y	+= soc.o
 
+obj-$(CONFIG_MP) += mp.o
 obj-$(CONFIG_OF_LIBFDT) += fdt.o
 obj-$(CONFIG_SYS_HAS_SERDES) += fsl_ls1_serdes.o ls102xa_serdes.o
 obj-$(CONFIG_SPL) += spl.o

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0+
 /*
- * Copyright 2017 NXP
+ * Copyright 2017-2019 NXP
  * Copyright 2014-2015 Freescale Semiconductor, Inc.
  * Layerscape PCIe driver
  */
@@ -242,11 +242,16 @@ static void ft_pcie_rc_fix(void *blob, struct ls_pcie *pcie)
 		if (off < 0)
 			return;
 	}
-
+#ifndef CONFIG_BAREMETAL
 	if (pcie->enabled && pcie->mode == PCI_HEADER_TYPE_BRIDGE)
 		fdt_set_node_status(blob, off, FDT_STATUS_OKAY, 0);
 	else
 		fdt_set_node_status(blob, off, FDT_STATUS_DISABLED, 0);
+#else
+	if (!pcie->enabled || pcie->mode != PCI_HEADER_TYPE_BRIDGE)
+		fdt_set_node_status(blob, off, FDT_STATUS_DISABLED, 0);
+
+#endif
 }
 
 static void ft_pcie_ep_fix(void *blob, struct ls_pcie *pcie)

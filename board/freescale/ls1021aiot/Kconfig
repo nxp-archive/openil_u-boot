@@ -12,6 +12,22 @@ config SYS_SOC
 config SYS_CONFIG_NAME
 	default "ls1021aiot"
 
+choice
+	prompt "Baremetal feature select"
+	default BM_CAN
+	depends on BAREMETAL
+	help
+	  For baremetal, GPIO3_15/27 and CAN3/4 has the same pins.
+	  Therefore, we need to select the pins
+
+config BM_CAN
+	bool "Can3/4 supported"
+
+config BM_GPIO
+	bool "GPIO3_15/27 supported"
+
+endchoice
+
 source "board/freescale/common/Kconfig"
 
 endif
