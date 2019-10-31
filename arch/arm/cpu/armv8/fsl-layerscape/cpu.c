@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0+
 /*
- * Copyright 2017 NXP
+ * Copyright 2017-2020 NXP
  * Copyright 2014-2015 Freescale Semiconductor, Inc.
  */
 
@@ -1119,10 +1119,6 @@ int arch_early_init_r(void)
 #endif
 	if (check_psci()) {
 		debug("PSCI: PSCI does not exist.\n");
-
-		/* if PSCI does not exist, boot secondary cores here */
-		if (fsl_layerscape_wake_seconday_cores())
-			printf("Did not wake secondary cores\n");
 	}
 
 	config_core_prefetch();
