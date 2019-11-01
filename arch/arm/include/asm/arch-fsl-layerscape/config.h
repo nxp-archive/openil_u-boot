@@ -1,6 +1,6 @@
 /* SPDX-License-Identifier: GPL-2.0+ */
 /*
- * Copyright 2016-2018 NXP
+ * Copyright 2016-2019 NXP
  * Copyright 2015, Freescale Semiconductor
  */
 
@@ -31,6 +31,19 @@
 #define CONFIG_SYS_FSL_OCRAM_BASE	0x18000000 /* initial RAM */
 #define SYS_FSL_OCRAM_SPACE_SIZE	0x00200000 /* 2M space */
 #define CONFIG_SYS_FSL_OCRAM_SIZE	0x00020000 /* Real size 128K */
+
+/* TZ Protection Controller Definitions */
+#define TZPC_BASE			0x02200000
+#define TZPCR0SIZE_BASE			(TZPC_BASE)
+#define TZPCDECPROT_0_STAT_BASE		(TZPC_BASE + 0x800)
+#define TZPCDECPROT_0_SET_BASE		(TZPC_BASE + 0x804)
+#define TZPCDECPROT_0_CLR_BASE		(TZPC_BASE + 0x808)
+#define TZPCDECPROT_1_STAT_BASE		(TZPC_BASE + 0x80C)
+#define TZPCDECPROT_1_SET_BASE		(TZPC_BASE + 0x810)
+#define TZPCDECPROT_1_CLR_BASE		(TZPC_BASE + 0x814)
+#define TZPCDECPROT_2_STAT_BASE		(TZPC_BASE + 0x818)
+#define TZPCDECPROT_2_SET_BASE		(TZPC_BASE + 0x81C)
+#define TZPCDECPROT_2_CLR_BASE		(TZPC_BASE + 0x820)
 
 /* DDR */
 #define CONFIG_SYS_DDR_BLOCK1_SIZE	((phys_size_t)2 << 30)

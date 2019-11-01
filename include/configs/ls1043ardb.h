@@ -1,12 +1,20 @@
 /* SPDX-License-Identifier: GPL-2.0+ */
 /*
  * Copyright 2015 Freescale Semiconductor
+ * Copyright 2017,2019 NXP
  */
 
 #ifndef __LS1043ARDB_H__
 #define __LS1043ARDB_H__
 
 #include "ls1043a_common.h"
+
+#ifdef CONFIG_BAREMETAL
+#define CONFIG_MP
+#define CONFIG_SYS_DDR_SDRAM_SLAVE_SIZE        (256 * 1024 * 1024)
+#define CONFIG_MASTER_CORE                     0
+#define CONFIG_SYS_DDR_SDRAM_MASTER_SIZE       (512 * 1024 * 1024)
+#endif
 
 #define CONFIG_SYS_CLK_FREQ		100000000
 #define CONFIG_DDR_CLK_FREQ		100000000
@@ -41,6 +49,8 @@
 #define CONFIG_SYS_MMCSD_RAW_MODE_ARGS_SECTOR	0x500
 #define CONFIG_SYS_MMCSD_RAW_MODE_ARGS_SECTORS	30
 #endif
+
+#define CONFIG_LAST_STAGE_INIT
 
 /*
  * NOR Flash Definitions

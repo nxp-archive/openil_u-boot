@@ -2,6 +2,7 @@
 #
 # (C) Copyright 2002-2006
 # Wolfgang Denk, DENX Software Engineering, wd@denx.de.
+# Copyright 2017,2019 NXP
 
 lib-$(CONFIG_USE_PRIVATE_LIBGCC) += ashldi3.o ashrdi3.o lshrdi3.o \
 				    lib1funcs.o uldivmod.o div0.o \
@@ -64,6 +65,8 @@ obj-y	+= cache.o
 obj-$(CONFIG_SYS_ARM_CACHE_CP15)	+= cache-cp15.o
 
 obj-y	+= psci-dt.o
+
+obj-y   += tzasc380.o
 
 obj-$(CONFIG_DEBUG_LL)	+= debug.o
 
