@@ -2,6 +2,9 @@
 /*
  * (C) Copyright 2000-2009
  * Wolfgang Denk, DENX Software Engineering, wd@denx.de.
+ *
+ * Copyright 2018-2019 NXP
+ *
  */
 
 #ifndef __COMMON_H_
@@ -33,6 +36,9 @@ typedef volatile unsigned char	vu_char;
 #include <part.h>
 #include <flash.h>
 #include <image.h>
+#if defined(CONFIG_MP)
+#include <asm/arch/mp.h>
+#endif
 
 #ifdef __LP64__
 #define CONFIG_SYS_SUPPORT_64BIT_DATA
@@ -74,6 +80,9 @@ int	cpu_init(void);
 
 /* common/main.c */
 void	main_loop	(void);
+void	core1_main(void);
+void	core2_main(void);
+void	core3_main(void);
 int run_command(const char *cmd, int flag);
 int run_command_repeatable(const char *cmd, int flag);
 
