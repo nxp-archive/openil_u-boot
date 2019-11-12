@@ -255,6 +255,7 @@ void felix_init(struct udevice *dev)
 	struct felix_priv *priv = dev_get_priv(dev);
 	ofnode port_node;
 	void *base = priv->regs_base;
+	int supported;
 	int to = 100;
 	u32 port;
 
@@ -274,6 +275,8 @@ void felix_init(struct udevice *dev)
 	out_le32(base + FELIX_IS1_TCAM_CTRL, FELIX_IS1_TCAM_CTRL_EN);
 	out_le32(base + FELIX_IS2_TCAM_CTRL, FELIX_IS2_TCAM_CTRL_EN);
 	udelay(20);
+
+	supported = PHY_GBIT_FEATURES | SUPPORTED_2500baseX_Full;
 
 	/* probe and set up ports */
 	dev_for_each_subnode(port_node, dev) {
@@ -326,6 +329,8 @@ void felix_init(struct udevice *dev)
 			continue;
 		}
 
+		phy->supported &= supported;
+		phy->advertising &= supported;
 		phy_config(phy);
 	}
 }
