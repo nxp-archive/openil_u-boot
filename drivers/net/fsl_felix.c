@@ -239,6 +239,7 @@ static void felix_start_pcs(struct udevice *port, int portno)
 	switch (if_type) {
 	case PHY_INTERFACE_MODE_SGMII:
 	case PHY_INTERFACE_MODE_SGMII_2500:
+	case PHY_INTERFACE_MODE_QSGMII:
 		felix_init_sgmii(port, portno, if_type);
 		break;
 	case PHY_INTERFACE_MODE_XGMII:
