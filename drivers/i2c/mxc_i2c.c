@@ -10,6 +10,7 @@
  *  Copyright (C) 2005 Matthias Blaschke <blaschke at synertronixx.de>
  *  Copyright (C) 2007 RightHand Technologies, Inc.
  *  Copyright (C) 2008 Darius Augulis <darius.augulis at teltonika.lt>
+ *  Copyright (C) 2019 NXP
  *
  */
 
@@ -1049,5 +1050,6 @@ U_BOOT_DRIVER(i2c_mxc) = {
 	.probe = mxc_i2c_probe,
 	.priv_auto_alloc_size = sizeof(struct mxc_i2c_bus),
 	.ops = &mxc_i2c_ops,
+	.flags = DM_FLAG_PRE_RELOC,
 };
 #endif
