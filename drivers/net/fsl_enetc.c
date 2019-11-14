@@ -206,6 +206,9 @@ static void enetc_config_phy(struct udevice *dev)
 
 	priv->phy = dm_eth_phy_connect(dev);
 
+	if (!priv->phy)
+		return;
+
 	supported = PHY_GBIT_FEATURES | SUPPORTED_2500baseX_Full;
 	priv->phy->supported &= supported;
 	priv->phy->advertising &= supported;
@@ -433,7 +436,8 @@ static int enetc_start(struct udevice *dev)
 	    priv->if_type == PHY_INTERFACE_MODE_RGMII_TXID)
 		enetc_init_rgmii(dev);
 
-	phy_startup(priv->phy);
+	if (priv->phy)
+		phy_startup(priv->phy);
 
 	return 0;
 }
