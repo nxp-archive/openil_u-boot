@@ -18,6 +18,7 @@
 #endif
 #include <asm/arch/soc.h>
 #include "pcie_layerscape.h"
+#include "pcie_layerscape_fixup_common.h"
 
 #if defined(CONFIG_FSL_LSCH3) || defined(CONFIG_FSL_LSCH2)
 /*
@@ -274,7 +275,7 @@ static void ft_pcie_ls_setup(void *blob, struct ls_pcie *pcie)
 }
 
 /* Fixup Kernel DT for PCIe */
-void ft_pci_setup(void *blob, bd_t *bd)
+void ft_pci_setup_ls(void *blob, bd_t *bd)
 {
 	struct ls_pcie *pcie;
 
@@ -287,7 +288,7 @@ void ft_pci_setup(void *blob, bd_t *bd)
 }
 
 #else /* !CONFIG_OF_BOARD_SETUP */
-void ft_pci_setup(void *blob, bd_t *bd)
+void ft_pci_setup_ls(void *blob, bd_t *bd)
 {
 }
 #endif
