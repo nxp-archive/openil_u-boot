@@ -1,6 +1,6 @@
 /* SPDX-License-Identifier: GPL-2.0+ */
 /*
- * Copyright 2017, 2019 NXP
+ * Copyright 2017-2019 NXP
  * Copyright 2014-2015 Freescale Semiconductor, Inc.
  * Layerscape PCIe driver
  */
@@ -147,6 +147,7 @@ struct ls_pcie {
 	int next_lut_index;
 	uint sriov_flag;
 	uint cfg2_flag;
+	int stream_id_cur;
 	int mode;
 };
 
