@@ -267,6 +267,15 @@ config FSL_PCIE_COMPAT
 	  This compatible is used to find pci controller node in Kernel DT
 	  to complete fixup.
 
+config FSL_PCIE_EP_COMPAT
+	string "PCIe EP compatible of Kernel DT"
+	depends on PCIE_LAYERSCAPE || PCIE_LAYERSCAPE_GEN4
+	default "fsl,lx2160a-pcie-ep" if ARCH_LX2160A
+	default "fsl,ls-pcie-ep"
+	help
+	  This compatible is used to find pci controller ep node in Kernel DT
+	  to complete fixup.
+
 config HAS_FEATURE_GIC64K_ALIGN
 	bool
 	default y if ARCH_LS1043A
