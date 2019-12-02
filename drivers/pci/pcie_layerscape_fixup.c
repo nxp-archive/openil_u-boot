@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0+
 /*
- * Copyright 2017-2019 NXP
+ * Copyright 2017, 2019 NXP
  * Copyright 2014-2015 Freescale Semiconductor, Inc.
  * Layerscape PCIe driver
  */
@@ -250,7 +250,7 @@ static void ft_pcie_ep_fix(void *blob, struct ls_pcie *pcie)
 {
 	int off;
 
-	off = fdt_node_offset_by_compat_reg(blob, CONFIG_FSL_PCIE_EP_COMPAT,
+	off = fdt_node_offset_by_compat_reg(blob, "fsl,ls-pcie-ep",
 					    pcie->dbi_res.start);
 	if (off < 0)
 		return;
