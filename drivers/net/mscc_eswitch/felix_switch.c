@@ -16,7 +16,7 @@
  */
 
 #include <common.h>
-#include <dsa.h>
+#include <net/dsa.h>
 #include <asm/io.h>
 #include <pci.h>
 #include <miiphy.h>
@@ -443,7 +443,7 @@ U_BOOT_DRIVER(felix_ethsw) = {
 	.probe	= felix_probe,
 	.ops    = &felix_dsa_ops,
 	.priv_auto_alloc_size = sizeof(struct felix_priv),
-	.platdata_auto_alloc_size = sizeof(struct eth_pdata),
+	.platdata_auto_alloc_size = sizeof(struct dsa_perdev_platdata),
 };
 
 static struct pci_device_id felix_ethsw_ids[] = {

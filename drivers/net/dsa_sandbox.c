@@ -3,7 +3,7 @@
  * (C) Copyright 2019 NXP
  */
 
-#include <dsa.h>
+#include <net/dsa.h>
 
 #define DSA_SANDBOX_MAGIC	0x00415344
 #define DSA_SANDBOX_TAG_LEN	sizeof(struct dsa_sandbox_tag)

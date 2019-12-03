@@ -3,7 +3,7 @@
  * (C) Copyright 2019, NXP
  */
 
-#include <dsa.h>
+#include <net/dsa.h>
 #include <dm/lists.h>
 #include <dm/device-internal.h>
 #include <dm/uclass-internal.h>

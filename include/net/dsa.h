@@ -34,9 +34,9 @@
  *	| sw0p0 |  | sw0p1 |  | sw0p2 |
  *	|-------|  |-------|  |-------|
  *
- * In U-Boot the intent is to allow acces to front panel ports (shown at the
+ * In U-Boot the intent is to allow access to front panel ports (shown at the
  * bottom of the picture) though the master Ethernet port (eth0 in the picture).
- * Front panel ports are presented as regular ethernet devices in U-Boot and
+ * Front panel ports are presented as regular Ethernet devices in U-Boot and
  * they are expected to support the typical networking commands.
  * In general DSA switches require the use of tags, extra headers added both by
  * software on Tx and by the switch on Rx.  These tags carry at a minimum port
@@ -46,9 +46,10 @@
  *
  * TODO:
  * - handle switch cascading, for now U-Boot only supports stand-alone switches.
- * - put master Eth in promisc mode, this isn't needed right now but will be
- *   sooner or later.
- *
+ * - propagate the master Eth MAC address to switch ports, this is used in
+ * Linux to avoid using additional MAC addresses on master Eth.
+ * - Add support to probe DSA switches connected to a MDIO bus, this is needed
+ * to convert switch drivers that are now under drivers/net/phy.
  */
 
 #define DSA_PORT_NAME_LENGTH	16
