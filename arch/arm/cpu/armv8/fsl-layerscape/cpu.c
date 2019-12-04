@@ -1403,9 +1403,11 @@ int dram_init_banksize(void)
 	phys_size_t dp_ddr_size;
 #endif
 
+#ifndef CONFIG_BAREMETAL
 #ifdef CONFIG_TFABOOT
 	if (!tfa_dram_init_banksize())
 		return 0;
+#endif
 #endif
 	/*
 	 * gd->ram_size has the total size of DDR memory, less reserved secure
