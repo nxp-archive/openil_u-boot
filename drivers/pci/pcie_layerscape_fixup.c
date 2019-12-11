@@ -220,22 +220,20 @@ static void ft_pcie_rc_fix(void *blob, struct ls_pcie *pcie)
 	off = fdt_node_offset_by_compat_reg(blob, "fsl,ls-pcie",
 					    pcie->dbi_res.start);
 	if (off < 0) {
-#if defined(CONFIG_FSL_LAYERSCAPE)
 #ifdef CONFIG_FSL_PCIE_COMPAT /* Compatible with older version of dts node */
+		char *compat = CONFIG_FSL_PCIE_COMPAT;
+#if defined(CONFIG_FSL_LAYERSCAPE)
 		uint svr = SVR_SOC_VER(get_svr());
-		char *compat = NULL;
 
 		if (svr == SVR_LS2088A || svr == SVR_LS2084A ||
 		    svr == SVR_LS2048A || svr == SVR_LS2044A ||
 		    svr == SVR_LS2081A || svr == SVR_LS2041A)
 			compat = "fsl,ls2088a-pcie";
-		else
-			compat = CONFIG_FSL_PCIE_COMPAT;
+#endif /* CONFIG_FSL_LAYERSCAPE */
 		if (compat)
 			off = fdt_node_offset_by_compat_reg(blob,
 					compat, pcie->dbi_res.start);
 #endif
-#endif /* CONFIG_FSL_LAYERSCAPE */
 		if (off < 0)
 			return;
 	}
