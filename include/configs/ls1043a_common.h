@@ -53,7 +53,6 @@
 #define COUNTER_FREQUENCY		25000000	/* 25MHz */
 
 /* Serial Port */
-#define CONFIG_CONS_INDEX      2
 #define CONFIG_SYS_NS16550_SERIAL
 #define CONFIG_SYS_NS16550_REG_SIZE	1
 #define CONFIG_SYS_NS16550_CLK          (get_serial_clock())
