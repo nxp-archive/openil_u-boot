@@ -180,6 +180,7 @@ int icc_set_block(int core_mask, unsigned int byte_count, unsigned long block)
 		}
 	}
 
+	dsb();
 	/* trigger the inter-core interrupt */
 	icc_set_sgi(dest_core, ICC_SGI);
 
