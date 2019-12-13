@@ -375,7 +375,7 @@ static int setup_dest_addr(void)
 	CONFIG_SYS_DDR_SDRAM_SLAVE_SIZE * (get_core_id() - 1);
 }
 #endif
-	gd->ram_top = gd->ram_base + get_effective_memsize();
+	gd->ram_top += get_effective_memsize();
 	gd->ram_top = board_get_usable_ram_top(gd->mon_len);
 	gd->relocaddr = gd->ram_top;
 	debug("Ram top: %08lX\n", (ulong)gd->ram_top);
