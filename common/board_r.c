@@ -467,7 +467,7 @@ static int initr_env(void)
 static int initr_default_env(void)
 {
 	/* initialize environment */
-	set_default_env(NULL);
+	set_default_env(NULL, 0);
 #ifdef CONFIG_OF_CONTROL
 	env_set_addr("fdtcontroladdr", gd->fdt_blob);
 #endif
