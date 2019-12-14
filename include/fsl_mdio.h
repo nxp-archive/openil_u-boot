@@ -46,9 +46,7 @@ void tsec_local_mdio_write(struct tsec_mii_mng __iomem *phyregs, int port_addr,
 		int dev_addr, int reg, int value);
 int tsec_local_mdio_read(struct tsec_mii_mng __iomem *phyregs, int port_addr,
 		int dev_addr, int regnum);
-int tsec_phy_read(struct mii_dev *bus, int addr, int dev_addr, int regnum);
-int tsec_phy_write(struct mii_dev *bus, int addr, int dev_addr, int regnum,
-		u16 value);
+int fsl_pq_mdio_reset(struct tsec_mii_mng __iomem *regs);
 int memac_mdio_write(struct mii_dev *bus, int port_addr, int dev_addr,
 		int regnum, u16 value);
 int memac_mdio_read(struct mii_dev *bus, int port_addr, int dev_addr,

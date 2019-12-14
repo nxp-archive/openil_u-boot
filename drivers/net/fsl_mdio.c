@@ -8,9 +8,11 @@
 #include <common.h>
 #include <miiphy.h>
 #include <phy.h>
+#include <miiphy.h>
 #include <fsl_mdio.h>
 #include <asm/io.h>
 #include <linux/errno.h>
+#include <tsec.h>
 
 void tsec_local_mdio_write(struct tsec_mii_mng __iomem *phyregs, int port_addr,
 		int dev_addr, int regnum, int value)
@@ -56,11 +58,8 @@ int tsec_local_mdio_read(struct tsec_mii_mng __iomem *phyregs, int port_addr,
 	return value;
 }
 
-static int fsl_pq_mdio_reset(struct mii_dev *bus)
+int fsl_pq_mdio_reset(struct tsec_mii_mng __iomem *regs)
 {
-	struct tsec_mii_mng __iomem *regs =
-		(struct tsec_mii_mng __iomem *)bus->priv;
-
 	/* Reset MII (due to new addresses) */
 	out_be32(&regs->miimcfg, MIIMCFG_RESET_MGMT);
 
@@ -72,6 +71,7 @@ static int fsl_pq_mdio_reset(struct mii_dev *bus)
 	return 0;
 }
 
+#ifndef CONFIG_DM_MDIO
 int tsec_phy_read(struct mii_dev *bus, int addr, int dev_addr, int regnum)
 {
 	struct tsec_mii_mng __iomem *phyregs =
@@ -91,6 +91,11 @@ int tsec_phy_write(struct mii_dev *bus, int addr, int dev_addr, int regnum,
 	return 0;
 }
 
+static int tsec_mdio_reset(struct mii_dev *bus)
+{
+	return fsl_pq_mdio_reset(bus->priv);
+}
+
 int fsl_pq_mdio_init(bd_t *bis, struct fsl_pq_mdio_info *info)
 {
 	struct mii_dev *bus = mdio_alloc();
@@ -102,10 +107,61 @@ int fsl_pq_mdio_init(bd_t *bis, struct fsl_pq_mdio_info *info)
 
 	bus->read = tsec_phy_read;
 	bus->write = tsec_phy_write;
-	bus->reset = fsl_pq_mdio_reset;
+	bus->reset = tsec_mdio_reset;
 	strcpy(bus->name, info->name);
 
 	bus->priv = (void *)info->regs;
 
 	return mdio_register(bus);
 }
+#endif
+
+#ifdef CONFIG_DM_MDIO
+static int dm_fsl_pq_mdio_read(struct udevice *dev, int addr, int devad,
+			       int reg)
+{
+	struct fsl_pq_mdio_info *info = dev_get_priv(dev);
+
+	return tsec_local_mdio_read(info->regs, addr, devad, reg);
+}
+
+static int dm_fsl_pq_mdio_write(struct udevice *dev, int addr, int devad,
+				int reg, u16 val)
+{
+	struct fsl_pq_mdio_info *info = dev_get_priv(dev);
+
+	tsec_local_mdio_write(info->regs, addr, devad, reg, val);
+
+	return 0;
+}
+
+static int fsl_pq_mdio_probe(struct udevice *dev)
+{
+	struct fsl_pq_mdio_info *info = dev_get_priv(dev);
+	fdt_addr_t reg;
+
+	reg = devfdt_get_addr(dev);
+	info->regs = map_physmem(reg + TSEC_MDIO_REGS_OFFSET, 0, MAP_NOCACHE);
+
+	return fsl_pq_mdio_reset(info->regs);
+}
+
+static const struct mdio_ops fsl_pq_mdio_ops = {
+	.read			= dm_fsl_pq_mdio_read,
+	.write			= dm_fsl_pq_mdio_write,
+};
+
+static const struct udevice_id fsl_pq_mdio_ids[] = {
+	{ .compatible = "fsl,etsec2-mdio" },
+	{ }
+};
+
+U_BOOT_DRIVER(fsl_pq_mdio) = {
+	.name			= "fsl_pq_mdio",
+	.id			= UCLASS_MDIO,
+	.of_match		= fsl_pq_mdio_ids,
+	.probe			= fsl_pq_mdio_probe,
+	.ops			= &fsl_pq_mdio_ops,
+	.priv_auto_alloc_size	= sizeof(struct fsl_pq_mdio_info),
+};
+#endif
