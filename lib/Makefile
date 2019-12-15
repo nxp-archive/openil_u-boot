@@ -102,6 +102,7 @@ obj-y += hexdump.o
 obj-$(CONFIG_TRACE) += trace.o
 obj-$(CONFIG_LIB_UUID) += uuid.o
 obj-$(CONFIG_LIB_RAND) += rand.o
+obj-$(CONFIG_PACKING) += packing.o
 obj-y += panic.o
 
 ifeq ($(CONFIG_$(SPL_TPL_)BUILD),y)
