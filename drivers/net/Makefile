@@ -22,6 +22,7 @@ obj-$(CONFIG_DNET) += dnet.o
 obj-$(CONFIG_E1000) += e1000.o
 obj-$(CONFIG_E1000_SPI) += e1000_spi.o
 obj-$(CONFIG_EEPRO100) += eepro100.o
+obj-$(CONFIG_SJA1105) += sja1105.o
 obj-$(CONFIG_SUN4I_EMAC) += sunxi_emac.o
 obj-$(CONFIG_SUN8I_EMAC) += sun8i_emac.o
 obj-$(CONFIG_EP93XX) += ep93xx_eth.o
