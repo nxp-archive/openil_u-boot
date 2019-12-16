@@ -1492,6 +1492,10 @@ config CMD_SOUND
 	     sound init   - set up sound system
 	     sound play   - play a sound
 
+config CMD_WAVPLAYER
+	bool "wavplayer"
+	depends on SOUND
+
 config CMD_QFW
 	bool "qfw"
 	select QFW
