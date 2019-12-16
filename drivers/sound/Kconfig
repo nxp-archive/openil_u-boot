@@ -130,4 +130,22 @@ config SOUND_WM8994
 	  audio data and I2C for codec control. At present it only works
 	  with the Samsung I2S driver.
 
+config FSL_SOUND
+	bool "Freescale sound"
+	depends on SOUND
+
+config SOUND_SGTL5000
+	bool "Freescale sgtl5000 audio condec"
+	depends on I2S
+	help
+	   Enable the sgtl5000 audio codec.This is connected via I2S for
+	   audio data and I2C for codec control.
+
+config FSL_SAI
+	bool "Freescale SAI module "
+	depends on I2S
+	help
+	   The synchronous audio interface (SAI) that supports fullduplex
+	   serial interfaces with frame synchronization such as I2S, AC97,
+	   TDM, and codec/DSP interfaces.
 endmenu

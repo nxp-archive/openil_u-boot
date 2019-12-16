@@ -21,3 +21,6 @@ obj-$(CONFIG_SOUND_I8254)	+= i8254_beep.o
 obj-$(CONFIG_SOUND_RT5677)	+= rt5677.o
 obj-$(CONFIG_INTEL_BROADWELL)	+= broadwell_i2s.o broadwell_sound.o
 obj-$(CONFIG_SOUND_IVYBRIDGE)	+= ivybridge_sound.o
+obj-$(CONFIG_SOUND_SGTL5000)	+= sgtl5000.o
+obj-$(CONFIG_FSL_SAI)	+= fsl-sai.o
+obj-$(CONFIG_FSL_SOUND)	+= fsl_sound.o
