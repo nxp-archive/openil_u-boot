@@ -19,7 +19,7 @@ int test_net(void)
 {
 #ifdef CONFIG_ENETC_COREID_SET
 	pci_init();
-	udelay(10 * 1000);  /* avoid that baremetal sometimes hang  */
+	mdelay(1 * 1000);  /* avoid that baremetal sometimes hang  */
 	eth_initialize();
 #endif
 	net_ping_ip = string_to_ip(ping_ip);
