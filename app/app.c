@@ -11,6 +11,7 @@
 #include <environment.h>
 #include <linux/types.h>
 #include "test.h"
+#include "../cmd/wavplayer.h"
 
 void core1_main(void)
 {
@@ -50,6 +51,10 @@ void core1_main(void)
 #endif
 #ifdef CONFIG_TARGET_MX6SABRESD
 	test_icc_func_init();
+#endif
+
+#if defined(CONFIG_TARGET_LS1028ARDB) && defined(CONFIG_CMD_WAVPLAYER)
+	test_wavplay();
 #endif
 	return;
 }
