@@ -25,6 +25,13 @@
 #define QIXIS_RCW_SRC_SD           0x08
 #define NON_EXTENDED_DUTCFG
 
+/* Baremetal configuration */
+#ifdef CONFIG_BAREMETAL
+#define CONFIG_SYS_DDR_SDRAM_SLAVE_SIZE        0x10000000ull
+#define CONFIG_MASTER_CORE                     0
+#define CONFIG_SYS_DDR_SDRAM_MASTER_SIZE       0x120000000ull
+#endif
+
 /* VID */
 
 #define I2C_MUX_CH_VOL_MONITOR		0xA
