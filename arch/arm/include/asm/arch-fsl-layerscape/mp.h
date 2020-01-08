@@ -23,8 +23,8 @@
 #define SPIN_TABLE_ELEM_LPID_IDX	2
 /* compare os arch and cpu arch */
 #define SPIN_TABLE_ELEM_ARCH_COMP_IDX	3
-#define WORDS_PER_SPIN_TABLE_ENTRY	8	/* pad to 64 bytes */
-#define SPIN_TABLE_ELEM_SIZE		64
+#define WORDS_PER_SPIN_TABLE_ENTRY	16	/* pad to 128 bytes */
+#define SPIN_TABLE_ELEM_SIZE		128
 
 /* os arch is same as cpu arch */
 #define OS_ARCH_SAME			0
