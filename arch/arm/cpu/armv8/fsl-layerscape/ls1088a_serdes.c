@@ -57,7 +57,7 @@ bool soc_has_mac1(void)
 	unsigned int svr = gur_in32(&gur->svr);
 	unsigned int version = SVR_SOC_VER(svr);
 
-	return version == SVR_LS1088A;
+	return (version == SVR_LS1088A || version == SVR_LS1084A);
 }
 
 int serdes_get_number(int serdes, int cfg)
