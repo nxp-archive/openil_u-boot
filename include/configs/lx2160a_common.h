@@ -1,6 +1,6 @@
 /* SPDX-License-Identifier: GPL-2.0+ */
 /*
- * Copyright 2018-2019 NXP
+ * Copyright 2018-2020 NXP
  */
 
 #ifndef __LX2_COMMON_H
@@ -247,8 +247,6 @@ int select_i2c_ch_pca9547_sec(unsigned char ch);
 	BOOTENV					\
 	"mcmemsize=0x70000000\0"		\
 	XSPI_MC_INIT_CMD				\
-	"boot_scripts=lx2160ardb_boot.scr\0"	\
-	"boot_script_hdr=hdr_lx2160ardb_bs.out\0"	\
 	"scan_dev_for_boot_part="		\
 		"part list ${devtype} ${devnum} devplist; "	\
 		"env exists devplist || setenv devplist 1; "	\
