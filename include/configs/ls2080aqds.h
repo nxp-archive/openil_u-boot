@@ -1,6 +1,6 @@
 /* SPDX-License-Identifier: GPL-2.0+ */
 /*
- * Copyright 2017, 2019 NXP
+ * Copyright 2017, 2019-2020 NXP
  * Copyright 2015 Freescale Semiconductor
  */
 
@@ -365,8 +365,8 @@ unsigned long get_board_ddr_clk(void);
 	"kernel_load=0xa0000000\0"		\
 	"kernel_size=0x2800000\0"		\
 	"mcmemsize=0x40000000\0"		\
-	"mcinitcmd=esbc_validate 0x580700000;"  \
-	"esbc_validate 0x580740000;"            \
+	"mcinitcmd=esbc_validate 0x580640000;"  \
+	"esbc_validate 0x580680000;"            \
 	"fsl_mc start mc 0x580a00000"           \
 	" 0x580e00000 \0"
 #else
@@ -394,7 +394,7 @@ unsigned long get_board_ddr_clk(void);
 	"kernel_size=0x2800000\0"               \
 	"kernel_size_sd=0x14000\0"               \
 	"load_addr=0xa0000000\0"		            \
-	"kernelheader_addr=0x580800000\0"	\
+	"kernelheader_addr=0x580600000\0"	\
 	"kernelheader_addr_r=0x80200000\0"	\
 	"kernelheader_size=0x40000\0"		\
 	"BOARD=ls2088aqds\0" \
@@ -447,7 +447,7 @@ unsigned long get_board_ddr_clk(void);
 #ifdef CONFIG_TFABOOT
 #define SD_BOOTCOMMAND						\
 			"env exists mcinitcmd && env exists secureboot "\
-			"&& mmcinfo && mmc read $load_addr 0x3c00 0x800 " \
+			"&& mmcinfo && mmc read $load_addr 0x3600 0x800 " \
 			"&& esbc_validate $load_addr; "			\
 			"env exists mcinitcmd && run mcinitcmd "	\
 			"&& mmc read 0x80d00000 0x6800 0x800 "		\
@@ -457,7 +457,7 @@ unsigned long get_board_ddr_clk(void);
 
 #define IFC_NOR_BOOTCOMMAND						\
 			"env exists mcinitcmd && env exists secureboot "\
-			"&& esbc_validate 0x580780000; env exists mcinitcmd "\
+			"&& esbc_validate 0x5806C0000; env exists mcinitcmd "\
 			"&& fsl_mc lazyapply dpl 0x580d00000;"		\
 			"run nor_bootcmd; "		\
 			"env exists secureboot && esbc_halt;"
