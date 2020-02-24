@@ -756,6 +756,7 @@ static int nxp_fspi_exec_op(struct spi_slave *slave,
 	err = fspi_readl_poll_tout(f, f->iobase + FSPI_STS0,
 				   FSPI_STS0_ARB_IDLE, 1, POLL_TOUT, true);
 	WARN_ON(err);
+	udelay(1);
 
 	nxp_fspi_prepare_lut(f, op);
 	/*
