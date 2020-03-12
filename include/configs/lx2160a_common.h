@@ -298,7 +298,8 @@ int select_i2c_ch_pca9547_sec(unsigned char ch);
 	func(USB, usb, 0) \
 	func(MMC, mmc, 0) \
 	func(MMC, mmc, 1) \
-	func(SCSI, scsi, 0)
+	func(SCSI, scsi, 0) \
+	func(DHCP, dhcp, na)
 #include <config_distro_bootcmd.h>
 
 #endif /* __LX2_COMMON_H */
