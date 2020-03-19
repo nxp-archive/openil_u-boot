@@ -37,7 +37,7 @@ source "board/freescale/common/Kconfig"
 
 endif
 
-if TARGET_LS1028ARDB
+if TARGET_LS1028ARDB || TARGET_LS1028ATSN
 
 config SYS_BOARD
 	default "ls1028a"
