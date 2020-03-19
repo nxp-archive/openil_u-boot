@@ -312,8 +312,8 @@
 		reg = <0x0 0x2100000 0x0 0x10000>;
 		interrupts = <GIC_SPI 26 IRQ_TYPE_LEVEL_HIGH>;
 		clock-names = "dspi";
-		clocks = <&clockgen 4 0>;
-		num-cs = <5>;
+		clocks = <&clockgen 4 1>;
+		num-cs = <4>;
 		litte-endian;
 		status = "disabled";
 	};
@@ -325,8 +325,8 @@
 		reg = <0x0 0x2110000 0x0 0x10000>;
 		interrupts = <GIC_SPI 26 IRQ_TYPE_LEVEL_HIGH>;
 		clock-names = "dspi";
-		clocks = <&clockgen 4 0>;
-		num-cs = <5>;
+		clocks = <&clockgen 4 1>;
+		num-cs = <4>;
 		little-endian;
 		status = "disabled";
 	};
@@ -338,8 +338,8 @@
 		reg = <0x0 0x2120000 0x0 0x10000>;
 		interrupts = <GIC_SPI 26 IRQ_TYPE_LEVEL_HIGH>;
 		clock-names = "dspi";
-		clocks = <&clockgen 4 0>;
-		num-cs = <5>;
+		clocks = <&clockgen 4 1>;
+		num-cs = <3>;
 		little-endian;
 		status = "disabled";
 	};
