@@ -136,8 +136,10 @@ static int felix_mdio_write(struct mii_dev *bus, int addr, int devad, int reg,
 /* set up serdes for SGMII */
 static int felix_init_sgmii(struct udevice *dev, int port, int if_type)
 {
+	struct dsa_perdev_platdata *platdata = dev->platdata;
 	struct felix_priv *priv = dev_get_priv(dev);
-	bool is2500 = false;
+	struct phy_device *phy;
+	bool autoneg = true;
 	u16 reg;
 
 	/* set up PCS lane address */
@@ -147,8 +149,10 @@ static int felix_init_sgmii(struct udevice *dev, int port, int if_type)
 	if (!priv->imdio.priv)
 		return 0;
 
-	if (if_type == PHY_INTERFACE_MODE_SGMII_2500)
-		is2500 = true;
+	phy = platdata->port[port].phy;
+	if (!phy || phy->phy_id == PHY_FIXED_ID ||
+	    if_type == PHY_INTERFACE_MODE_SGMII_2500)
+		autoneg = false;
 
 	/*
 	 * Set to SGMII mode, for 1Gbps enable AN, for 2.5Gbps set fixed speed.
@@ -157,7 +161,12 @@ static int felix_init_sgmii(struct udevice *dev, int port, int if_type)
 	 * but intentional.
 	 */
 	reg = ENETC_PCS_IF_MODE_SGMII;
-	reg |= is2500 ? ENETC_PCS_IF_MODE_SPEED_1G : ENETC_PCS_IF_MODE_SGMII_AN;
+
+	if (autoneg)
+		reg |= ENETC_PCS_IF_MODE_SGMII_AN;
+	else
+		reg |= ENETC_PCS_IF_MODE_SPEED_1G;
+
 	felix_mdio_write(&priv->imdio, port, MDIO_DEVAD_NONE,
 			 ENETC_PCS_IF_MODE, reg);
 
@@ -172,7 +181,10 @@ static int felix_init_sgmii(struct udevice *dev, int port, int if_type)
 			 ENETC_PCS_LINK_TIMER2, ENETC_PCS_LINK_TIMER2_VAL);
 
 	reg = ENETC_PCS_CR_DEF_VAL;
-	reg |= is2500 ? ENETC_PCS_CR_RST : ENETC_PCS_CR_RESET_AN;
+	if (autoneg)
+		reg |= ENETC_PCS_CR_RESET_AN;
+	else
+		reg |= ENETC_PCS_CR_RST;
 	/* restart PCS AN */
 	felix_mdio_write(&priv->imdio, port, MDIO_DEVAD_NONE,
 			 ENETC_PCS_CR, reg);
