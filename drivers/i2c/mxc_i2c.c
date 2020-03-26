@@ -10,7 +10,7 @@
  *  Copyright (C) 2005 Matthias Blaschke <blaschke at synertronixx.de>
  *  Copyright (C) 2007 RightHand Technologies, Inc.
  *  Copyright (C) 2008 Darius Augulis <darius.augulis at teltonika.lt>
- *  Copyright (C) 2019 NXP
+ *  Copyright 2019-2020 NXP
  *
  */
 
