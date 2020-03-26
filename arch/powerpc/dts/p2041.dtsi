@@ -50,6 +50,18 @@
 		device_type = "soc";
 		compatible = "simple-bus";
 
+		usb0: usb@210000 {
+			compatible = "fsl-usb2-mph";
+			reg = <0x210000 0x1000>;
+			phy_type = "utmi";
+		};
+
+		usb1: usb@211000 {
+			compatible = "fsl-usb2-mph";
+			reg = <0x210000 0x1000>;
+			phy_type = "utmi";
+		};
+
 		mpic: pic@40000 {
 			interrupt-controller;
 			#address-cells = <0>;
@@ -64,6 +76,24 @@
 			compatible = "fsl,esdhc";
 			reg = <0x114000 0x1000>;
 			clock-frequency = <0>;
+		};
+
+		espi0: spi@110000 {
+			compatible = "fsl,mpc8536-espi";
+			#address-cells = <1>;
+			#size-cells = <0>;
+			reg = <0x110000 0x1000>;
+			fsl,espi-num-chipselects = <4>;
+			status = "disabled";
+		};
+
+		sata: sata@220000 {
+			compatible = "fsl,pq-sata-v2";
+			reg = <0x220000 0x1000>;
+			interrupts = <68 0x2 0 0>;
+			sata-offset = <0x1000>;
+			sata-number = <2>;
+			sata-fpdma = <0>;
 		};
 	};
 

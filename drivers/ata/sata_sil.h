@@ -1,6 +1,7 @@
 /* SPDX-License-Identifier: GPL-2.0+ */
 /*
  * Copyright (C) 2011 Freescale Semiconductor, Inc.
+ * Copyright 2019 NXP
  * Author: Tang Yuantian <b29983@freescale.com>
  */
 
@@ -13,7 +14,7 @@
 /*
  * SATA device driver struct for each dev
  */
-struct sil_sata {
+typedef struct sil_sata {
 	char	name[12];
 	void	*port;	/* the port base address */
 	int		lba48;
@@ -24,7 +25,8 @@ struct sil_sata {
 	int		wcache;
 	int		flush;
 	int		flush_ext;
-};
+	int		id;
+} sil_sata_t;
 
 /* sata info for each controller */
 struct sata_info {
@@ -209,5 +211,13 @@ enum {
 
 	CMD_ERR		= 0x21,
 };
+
+#if CONFIG_IS_ENABLED(BLK)
+#define ATA_MAX_PORTS		32
+struct sil_sata_priv {
+	int		port_num;
+	sil_sata_t	*sil_sata_desc[ATA_MAX_PORTS];
+};
+#endif
 
 #endif
