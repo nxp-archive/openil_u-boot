@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0+
 /*
- * (C) Copyright 2019 NXP
+ * Copyright 2019 NXP
  */
 
 #include <net/dsa.h>
