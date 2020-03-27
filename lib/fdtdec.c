@@ -506,13 +506,14 @@ int fdtdec_get_alias_seq(const void *blob, const char *base, int offset,
 			 int *seqp)
 {
 	int base_len = strlen(base);
-	const char *find_name;
-	int find_namelen;
 	int prop_offset;
+	char path[64];
+	int path_len;
 	int aliases;
 
-	find_name = fdt_get_name(blob, offset, &find_namelen);
-	debug("Looking for '%s' at %d, name %s\n", base, offset, find_name);
+	fdt_get_path(blob, offset, path, sizeof(path));
+	path_len = strlen(path);
+	debug("Looking for '%s' at %d, path %s\n", base, offset, path);
 
 	aliases = fdt_path_offset(blob, "/aliases");
 	for (prop_offset = fdt_first_property_offset(blob, aliases);
@@ -520,17 +521,15 @@ int fdtdec_get_alias_seq(const void *blob, const char *base, int offset,
 	     prop_offset = fdt_next_property_offset(blob, prop_offset)) {
 		const char *prop;
 		const char *name;
-		const char *slash;
 		int len, val;
 
 		prop = fdt_getprop_by_offset(blob, prop_offset, &name, &len);
 		debug("   - %s, %s\n", name, prop);
-		if (len < find_namelen || *prop != '/' || prop[len - 1] ||
+		if (len < path_len || *prop != '/' || prop[len - 1] ||
 		    strncmp(name, base, base_len))
 			continue;
 
-		slash = strrchr(prop, '/');
-		if (strcmp(slash + 1, find_name))
+		if (strcmp(prop, path))
 			continue;
 		val = trailing_strtol(name);
 		if (val != -1) {
