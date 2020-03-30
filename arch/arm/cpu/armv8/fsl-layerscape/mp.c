@@ -186,6 +186,10 @@ int fsl_layerscape_wakeup_fixed_core(u32 coreid, u64 addr)
 	u32 core_mask;
 	u64 *table = get_spin_tbl_addr();
 	unsigned long relocaddr = addr;
+#ifdef CONFIG_ARCH_LX2160A
+	u32 cluster;
+	u32 mpidr;
+#endif
 
 #ifdef COUNTER_FREQUENCY_REAL
 	/* update for secondary cores */
@@ -209,7 +213,13 @@ int fsl_layerscape_wakeup_fixed_core(u32 coreid, u64 addr)
 #ifdef CONFIG_FSL_LSCH3
 	gur_out32(&gur->bootlocptrh, (u32)(relocaddr >> 32));
 	gur_out32(&gur->bootlocptrl, (u32)relocaddr);
+#ifdef CONFIG_ARCH_LX2160A
+	cluster = coreid / 2;
+	mpidr = cluster << 8 | coreid % 2;
+	gur_out32(&gur->scratchrw[6], mpidr);
+#else
 	gur_out32(&gur->scratchrw[6], 1);
+#endif
 	asm volatile("dsb st" : : : "memory");
 	rst->brrl = core_mask;
 	asm volatile("dsb st" : : : "memory");

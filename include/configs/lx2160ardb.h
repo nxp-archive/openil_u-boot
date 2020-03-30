@@ -79,6 +79,13 @@
 
 #endif
 
+/* Baremetal configuration */
+#ifdef CONFIG_BAREMETAL
+#define CONFIG_SYS_DDR_SDRAM_SLAVE_SIZE        0x10000000ull
+#define CONFIG_MASTER_CORE                     0
+#define CONFIG_SYS_DDR_SDRAM_MASTER_SIZE       0x120000000ull
+#endif
+
 /* EMC2305 */
 #define I2C_MUX_CH_EMC2305		0x09
 #define I2C_EMC2305_ADDR		0x4D
