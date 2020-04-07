@@ -55,6 +55,10 @@ void core1_main(void)
 	test_icc_func_init();
 #endif
 
+#ifdef CONFIG_TARGET_LX2160ARDB
+	test_icc_func_init();
+#endif
+
 #if defined(CONFIG_TARGET_LS1028ARDB) && defined(CONFIG_CMD_WAVPLAYER)
 	test_wavplay();
 #endif
@@ -83,6 +87,90 @@ void core3_main(void)
 #ifdef CONFIG_USB_COREID_SET
 	test_usb();
 #endif
+
+	return;
+}
+
+void core4_main(void)
+{
+	test_icc_func_init();
+
+	return;
+}
+
+void core5_main(void)
+{
+	test_icc_func_init();
+
+	return;
+}
+
+void core6_main(void)
+{
+	test_icc_func_init();
+
+	return;
+}
+
+void core7_main(void)
+{
+	test_icc_func_init();
+
+	return;
+}
+
+void core8_main(void)
+{
+	test_icc_func_init();
+
+	return;
+}
+
+void core9_main(void)
+{
+	test_icc_func_init();
+
+	return;
+}
+
+void core10_main(void)
+{
+	test_icc_func_init();
+
+	return;
+}
+
+void core11_main(void)
+{
+	test_icc_func_init();
+
+	return;
+}
+
+void core12_main(void)
+{
+	test_icc_func_init();
+
+	return;
+}
+
+void core13_main(void)
+{
+	test_icc_func_init();
+
+	return;
+}
+
+void core14_main(void)
+{
+	test_icc_func_init();
+
+	return;
+}
+
+void core15_main(void)
+{
+	test_icc_func_init();
 
 	return;
 }
