@@ -221,11 +221,11 @@ static int dsa_port_parse_dt(struct udevice *dev, int port_index,
 		    reg != port_index)
 			continue;
 
+		port->node = temp_node;
+
 		/* if the port is explicitly disabled in DT skip it */
 		if (!ofnode_is_available(temp_node))
 			return -ENODEV;
-
-		port->node = temp_node;
 
 		dev_dbg(dev, "port %d node %s\n", port->index,
 			ofnode_get_name(port->node));
