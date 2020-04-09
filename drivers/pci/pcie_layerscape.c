@@ -655,7 +655,7 @@ static const struct udevice_id ls_pcie_ids[] = {
 };
 
 U_BOOT_DRIVER(pci_layerscape) = {
-	.name = "pci_layerscape",
+	.name = PCI_LS_DRV_NAME,
 	.id = UCLASS_PCI,
 	.of_match = ls_pcie_ids,
 	.ops = &ls_pcie_ops,

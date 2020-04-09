@@ -180,6 +180,9 @@ static void fdt_fixup_pcie_ls(void *blob)
 	     pci_find_next_device(&dev)) {
 		for (bus = dev; device_is_on_pci_bus(bus);)
 			bus = bus->parent;
+		/* check that this is the LS PCI controller */
+		if (strcmp(bus->driver->name, PCI_LS_DRV_NAME))
+			continue;
 		pcie = dev_get_priv(bus);
 
 		streamid = pcie_next_streamid(pcie->stream_id_cur, pcie->idx);
