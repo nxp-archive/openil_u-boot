@@ -12,13 +12,10 @@
 #define DSA_PORT_CHILD_DRV_NAME "dsa-port"
 
 /* helper that returns the DSA master Ethernet device. */
-static struct udevice *dsa_port_get_master(struct udevice *pdev, bool probe)
+static struct udevice *dsa_port_get_master(struct udevice *pdev)
 {
 	struct udevice *dev = dev_get_parent(pdev);
 	struct dsa_perdev_platdata *platdata = dev_get_platdata(dev);
-
-	if (probe)
-		device_probe(platdata->master_dev);
 
 	return platdata->master_dev;
 }
@@ -31,7 +28,7 @@ static int dsa_port_start(struct udevice *pdev)
 {
 	struct udevice *dev = dev_get_parent(pdev);
 	struct dsa_perdev_platdata *platdata = dev_get_platdata(dev);
-	struct udevice *master = dsa_port_get_master(pdev, true);
+	struct udevice *master = dsa_port_get_master(pdev);
 	struct dsa_port_platdata *ppriv = dev_get_priv(pdev);
 	struct dsa_ops *ops = dsa_get_ops(dev);
 	int err;
@@ -62,7 +59,7 @@ static void dsa_port_stop(struct udevice *pdev)
 {
 	struct udevice *dev = dev_get_parent(pdev);
 	struct dsa_perdev_platdata *platdata = dev_get_platdata(dev);
-	struct udevice *master = dsa_port_get_master(pdev, false);
+	struct udevice *master = dsa_port_get_master(pdev);
 	struct dsa_port_platdata *ppriv = dev_get_priv(pdev);
 	struct dsa_ops *ops = dsa_get_ops(dev);
 
@@ -93,7 +90,7 @@ static int dsa_port_send(struct udevice *pdev, void *packet, int length)
 {
 	struct udevice *dev = dev_get_parent(pdev);
 	struct dsa_perdev_platdata *platdata = dev_get_platdata(dev);
-	struct udevice *master = dsa_port_get_master(pdev, true);
+	struct udevice *master = dsa_port_get_master(pdev);
 	struct dsa_port_platdata *ppriv = dev_get_priv(pdev);
 	struct dsa_ops *ops = dsa_get_ops(dev);
 	uchar dsa_packet[DSA_MAX_FRAME_SIZE];
@@ -123,7 +120,7 @@ static int dsa_port_recv(struct udevice *pdev, int flags, uchar **packetp)
 {
 	struct udevice *dev = dev_get_parent(pdev);
 	struct dsa_perdev_platdata *platdata = dev_get_platdata(dev);
-	struct udevice *master = dsa_port_get_master(pdev, true);
+	struct udevice *master = dsa_port_get_master(pdev);
 	struct dsa_port_platdata *ppriv = dev_get_priv(pdev);
 	struct dsa_ops *ops = dsa_get_ops(dev);
 	int head = platdata->headroom, tail = platdata->tailroom;
@@ -163,7 +160,7 @@ static int dsa_port_free_pkt(struct udevice *pdev, uchar *packet, int length)
 {
 	struct udevice *dev = dev_get_parent(pdev);
 	struct dsa_perdev_platdata *platdata = dev_get_platdata(dev);
-	struct udevice *master = dsa_port_get_master(pdev, true);
+	struct udevice *master = dsa_port_get_master(pdev);
 
 	if (!master)
 		return -EINVAL;
@@ -343,9 +340,11 @@ static int dm_dsa_pre_probe(struct udevice *dev)
 	if (!platdata)
 		return -EINVAL;
 
-	if (ofnode_valid(platdata->master_node))
+	if (ofnode_valid(platdata->master_node)) {
 		uclass_find_device_by_ofnode(UCLASS_ETH, platdata->master_node,
 					     &platdata->master_dev);
+		device_probe(platdata->master_dev);
+	}
 
 	for (i = 0; i < platdata->num_ports; i++) {
 		struct dsa_port_platdata *port = &platdata->port[i];
