@@ -176,6 +176,32 @@ static int dsa_port_free_pkt(struct udevice *pdev, uchar *packet, int length)
 	return 0;
 }
 
+static int dsa_port_probe(struct udevice *pdev)
+{
+	struct udevice *master = dsa_port_get_master(pdev);
+	unsigned char env_enetaddr[ARP_HLEN];
+
+	/* If there is no MAC address in the environment, inherit it
+	 * from the DSA master.
+	 */
+	eth_env_get_enetaddr_by_index("eth", pdev->seq, env_enetaddr);
+	if (!is_zero_ethaddr(env_enetaddr))
+		return 0;
+
+	if (master) {
+		struct eth_pdata *slave_pdata, *master_pdata;
+
+		master_pdata = dev_get_platdata(master);
+		slave_pdata = dev_get_platdata(pdev);
+		memcpy(slave_pdata->enetaddr, master_pdata->enetaddr,
+		       ARP_HLEN);
+		eth_env_set_enetaddr_by_index("eth", pdev->seq,
+					      master_pdata->enetaddr);
+	}
+
+	return 0;
+}
+
 static const struct eth_ops dsa_port_ops = {
 	.start		= dsa_port_start,
 	.send		= dsa_port_send,
@@ -188,6 +214,7 @@ U_BOOT_DRIVER(dsa_port) = {
 	.name	= DSA_PORT_CHILD_DRV_NAME,
 	.id	= UCLASS_ETH,
 	.ops	= &dsa_port_ops,
+	.probe	= dsa_port_probe,
 	.platdata_auto_alloc_size = sizeof(struct eth_pdata),
 };
 
