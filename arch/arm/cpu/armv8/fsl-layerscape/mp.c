@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0+
 /*
  * Copyright 2014-2015 Freescale Semiconductor, Inc.
- * Copyright 2018-2019 NXP
+ * Copyright 2018-2020 NXP
  */
 
 #include <common.h>
@@ -353,5 +353,8 @@ int get_core_id(void)
 			     :
 			     : "memory");
 
-	return aff & 0xFF;
+	aff = aff & 0xFFFF;
+	aff = ((aff >> 8) * CORE_NUM_PER_CLUSTER) + (aff & 0xF);
+
+	return aff;
 }
