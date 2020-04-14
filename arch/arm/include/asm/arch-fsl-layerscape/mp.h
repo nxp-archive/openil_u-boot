@@ -1,7 +1,7 @@
 /* SPDX-License-Identifier: GPL-2.0+ */
 /*
  * Copyright 2014-2015, Freescale Semiconductor
- * Copyright 2018-2019 NXP
+ * Copyright 2018-2020 NXP
  */
 
 #ifndef _FSL_LAYERSCAPE_MP_H
@@ -23,8 +23,8 @@
 #define SPIN_TABLE_ELEM_LPID_IDX	2
 /* compare os arch and cpu arch */
 #define SPIN_TABLE_ELEM_ARCH_COMP_IDX	3
-#define WORDS_PER_SPIN_TABLE_ENTRY	8	/* pad to 64 bytes */
-#define SPIN_TABLE_ELEM_SIZE		64
+#define WORDS_PER_SPIN_TABLE_ENTRY	16	/* pad to 128 bytes */
+#define SPIN_TABLE_ELEM_SIZE		128
 
 /* os arch is same as cpu arch */
 #define OS_ARCH_SAME			0
