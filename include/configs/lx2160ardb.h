@@ -1,12 +1,13 @@
 /* SPDX-License-Identifier: GPL-2.0+ */
 /*
- * Copyright 2018 NXP
+ * Copyright 2018-2020 NXP
  */
 
 #ifndef __LX2_RDB_H
 #define __LX2_RDB_H
 
 #include "lx2160a_common.h"
+#include "lx2160ardb_config.h"
 
 /* Qixis */
 #define QIXIS_XMAP_MASK			0x07

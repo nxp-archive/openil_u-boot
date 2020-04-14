@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0+
 /*
- * Copyright 2018-2019 NXP
+ * Copyright 2018-2020 NXP
  *
  */
 
@@ -15,6 +15,7 @@
 
 void core1_main(void)
 {
+#ifndef CONFIG_TARGET_LX2160ARDB
 #ifndef CONFIG_TARGET_MX6SABRESD
 #ifndef CONFIG_TARGET_LS1028ARDB
 	test_i2c();
@@ -46,6 +47,7 @@ void core1_main(void)
 	test_icc_func_init();
 #ifdef CONFIG_ENETC_COREID_SET
 	test_net();
+#endif
 #endif
 #endif
 #endif
