@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0+
 /*
- * Copyright 2018-2019 NXP
+ * Copyright 2018-2020 NXP
  *
  */
 
@@ -132,7 +132,21 @@ void icc_block_free(unsigned long block)
 void icc_set_sgi(int core_mask, unsigned int hw_irq)
 {
 #if defined(CONFIG_GICV3)
+#ifdef	CONFIG_ARCH_LX2160A
+	static unsigned long i, cluster, mask, val;
+
+	ICC_TRG_CORE = mycoreid;
+	for (i = 0; i < 16; i++) {
+		if ((core_mask >> i) & 0x1) {
+			cluster = i / CORE_NUM_PER_CLUSTER;
+			mask = i % CORE_NUM_PER_CLUSTER;
+			val |= (1 << mask) | (cluster << 16);
+			gic_send_sgi_test(hw_irq, val);
+		}
+	}
+#else
 	gic_send_sgi_test(hw_irq, core_mask);
+#endif
 #else
 	gic_set_sgi(core_mask, hw_irq);
 #endif
@@ -273,7 +287,10 @@ static void icc_irq_handler(int hw_irq, int src_coreid)
 				hw_irq, ICC_SGI);
 		return;
 	}
-
+#ifdef	CONFIG_ARCH_LX2160A
+	src_coreid = ICC_TRG_CORE;
+	ICC_TRG_CORE = 0;
+#endif
 	if (src_coreid == mycoreid) {
 		printf("Do not support self-icc now!\n");
 		return;
@@ -321,6 +338,9 @@ int icc_init(void)
 	int ret;
 
 	mycoreid = get_core_id();
+#ifdef	CONFIG_ARCH_LX2160A
+	ICC_TRG_CORE = 0;
+#endif
 	ret = icc_check_resource(mycoreid);
 	if (ret) {
 		printf("Core%d check resource failed! %d\n", mycoreid, ret);

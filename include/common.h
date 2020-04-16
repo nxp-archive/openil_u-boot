@@ -3,7 +3,7 @@
  * (C) Copyright 2000-2009
  * Wolfgang Denk, DENX Software Engineering, wd@denx.de.
  *
- * Copyright 2018-2019 NXP
+ * Copyright 2018-2020 NXP
  *
  */
 
@@ -83,6 +83,18 @@ void	main_loop	(void);
 void	core1_main(void);
 void	core2_main(void);
 void	core3_main(void);
+void	core4_main(void);
+void	core5_main(void);
+void	core6_main(void);
+void	core7_main(void);
+void	core8_main(void);
+void	core9_main(void);
+void	core10_main(void);
+void	core11_main(void);
+void	core12_main(void);
+void	core13_main(void);
+void	core14_main(void);
+void	core15_main(void);
 int run_command(const char *cmd, int flag);
 int run_command_repeatable(const char *cmd, int flag);
 
