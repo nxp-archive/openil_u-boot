@@ -651,7 +651,7 @@ static struct phy_device *phy_device_create(struct mii_dev *bus, int addr,
 	dev = malloc(sizeof(*dev));
 	if (!dev) {
 		printf("Failed to allocate PHY device for %s:%d\n",
-		       bus->name, addr);
+		       bus ? bus->name : "(null bus)", addr);
 		return NULL;
 	}
 
@@ -679,7 +679,7 @@ static struct phy_device *phy_device_create(struct mii_dev *bus, int addr,
 		return NULL;
 	}
 
-	if (addr >= 0 && addr < PHY_MAX_ADDR)
+	if (addr >= 0 && addr < PHY_MAX_ADDR && phy_id != PHY_FIXED_ID)
 		bus->phymap[addr] = dev;
 
 	return dev;
