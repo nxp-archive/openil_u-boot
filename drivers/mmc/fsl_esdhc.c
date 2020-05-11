@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0+
 /*
  * Copyright 2007, 2010-2011 Freescale Semiconductor, Inc
- * Copyright 2019 NXP Semiconductors
+ * Copyright 2019-2020 NXP
  * Andy Fleming
  *
  * Based vaguely on the pxa mmc code:
@@ -636,7 +636,6 @@ static int esdhc_init_common(struct fsl_esdhc_priv *priv, struct mmc *mmc)
 static int esdhc_getcd_common(struct fsl_esdhc_priv *priv)
 {
 	struct fsl_esdhc *regs = priv->esdhc_regs;
-	int timeout = 1000;
 
 #ifdef CONFIG_ESDHC_DETECT_QUIRK
 	if (CONFIG_ESDHC_DETECT_QUIRK)
@@ -648,10 +647,10 @@ static int esdhc_getcd_common(struct fsl_esdhc_priv *priv)
 		return 1;
 #endif
 
-	while (!(esdhc_read32(&regs->prsstat) & PRSSTAT_CINS) && --timeout)
-		udelay(1000);
+	if (esdhc_read32(&regs->prsstat) & PRSSTAT_CINS)
+		return 1;
 
-	return timeout > 0;
+	return 0;
 }
 
 static int esdhc_reset(struct fsl_esdhc *regs)
