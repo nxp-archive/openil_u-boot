@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0+
 /*
  * Copyright 2007, 2010-2011 Freescale Semiconductor, Inc
- * Copyright 2019 NXP Semiconductors
+ * Copyright 2019-2020 NXP
  * Andy Fleming
  *
  * Based vaguely on the pxa mmc code:
@@ -598,6 +598,26 @@ static int esdhc_set_ios_common(struct fsl_esdhc_priv *priv, struct mmc *mmc)
 	return 0;
 }
 
+static int esdhc_getcd_common(struct fsl_esdhc_priv *priv)
+{
+	struct fsl_esdhc *regs = priv->esdhc_regs;
+
+#ifdef CONFIG_ESDHC_DETECT_QUIRK
+	if (CONFIG_ESDHC_DETECT_QUIRK)
+		return 1;
+#endif
+
+#if CONFIG_IS_ENABLED(DM_MMC)
+	if (priv->non_removable)
+		return 1;
+#endif
+
+	if (esdhc_read32(&regs->prsstat) & PRSSTAT_CINS)
+		return 1;
+
+	return 0;
+}
+
 static int esdhc_init_common(struct fsl_esdhc_priv *priv, struct mmc *mmc)
 {
 	struct fsl_esdhc *regs = priv->esdhc_regs;
@@ -612,6 +632,12 @@ static int esdhc_init_common(struct fsl_esdhc_priv *priv, struct mmc *mmc)
 		if (get_timer(start) > 1000)
 			return -ETIMEDOUT;
 	}
+#ifdef CONFIG_FSL_ESDHC_33V_IO_RELIABILITY_WORKAROUND
+	if (!esdhc_getcd_common(priv)) {
+		esdhc_setbits32(&regs->proctl, PROCTL_VOLT_SEL);
+		return 0;
+	}
+#endif
 
 	/* Enable cache snooping */
 	esdhc_write32(&regs->esdhcctl, 0x00000040);
@@ -631,27 +657,6 @@ static int esdhc_init_common(struct fsl_esdhc_priv *priv, struct mmc *mmc)
 	esdhc_clrsetbits32(&regs->sysctl, SYSCTL_TIMEOUT_MASK, 14 << 16);
 
 	return 0;
-}
-
-static int esdhc_getcd_common(struct fsl_esdhc_priv *priv)
-{
-	struct fsl_esdhc *regs = priv->esdhc_regs;
-	int timeout = 1000;
-
-#ifdef CONFIG_ESDHC_DETECT_QUIRK
-	if (CONFIG_ESDHC_DETECT_QUIRK)
-		return 1;
-#endif
-
-#if CONFIG_IS_ENABLED(DM_MMC)
-	if (priv->non_removable)
-		return 1;
-#endif
-
-	while (!(esdhc_read32(&regs->prsstat) & PRSSTAT_CINS) && --timeout)
-		udelay(1000);
-
-	return timeout > 0;
 }
 
 static int esdhc_reset(struct fsl_esdhc *regs)
@@ -927,12 +932,38 @@ __weak int esdhc_status_fixup(void *blob, const char *compat)
 	return 0;
 }
 
+#ifdef CONFIG_FSL_ESDHC_33V_IO_RELIABILITY_WORKAROUND
+static int fsl_esdhc_get_cd(struct udevice *dev);
+
+static void esdhc_disable_for_no_card(void *blob)
+{
+	struct udevice *dev;
+
+	for (uclass_first_device(UCLASS_MMC, &dev);
+	     dev;
+	     uclass_next_device(&dev)) {
+		char esdhc_path[50];
+
+		if (fsl_esdhc_get_cd(dev))
+			continue;
+
+		snprintf(esdhc_path, sizeof(esdhc_path), "/soc/esdhc@%lx",
+			 (unsigned long)dev_read_addr(dev));
+		do_fixup_by_path(blob, esdhc_path, "status", "disabled",
+				 sizeof("disabled"), 1);
+	}
+}
+#endif
+
 void fdt_fixup_esdhc(void *blob, bd_t *bd)
 {
 	const char *compat = "fsl,esdhc";
 
 	if (esdhc_status_fixup(blob, compat))
 		return;
+#ifdef CONFIG_FSL_ESDHC_33V_IO_RELIABILITY_WORKAROUND
+	esdhc_disable_for_no_card(blob);
+#endif
 
 #ifdef CONFIG_FSL_ESDHC_USE_PERIPHERAL_CLK
 	do_fixup_by_compat_u32(blob, compat, "peripheral-frequency",
