@@ -211,7 +211,7 @@
 
 #define FDT_SEQ_MACADDR_FROM_ENV
 
-#define CONFIG_ETHPRIME			"FM1@DTSEC3"
+#define CONFIG_ETHPRIME			"FM1@DTSEC5"
 #endif
 
 #endif
@@ -271,7 +271,7 @@
 			"eth5addr=00:04:9F:04:F0:F5\0" \
 			"eth6addr=00:04:9F:04:F0:F6\0" \
 			"eth7addr=68:05:ca:35:cc:61\0" \
-			"ethact=FM1@DTSEC3\0"			\
+			"ethact=FM1@DTSEC5\0"			\
 
 #include <asm/fsl_secure_boot.h>
 

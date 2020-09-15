@@ -507,11 +507,13 @@ int fm_init_common(int index, struct ccsr_fman *reg)
 	void *addr = NULL;
 #endif
 
+#ifndef CONFIG_BAREMETAL
 	/* Upload the Fman microcode if it's present */
 	rc = fman_upload_firmware(index, &reg->fm_imem, addr);
 	if (rc)
 		return rc;
 	env_set_addr("fman_ucode", addr);
+#endif
 
 	fm_init_muram(index, &reg->muram);
 	fm_init_qmi(&reg->fm_qmi_common);
