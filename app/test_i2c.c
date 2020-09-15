@@ -8,29 +8,38 @@
 #include <i2c.h>
 
 #ifdef CONFIG_TARGET_LS1021AIOT
-#define I2C_AUDIO_ADDR	0x2a
-#define I2C_AUDIO_OFFSET0_DATA	0xa0
+#define I2C_BUS_NUM  0
+#define I2C_CHIP_ADDR	0x2a
+#define I2C_OFFSET0_DATA	0xa0
+#define I2C_ADDR_LEN  2
+#define I2C_DATA_LEN  2
 #elif defined(CONFIG_TARGET_LS1043ARDB) || defined(CONFIG_TARGET_LS1046ARDB)
-#define I2C_AUDIO_ADDR  0x40
-#define I2C_AUDIO_OFFSET0_DATA  0x39
+#define I2C_BUS_NUM  0
+#define I2C_CHIP_ADDR  0x40
+#define I2C_OFFSET0_DATA  0x39
+#define I2C_ADDR_LEN  1
+#define I2C_DATA_LEN  2
 #else
-#define I2C_AUDIO_ADDR  0x40
-#define I2C_AUDIO_OFFSET0_DATA  0x39
+#define I2C_BUS_NUM  0
+#define I2C_CHIP_ADDR  0x40
+#define I2C_OFFSET0_DATA  0x39
+#define I2C_ADDR_LEN  1
+#define I2C_DATA_LEN  2
 #endif
 
 
 void test_i2c(void)
 {
-	/* I2C_AUDIO_ADDR is address of Audio codec. */
-	int chip = I2C_AUDIO_ADDR;
+	/* I2C_CHIP_ADDR is address of the i2c device. */
+	int chip = I2C_CHIP_ADDR;
 	int devaddr = 0;
-	int alen = 1;
-	unsigned char   linebuf[10];
-	int length = 1;
-	int bus_no;
+	unsigned char  linebuf[10];
+	int bus_no = I2C_BUS_NUM;
+	int alen = I2C_ADDR_LEN;
+	int length = I2C_DATA_LEN;
+
 	int ret;
 
-	bus_no = 0;
 	ret = i2c_set_bus_num(bus_no);
 	if (ret != 0) {
 		printf("[error]i2c test error, set bus error\n");
@@ -48,10 +57,10 @@ void test_i2c(void)
 	 * func to write i2c device.
 	 */
 
-	/* I2C_AUDIO_OFFSET0_DATA is a fixed data that is stored
-	 * in offset 0 of Audio codec device.
+	/* I2C_OFFSET0_DATA is a fixed data that is stored
+	 * in offset 0 of the i2c device.
 	 */
-	if (linebuf[0] == I2C_AUDIO_OFFSET0_DATA)
+	if (linebuf[0] == I2C_OFFSET0_DATA)
 		printf("[ok]i2c test ok\n");
 	else
 		printf("[error]i2c test error\n");
