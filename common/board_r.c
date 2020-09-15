@@ -595,7 +595,7 @@ static int initr_bbmii(void)
 #ifdef CONFIG_CMD_NET
 static int initr_net(void)
 {
-#ifdef CONFIG_FMAN1_COREID
+#ifdef CONFIG_FMAN_FMAN1_COREID
 	if (get_core_id() == CONFIG_FMAN_FMAN1_COREID) {
 		puts("Net:   ");
 		eth_initialize();
