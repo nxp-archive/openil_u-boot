@@ -9,6 +9,10 @@ config SYS_VENDOR
 config SYS_CONFIG_NAME
 	default "imx8mm_evk"
 
+config BAREMETAL
+	bool "Enable baremetal"
+	default y
+
 source "board/freescale/common/Kconfig"
 
 endif
