@@ -94,6 +94,7 @@ obj-$(CONFIG_CMD_MDIO) += mdio.o
 obj-$(CONFIG_CMD_MISC) += misc.o
 obj-$(CONFIG_CMD_MMC) += mmc.o
 obj-$(CONFIG_MP) += mp.o
+obj-$(CONFIG_ICC) += icc.o
 obj-$(CONFIG_CMD_MTD) += mtd.o
 obj-$(CONFIG_CMD_MTDPARTS) += mtdparts.o
 ifneq ($(CONFIG_CMD_NAND)$(CONFIG_CMD_SF),)

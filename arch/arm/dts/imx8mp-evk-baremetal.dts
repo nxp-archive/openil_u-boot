@@ -1,0 +1,16 @@
+// SPDX-License-Identifier: (GPL-2.0+ OR MIT)
+/*
+ * Copyright 2020 NXP
+ */
+
+/dts-v1/;
+
+#include "imx8mp-evk.dts"
+
+/ {
+	model = "NXP i.MX8MPlus LPDDR4 EVK board for baremetal";
+};
+
+&eqos {
+	status = "disabled";
+};

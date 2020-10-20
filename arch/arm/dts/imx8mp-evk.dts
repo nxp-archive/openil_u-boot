@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: (GPL-2.0+ OR MIT)
 /*
- * Copyright 2019 NXP
+ * Copyright 2019-2020 NXP
  */
 
 /dts-v1/;
@@ -92,7 +92,7 @@
 	pinctrl-0 = <&pinctrl_eqos>;
 	phy-mode = "rgmii-id";
 	phy-handle = <&ethphy0>;
-	status = "okay";
+	status = "disabled";
 
 	mdio {
 		compatible = "snps,dwmac-mdio";

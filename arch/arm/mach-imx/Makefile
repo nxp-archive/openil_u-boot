@@ -124,7 +124,10 @@ DEPFILE_EXISTS := $(shell $(CPP) $(cpp_flags) -x c -o u-boot-dtb.cfgout $(srctre
 else ifeq ($(CONFIG_ARCH_IMX8M), y)
 IMAGE_TYPE := imx8mimage
 IMX8M_DEPFILES := $(srctree)/tools/imx8m_image.sh
-DEPFILE_EXISTS := $(shell $(CPP) $(cpp_flags) -x c -o spl/u-boot-spl.cfgout $(srctree)/$(IMX_CONFIG);if [ -f spl/u-boot-spl.cfgout ]; then $(IMX8M_DEPFILES) spl/u-boot-spl.cfgout 0; echo $$?; fi)
+ifeq ($(CONFIG_SPL_BUILD),y)
+SPL_DEPFILE_EXISTS := $(shell $(CPP) $(cpp_flags) -x c -o spl/u-boot-spl.cfgout $(srctree)/$(IMX_CONFIG);if [ -f spl/u-boot-spl.cfgout ]; then $(IMX8M_DEPFILES) spl/u-boot-spl.cfgout 0; echo $$?; fi)
+endif
+DEPFILE_EXISTS := $(shell $(CPP) $(cpp_flags) -x c -o u-boot-dtb.cfgout $(srctree)/$(IMX_CONFIG); if [ -f u-boot-dtb.cfgout ]; then $(CNTR_DEPFILES) u-boot-dtb.cfgout; echo $$?; fi)
 else
 IMAGE_TYPE := imximage
 DEPFILE_EXISTS := 0

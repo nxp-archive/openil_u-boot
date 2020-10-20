@@ -167,4 +167,24 @@ typedef struct global_data {
 #define GD_FLG_LOG_READY	0x08000 /* Log system is ready for use	   */
 #define GD_FLG_WDT_READY	0x10000 /* Watchdog is ready for use	   */
 
+typedef struct {
+    u32 lock;
+    u32 owner;
+} arch_rwlock_t;
+
+/*
+ * Shared global data for slave cores
+ */
+typedef struct share_global_data {
+    arch_rwlock_t consol_lock_putc; /* spin lock for putc */
+    arch_rwlock_t consol_lock_puts; /* spin lock for puts */
+    arch_rwlock_t consol_lock_getc; /* spin lock for getc */
+    arch_rwlock_t lock_sgd;     /* spin lock for sgd */
+    u32 stream_channel;     /* mux stream channel */
+    /* core reset status, online or offline */
+    u32 core_reset_status[CONFIG_MAX_CPUS];
+    volatile u32 gpio_info[4];
+} sgd_t;
+
+
 #endif /* __ASM_GENERIC_GBL_DATA_H */

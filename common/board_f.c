@@ -64,6 +64,7 @@ DECLARE_GLOBAL_DATA_PTR = (gd_t *)(CONFIG_SYS_INIT_GD_ADDR);
 DECLARE_GLOBAL_DATA_PTR;
 #endif
 
+sgd_t *sgd = (sgd_t *)((u32 *)CONFIG_SYS_DDR_SDRAM_SHARE_RESERVE_BASE);
 /*
  * TODO(sjg@chromium.org): IMO this code should be
  * refactored to a single function, something like:
@@ -131,6 +132,24 @@ static int init_baud_rate(void)
 	return 0;
 }
 
+
+static int core_share_global_data_init(void)
+{
+	int coreid = get_core_id();
+
+	if (coreid != CONFIG_SLAVE_FIRST_CORE)
+		return 0;
+
+	memset(sgd, 0, sizeof(sgd_t));
+#ifdef CONFIG_ENABLE_WRITE_LOCK
+	arch_write_lock_init(&sgd->consol_lock_putc);
+	arch_write_lock_init(&sgd->consol_lock_puts);
+	arch_write_lock_init(&sgd->consol_lock_getc);
+	arch_write_lock_init(&sgd->lock_sgd);
+#endif
+	sgd->stream_channel = 0xFFFF;
+	return 0;
+}
 static int display_text_info(void)
 {
 #if !defined(CONFIG_SANDBOX) && !defined(CONFIG_EFI_APP)
@@ -202,6 +221,14 @@ static int print_cpuinfo(void)
 	return 0;
 }
 #endif
+
+int dram_init_slave(void)
+{
+    u32 coreid = get_core_id();
+	gd->ram_size = CONFIG_SYS_DDR_SDRAM_SLAVE_SIZE;
+    gd->ram_base = CONFIG_SYS_DDR_SDRAM_SLAVE_COREX_ADDR(coreid);
+	return 0;
+}
 
 static int announce_dram_init(void)
 {
@@ -345,10 +372,13 @@ static int setup_dest_addr(void)
 	gd->ram_size -= CONFIG_SYS_MEM_TOP_HIDE;
 #endif
 #ifdef CONFIG_SYS_SDRAM_BASE
-	gd->ram_base = CONFIG_SYS_SDRAM_BASE;
+	if (get_core_id() == CONFIG_MASTER_CORE) {
+		gd->ram_top = CONFIG_SYS_SDRAM_BASE;
+	} else{
+        u32 coreid = get_core_id();
+		gd->ram_top = CONFIG_SYS_DDR_SDRAM_SLAVE_COREX_RAMTOP_ADDR(coreid);
+	}
 #endif
-	gd->ram_top = gd->ram_base + get_effective_memsize();
-	gd->ram_top = board_get_usable_ram_top(gd->mon_len);
 	gd->relocaddr = gd->ram_top;
 	debug("Ram top: %08lX\n", (ulong)gd->ram_top);
 #if defined(CONFIG_MP) && (defined(CONFIG_MPC86xx) || defined(CONFIG_E500))
@@ -1088,3 +1118,164 @@ void board_init_f_r(void)
 	hang();
 }
 #endif /* CONFIG_X86 */
+
+static const init_fnc_t init_sequence_f_slave[] = {
+	setup_mon_len,
+#ifdef CONFIG_OF_CONTROL
+	fdtdec_setup,
+#endif
+#ifdef CONFIG_TRACE
+	trace_early_init,
+#endif
+	initf_malloc,
+	initf_bootstage,	/* uses its own timer, so does not need DM */
+	initf_console_record,
+#if defined(CONFIG_HAVE_FSP)
+	arch_fsp_init,
+#endif
+	arch_cpu_init,		/* basic arch cpu dependent setup */
+	initf_dm,
+	arch_cpu_init_dm,
+#if defined(CONFIG_PPC) || defined(CONFIG_SYS_FSL_CLK) || defined(CONFIG_M68K)
+	/* get CPU and bus clocks according to the environment variable */
+	get_clocks,		/* get CPU and bus clocks (etc.) */
+#endif
+#if !defined(CONFIG_M68K)
+	timer_init,		/* initialize timer */
+#endif
+	env_init,		/* initialize environment */
+	init_baud_rate,		/* initialze baudrate settings */
+	core_share_global_data_init,
+	serial_init,		/* serial communications setup */
+	console_init_f,		/* stage 1 init of console */
+	display_options,	/* say that we are here */
+	display_text_info,	/* show debugging info if required */
+#if defined(CONFIG_PPC) || defined(CONFIG_M68K) || defined(CONFIG_SH) || \
+		defined(CONFIG_X86)
+	checkcpu,
+#endif
+#if defined(CONFIG_DISPLAY_CPUINFO)
+	print_cpuinfo,		/* display cpu info (and speed) */
+#endif
+	INIT_FUNC_WATCHDOG_INIT
+#if defined(CONFIG_MISC_INIT_F)
+	misc_init_f,
+#endif
+	INIT_FUNC_WATCHDOG_RESET
+#if defined(CONFIG_SYS_I2C)
+	init_func_i2c,
+#endif
+#if defined(CONFIG_HARD_SPI)
+	init_func_spi,
+#endif
+	announce_dram_init,
+	dram_init_slave,		/* configure available RAM banks */
+#ifdef CONFIG_POST
+	post_init_f,
+#endif
+	INIT_FUNC_WATCHDOG_RESET
+
+#ifdef CONFIG_POST
+	init_post,
+#endif
+	INIT_FUNC_WATCHDOG_RESET
+	/*
+	 * Now that we have DRAM mapped and working, we can
+	 * relocate the code and continue running from DRAM.
+	 *
+	 * Reserve memory at end of RAM for (top down in that order):
+	 *  - area that won't get touched by U-Boot and Linux (optional)
+	 *  - kernel log buffer
+	 *  - protected RAM
+	 *  - LCD framebuffer
+	 *  - monitor code
+	 *  - board info struct
+	 */
+	setup_dest_addr,
+#if defined(CONFIG_LOGBUFFER)
+	reserve_logbuffer,
+#endif
+#ifdef CONFIG_PRAM
+	reserve_pram,
+#endif
+	reserve_round_4k,
+#ifdef CONFIG_ARM
+	reserve_mmu,
+#endif
+	reserve_video,
+	reserve_trace,
+	reserve_uboot,
+	reserve_malloc,
+	reserve_board,
+	setup_machine,
+	reserve_global_data,
+	reserve_fdt,
+	reserve_bootstage,
+	reserve_arch,
+	reserve_stacks,
+	dram_init_banksize,
+	show_dram_config,
+#if defined(CONFIG_M68K) || defined(CONFIG_MIPS) || defined(CONFIG_PPC) || \
+	defined(CONFIG_SH)
+	setup_board_part1,
+#endif
+#if defined(CONFIG_PPC) || defined(CONFIG_M68K)
+	INIT_FUNC_WATCHDOG_RESET
+	setup_board_part2,
+#endif
+	display_new_sp,
+#ifdef CONFIG_OF_BOARD_FIXUP
+	fix_fdt,
+#endif
+	INIT_FUNC_WATCHDOG_RESET
+	reloc_fdt,
+	reloc_bootstage,
+	setup_reloc,
+#if defined(CONFIG_X86) || defined(CONFIG_ARC)
+	copy_uboot_to_ram,
+	do_elf_reloc_fixups,
+	clear_bss,
+#endif
+#if defined(CONFIG_XTENSA)
+	clear_bss,
+#endif
+#if !defined(CONFIG_ARM) && !defined(CONFIG_SANDBOX) && \
+		!CONFIG_IS_ENABLED(X86_64)
+	jump_to_copy,
+#endif
+	NULL,
+};
+
+void board_init_f_slave(ulong boot_flags)
+{
+#ifdef CONFIG_SYS_GENERIC_GLOBAL_DATA
+	/*
+	 * For some archtectures, global data is initialized and used before
+	 * calling this function. The data should be preserved. For others,
+	 * CONFIG_SYS_GENERIC_GLOBAL_DATA should be defined and use the stack
+	 * here to host global data until relocation.
+	 */
+	gd_t data;
+
+	gd = &data;
+
+	/*
+	 * Clear global data before it is accessed at debug print
+	 * in initcall_run_list. Otherwise the debug print probably
+	 * get the wrong vaule of gd->have_console.
+	 */
+	zero_global_data();
+#endif
+
+	gd->flags = boot_flags;
+	gd->have_console = 0;
+
+	if (initcall_run_list(init_sequence_f_slave))
+		hang();
+
+#if !defined(CONFIG_ARM) && !defined(CONFIG_SANDBOX) && \
+		!defined(CONFIG_EFI_APP)
+	/* NOTREACHED - jump_to_copy() does not return */
+	hang();
+#endif
+}

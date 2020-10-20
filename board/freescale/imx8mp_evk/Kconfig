@@ -9,6 +9,20 @@ config SYS_VENDOR
 config SYS_CONFIG_NAME
 	default "imx8mp_evk"
 
+config BAREMETAL
+	bool "Enable baremetal"
+	default y
+
+config NIC_COREID_SET
+	bool "Enable NIC for baremetal"
+	default n
+	depends on BAREMETAL
+
+config NIC_NIC0_COREID
+	int "which core that NIC is assigned to"
+	default "1"
+	depends on NIC_COREID_SET
+
 source "board/freescale/common/Kconfig"
 
 endif

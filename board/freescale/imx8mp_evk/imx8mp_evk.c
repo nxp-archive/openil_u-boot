@@ -31,6 +31,10 @@ static iomux_v3_cfg_t const uart_pads[] = {
 	MX8MP_PAD_UART2_RXD__UART2_DCE_RX | MUX_PAD_CTRL(UART_PAD_CTRL),
 	MX8MP_PAD_UART2_TXD__UART2_DCE_TX | MUX_PAD_CTRL(UART_PAD_CTRL),
 };
+static iomux_v3_cfg_t const uart4_pads[] = {
+	MX8MP_PAD_UART4_RXD__UART4_DCE_RX | MUX_PAD_CTRL(UART_PAD_CTRL),
+	MX8MP_PAD_UART4_TXD__UART4_DCE_TX | MUX_PAD_CTRL(UART_PAD_CTRL),
+};
 
 static iomux_v3_cfg_t const wdog_pads[] = {
 	MX8MP_PAD_GPIO1_IO02__WDOG1_WDOG_B  | MUX_PAD_CTRL(WDOG_PAD_CTRL),
@@ -52,9 +56,8 @@ int board_early_init_f(void)
 
 	set_wdog_reset(wdog);
 
-	imx_iomux_v3_setup_multiple_pads(uart_pads, ARRAY_SIZE(uart_pads));
-
-	init_uart_clk(1);
+	imx_iomux_v3_setup_multiple_pads(uart4_pads, ARRAY_SIZE(uart_pads));
+	init_uart_clk(3);
 
 	return 0;
 }
