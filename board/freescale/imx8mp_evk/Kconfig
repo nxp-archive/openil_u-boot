@@ -11,7 +11,7 @@ config SYS_CONFIG_NAME
 
 config BAREMETAL
 	bool "Enable baremetal"
-	default y
+	default n
 
 source "board/freescale/common/Kconfig"
 
