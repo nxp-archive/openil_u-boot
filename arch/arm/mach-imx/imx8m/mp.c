@@ -101,6 +101,7 @@ int cpu_release(u32 nr, int argc, char *const argv[])
 {
 	uint32_t boot_addr;
 	boot_addr = simple_strtoul(argv[0], NULL, 16);
+	flush_dcache_all();
     imx_set_cpu_entry(nr,boot_addr);
     imx_set_cpu_pwr_on(nr);
 
@@ -125,9 +126,9 @@ DECLARE_GLOBAL_DATA_PTR;
 
 int fsl_layerscape_wakeup_fixed_core(u32 coreid, u32 addr)
 {
-
-	printf("%s cores %d, addr=0x%x, gd->reloc_addr 0x%x\n",
-		__func__, coreid, addr, gd->relocaddr);
+	flush_dcache_all();
+	imx_set_cpu_entry(coreid, addr);
+	imx_set_cpu_pwr_on(coreid);
 
 	return 0;
 }
