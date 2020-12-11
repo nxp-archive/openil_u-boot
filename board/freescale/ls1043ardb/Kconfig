@@ -49,6 +49,16 @@ config FMAN_FMAN1_COREID
 	int "FMAN1 is assigned to that core"
 	default "1"
 
+config IFC_COREID_SET
+	bool "Enable IFC for baremetal"
+	default n
+	depends on BAREMETAL
+
+config IFC_COREID
+	int "IFC is assigned to that core"
+	default "1"
+	depends on IFC_COREID_SET
+
 config USB_COREID_SET
 	bool "Enable USB for baremetal"
 	default y
