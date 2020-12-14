@@ -7,7 +7,7 @@
 #define __LS1028A_RDB_H
 
 #include "ls1028a_common.h"
-#include "ls1043ardb_config.h"
+#include "ls1028ardb_config.h"
 
 #define CONFIG_ICC
 #define CONFIG_USE_IRQ
