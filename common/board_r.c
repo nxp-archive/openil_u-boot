@@ -505,6 +505,22 @@ static int initr_env(void)
 	return 0;
 }
 
+static int initr_default_env(void)
+{
+	/* initialize environment */
+	if (should_load_env())
+		env_relocate();
+	else
+		env_set_default(NULL, 0);
+#ifdef CONFIG_OF_CONTROL
+    env_set_addr("fdtcontroladdr", gd->fdt_blob);
+#endif
+
+	/* Initialize from environment */
+	image_load_addr = env_get_ulong("loadaddr", 16, image_load_addr);
+
+	return 0;
+}
 #ifdef CONFIG_SYS_BOOTPARAMS_LEN
 static int initr_malloc_bootparams(void)
 {
@@ -1063,6 +1079,7 @@ init_fnc_t init_sequence_r_slave[] = {
     stdio_add_devices,
     initr_jumptable,
     console_init_r,     /* fully init console as a device */
+	initr_default_env,
     INIT_FUNC_WATCHDOG_RESET
     /* PPC has a udelay(20) here dating from 2002. Why? */
 
