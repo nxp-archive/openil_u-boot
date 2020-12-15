@@ -27,6 +27,9 @@
 #define CONFIG_SYS_I2C_MXC_I2C3	/* enable I2C bus 2 */
 #define CONFIG_SYS_I2C_MXC_I2C4	/* enable I2C bus 3 */
 
+#define	CONFIG_I2C_BUS_CORE_ID_SET
+#define CONFIG_SYS_I2C_MXC_I2C0_COREID  1
+
 #ifdef CONFIG_EXTRA_ENV_SETTINGS
 #undef CONFIG_EXTRA_ENV_SETTINGS
 #endif
