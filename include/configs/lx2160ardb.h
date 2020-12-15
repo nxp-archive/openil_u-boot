@@ -114,4 +114,8 @@
 
 #include <asm/fsl_secure_boot.h>
 
+#ifdef CONFIG_EXTRA_ENV_SETTINGS
+#undef CONFIG_EXTRA_ENV_SETTINGS
+#endif
+
 #endif /* __LX2_RDB_H */
