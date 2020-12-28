@@ -1414,10 +1414,6 @@ int dram_init_banksize(void)
 	phys_size_t dp_ddr_size;
 #endif
 
-#ifdef CONFIG_TFABOOT
-	if (!tfa_dram_init_banksize())
-		return 0;
-#endif
 	/*
 	 * gd->ram_size has the total size of DDR memory, less reserved secure
 	 * memory. The DDR extends from low region to high region(s) presuming

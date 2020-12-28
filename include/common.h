@@ -7,6 +7,9 @@
  *
  * (C) Copyright 2000-2009
  * Wolfgang Denk, DENX Software Engineering, wd@denx.de.
+ *
+ * Copyright 2018-2021 NXP
+ *
  */
 
 #ifndef __COMMON_H_

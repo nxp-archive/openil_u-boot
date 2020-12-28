@@ -245,6 +245,9 @@ void trap_init(unsigned long reloc_addr);
  * This normally runs the command line.
  */
 void main_loop(void);
+void core1_main(void);
+void core2_main(void);
+void core3_main(void);
 
 #if defined(CONFIG_ARM)
 void relocate_code(ulong addr_moni);
