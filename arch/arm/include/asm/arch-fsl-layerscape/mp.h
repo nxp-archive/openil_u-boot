@@ -1,6 +1,7 @@
 /* SPDX-License-Identifier: GPL-2.0+ */
 /*
  * Copyright 2014-2015, Freescale Semiconductor
+ * Copyright 2018-2021 NXP
  */
 
 #ifndef _FSL_LAYERSCAPE_MP_H
@@ -46,6 +47,8 @@ phys_addr_t determine_mp_bootpg(void);
 void secondary_boot_func(void);
 int is_core_online(u64 cpu_id);
 u32 cpu_pos_mask(void);
+int get_core_id(void);
+int is_core_valid(unsigned int core);
 #endif
 
 #endif /* _FSL_LAYERSCAPE_MP_H */

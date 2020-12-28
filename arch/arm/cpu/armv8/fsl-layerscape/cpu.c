@@ -114,7 +114,7 @@ static struct mm_region early_map[] = {
 	(defined(CONFIG_SPL) && !defined(CONFIG_SPL_BUILD))
 	  PTE_BLOCK_MEMTYPE(MT_NORMAL) |
 #else	/* Start with nGnRnE and PXN and UXN to prevent speculative access */
-	  PTE_BLOCK_MEMTYPE(MT_DEVICE_NGNRNE) | PTE_BLOCK_PXN | PTE_BLOCK_UXN |
+	  PTE_BLOCK_MEMTYPE(MT_NORMAL) |
 #endif
 	  PTE_BLOCK_OUTER_SHARE | PTE_BLOCK_NS
 	},
@@ -173,7 +173,7 @@ static struct mm_region early_map[] = {
 	(defined(CONFIG_SPL) && !defined(CONFIG_SPL_BUILD))
 	  PTE_BLOCK_MEMTYPE(MT_NORMAL) |
 #else	/* Start with nGnRnE and PXN and UXN to prevent speculative access */
-	  PTE_BLOCK_MEMTYPE(MT_DEVICE_NGNRNE) | PTE_BLOCK_PXN | PTE_BLOCK_UXN |
+	  PTE_BLOCK_MEMTYPE(MT_NORMAL) |
 #endif
 	  PTE_BLOCK_OUTER_SHARE | PTE_BLOCK_NS
 	},
@@ -1126,10 +1126,6 @@ int arch_early_init_r(void)
 #endif
 	if (check_psci()) {
 		debug("PSCI: PSCI does not exist.\n");
-
-		/* if PSCI does not exist, boot secondary cores here */
-		if (fsl_layerscape_wake_seconday_cores())
-			printf("Did not wake secondary cores\n");
 	}
 
 	config_core_prefetch();

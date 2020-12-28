@@ -1,7 +1,7 @@
 /* SPDX-License-Identifier: GPL-2.0+ */
 /*
  * (C) Copyright 2014-2015 Freescale Semiconductor
- * Copyright 2019 NXP
+ * Copyright 2018-2019 NXP
  *
  * Extracted from armv8/start.S
  */
@@ -474,6 +474,7 @@ ENTRY(secondary_boot_func)
 	mov	x4, #1
 	str	x4, [x11, #8]	/* STATUS */
 	dsb	sy
+	bl _main_slave
 #if defined(CONFIG_GICV3)
 	gic_wait_for_interrupt_m x0
 #elif defined(CONFIG_GICV2)

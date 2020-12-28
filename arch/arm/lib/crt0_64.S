@@ -7,6 +7,9 @@
  *
  * (C) Copyright 2012
  * Albert ARIBAUD <albert.u.boot@aribaud.net>
+ *
+ * Copyright 2018-2021 NXP
+ *
  */
 
 #include <config.h>
@@ -156,3 +159,78 @@ clear_loop:
 #endif
 
 ENDPROC(_main)
+ENTRY(_main_slave)
+/*
+ * Set up initial C runtime environment and call board_init_f(0).
+ */
+#if defined(CONFIG_SPL_BUILD) && defined(CONFIG_SPL_STACK)
+	ldr	x0, =(CONFIG_SPL_STACK)
+#else
+	ldr	x0, =(CONFIG_SYS_INIT_SP_ADDR)
+
+#endif
+	bic	sp, x0, #0xf	/* 16-byte alignment for ABI compliance */
+	mov	x0, sp
+	bl	board_init_f_alloc_reserve
+	mov	sp, x0
+	/* set up gd here, outside any C code */
+	mov	x18, x0
+	bl	board_init_f_init_reserve
+	mov	x0, #0
+	bl	board_init_f_slave
+
+#if !defined(CONFIG_SPL_BUILD)
+/*
+ * Set up intermediate environment (new sp and gd) and call
+ * relocate_code(addr_moni). Trick here is that we'll return
+ * 'here' but relocated.
+ */
+	ldr	x0, [x18, #GD_START_ADDR_SP]	/* x0 <- gd->start_addr_sp */
+	bic	sp, x0, #0xf	/* 16-byte alignment for ABI compliance */
+	ldr	x18, [x18, #GD_BD]		/* x18 <- gd->bd */
+	sub	x18, x18, #GD_SIZE		/* new GD is below bd */
+
+	adr	lr, xf_relocation_return
+	ldr	x9, [x18, #GD_RELOC_OFF]	/* x9 <- gd->reloc_off */
+	add	lr, lr, x9	/* new return address after relocation */
+	ldr	x0, [x18, #GD_RELOCADDR]	/* x0 <- gd->relocaddr */
+	b	relocate_code
+
+xf_relocation_return:
+
+/*
+ * Set up final (full) environment
+ */
+	bl	c_runtime_cpu_setup		/* still call old routine */
+#endif /* !CONFIG_SPL_BUILD */
+#if defined(CONFIG_SPL_BUILD)
+	bl	spl_relocate_stack_gd           /* may return NULL */
+	/*
+	 * Perform 'sp = (x0 != NULL) ? x0 : sp' while working
+	 * around the constraint that conditional moves can not
+	 * have 'sp' as an operand
+	 */
+	mov	x1, sp
+	cmp	x0, #0
+	csel	x0, x0, x1, ne
+	mov	sp, x0
+#endif
+/*
+ * Clear BSS section
+ */
+	ldr	x0, =__bss_start		/* this is auto-relocated! */
+	ldr	x1, =__bss_end			/* this is auto-relocated! */
+slave_clear_loop:
+	str	xzr, [x0], #8
+	cmp	x0, x1
+	b.lo	slave_clear_loop
+
+	/* call board_init_r(gd_t *id, ulong dest_addr) */
+	mov	x0, x18				/* gd_t */
+	ldr	x1, [x18, #GD_RELOCADDR]	/* dest_addr */
+
+	b	board_init_r_slave			/* PC relative jump */
+
+	/* NOTREACHED - board_init_r() does not return */
+    wfi
+ENDPROC(_main_slave)
