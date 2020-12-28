@@ -1734,6 +1734,10 @@ config CMD_SYSBOOT
 	help
 	  Boot image via local extlinux.conf file
 
+config CMD_WAVPLAYER
+	bool "wavplayer"
+	depends on SOUND
+
 config CMD_QFW
 	bool "qfw"
 	select QFW
