@@ -3,6 +3,8 @@
  * Copyright (c) 2012 The Chromium OS Authors.
  * (C) Copyright 2002-2010
  * Wolfgang Denk, DENX Software Engineering, wd@denx.de.
+ *
+ * Copyright 2018-2021 NXP
  */
 
 #ifndef __ASM_GENERIC_GBL_DATA_H
@@ -166,5 +168,18 @@ typedef struct global_data {
 #define GD_FLG_SPL_EARLY_INIT	0x04000 /* Early SPL init is done	   */
 #define GD_FLG_LOG_READY	0x08000 /* Log system is ready for use	   */
 #define GD_FLG_WDT_READY	0x10000 /* Watchdog is ready for use	   */
+
+#include <linux/compat.h>
+/*
+ * Shared global data for slave cores
+ */
+typedef struct share_global_data {
+	arch_rwlock_t consol_lock_putc;	/* spin lock for putc */
+	arch_rwlock_t consol_lock_puts;	/* spin lock for puts */
+	arch_rwlock_t consol_lock_getc;	/* spin lock for getc */
+	u32 stream_channel;		/* mux stream channel */
+	/* core reset status, online or offline */
+	u32 core_reset_status[CONFIG_MAX_CPUS];
+} sgd_t;
 
 #endif /* __ASM_GENERIC_GBL_DATA_H */
