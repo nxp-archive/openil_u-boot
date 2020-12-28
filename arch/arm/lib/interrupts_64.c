@@ -357,8 +357,26 @@ void do_irq(struct pt_regs *pt_regs, unsigned int esr)
 	int src_coreid; /* just for SGI, will be 0 for other */
 	void (*irq_handle)(int, int);
 
+#if defined(CONFIG_GICV3)
+#define ICC_IAR_INT_ID_MASK	0xffffff
+	ack = gic_ack_int_v3();
+	hw_irq = ack & ICC_IAR_INT_ID_MASK;
+	/* FIX ME: use the fixed source coreID for ls1028a */
+	src_coreid = 0;
+
+	if (hw_irq  >= 1024 && hw_irq <= 8191)
+		return;
+
+	irq_handle = (void (*)(int, int))g_gic_irq_cb[hw_irq];
+	if (irq_handle) {
+		irq_handle(hw_irq, src_coreid);
+	}
+
+	gic_end_int_v3(ack);
+#elif defined(CONFIG_GICV2)
 READ_ACK:
 	ack = gic_ack_int();
+
 	hw_irq = ack & GICC_IAR_INT_ID_MASK;
 	src_coreid = ack >> 10;
 
@@ -378,6 +396,7 @@ READ_ACK:
 		wfi();
 
 	goto READ_ACK;
+#endif
 }
 
 /*

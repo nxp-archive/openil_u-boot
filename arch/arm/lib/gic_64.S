@@ -4,6 +4,8 @@
  *
  * (C) Copyright 2013
  * David Feng <fenghua@phytium.com.cn>
+ *
+ * Copyright 2018-2021 NXP
  */
 
 #include <asm-offsets.h>
@@ -104,7 +106,7 @@ ENTRY(gic_init_secure_percpu)
 	mov	w11, #~0
 	str	w11, [x10, GICR_IGROUPRn]
 	str	wzr, [x10, GICR_IGROUPMODRn]	/* SGIs|PPIs Group1NS */
-	mov	w11, #0x1		/* Enable SGI 0 */
+	mov w11, #0xffff        /* Enable SGI 0-15 */
 	str	w11, [x10, GICR_ISENABLERn]
 
 	switch_el x10, 3f, 2f, 1f
@@ -197,3 +199,30 @@ ENTRY(gic_wait_for_interrupt)
 #endif
 	ret
 ENDPROC(gic_wait_for_interrupt)
+
+
+WEAK(gic_send_sgi_test)
+#if defined(CONFIG_GICV3)
+	orr	x1, x1, x0, lsl #24
+	msr	ICC_ASGI1R_EL1, x1
+	isb
+#elif defined(CONFIG_GICV2)
+	ldr	x1, =GICD_BASE
+	mov	w2, #0x8000
+	movk	w2, #0x100, lsl #16
+	orr	w2, w2, w0
+	str	w2, [x1, GICD_SGIR]
+#endif
+	ret
+ENDPROC(gic_send_sgi_test)
+
+WEAK(gic_ack_int_v3)
+       mrs     x0, ICC_IAR1_EL1
+       dsb	sy
+       ret
+ENDPROC(gic_ack_int_v3)
+
+WEAK(gic_end_int_v3)
+       msr     ICC_EOIR1_EL1, x0
+       ret
+ENDPROC(gic_ack_int_v3)
