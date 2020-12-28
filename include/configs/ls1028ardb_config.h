@@ -18,6 +18,9 @@
  */
 #define CONFIG_SYS_MALLOC_LEN	(CONFIG_ENV_SIZE + 128 * 1024 * 1024)
 
+/* Number of cores in each cluster */
+#define CORE_NUM_PER_CLUSTER	2
+
 /* I2C */
 #define CONFIG_SYS_I2C_MXC_I2C1	/* enable I2C bus 0 */
 #define CONFIG_SYS_I2C_MXC_I2C2	/* enable I2C bus 1 */

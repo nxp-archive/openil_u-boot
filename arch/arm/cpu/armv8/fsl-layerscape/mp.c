@@ -354,5 +354,8 @@ int get_core_id(void)
 			     :
 			     : "memory");
 
-	return aff & 0xFF;
+	aff = aff & 0xFFFF;
+	aff = ((aff >> 8) * CORE_NUM_PER_CLUSTER) + (aff & 0xF);
+
+	return aff;
 }
