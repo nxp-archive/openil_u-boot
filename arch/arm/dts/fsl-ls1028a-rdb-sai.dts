@@ -27,7 +27,6 @@
 			"MIC_IN", "Mic Jack",
 			"Mic Jack", "Mic Bias",
 			"Headphone Jack", "HP_OUT";
-		status = "disabled";
 	};
 };
 
@@ -90,7 +89,6 @@
 				VDDIO-supply = <1800>;
 				sys_mclk = <25000000>;
 				sclk-strength = <3>;
-				status = "disabled";
 			};
 		};
 
@@ -168,3 +166,6 @@
 	};
 };
 
+&sai4 {
+        status = "okay";
+};
