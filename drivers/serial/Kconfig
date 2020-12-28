@@ -93,7 +93,7 @@ config CONS_INDEX
 	default 4 if CONS_INDEX_4
 	default 5 if CONS_INDEX_5
 	default 6 if CONS_INDEX_6
-	default 1
+	default 2
 	help
 	  Set this to match the UART number of the serial console.
 
