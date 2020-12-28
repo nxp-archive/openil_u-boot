@@ -60,6 +60,7 @@
 #include <linux/compiler.h>
 #include <linux/err.h>
 #include <efi_loader.h>
+#include <asm/interrupt-gic.h>
 #include <wdt.h>
 #if defined(CONFIG_GPIO_HOG)
 #include <asm/gpio.h>
@@ -534,6 +535,15 @@ static int initr_enable_interrupts(void)
 	return 0;
 }
 #endif
+
+static int initr_gic_init(void)
+{
+	if (get_core_id() == 1)
+		gic_set_pri_common();
+	gic_set_pri_per_cpu();
+	gic_enable_dist();
+	return 0;
+}
 
 #ifdef CONFIG_CMD_NET
 static int initr_ethaddr(void)
@@ -1049,6 +1059,7 @@ init_fnc_t init_sequence_r_slave[] = {
 #if defined(CONFIG_ARM) || defined(CONFIG_AVR32)
 	initr_enable_interrupts,
 #endif
+	initr_gic_init,
 #ifdef CONFIG_CMD_NET
 	initr_ethaddr,
 #endif
