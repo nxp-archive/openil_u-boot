@@ -2,6 +2,8 @@
 /*
  * (C) Copyright 2004
  * Wolfgang Denk, DENX Software Engineering, wd@denx.de.
+ *
+ * Copyright 2018-2021 NXP
  */
 
 #include <common.h>
@@ -17,6 +19,7 @@ DECLARE_GLOBAL_DATA_PTR;
 
 static struct serial_device *serial_devices;
 static struct serial_device *serial_current;
+extern sgd_t *sgd;
 /*
  * Table with supported baudrates (defined in config_xyz.h)
  */
@@ -434,7 +437,13 @@ void serial_putc(const char c)
  */
 void serial_puts(const char *s)
 {
+#ifdef CONFIG_ENABLE_WRITE_LOCK
+	arch_write_lock(&sgd->consol_lock_puts);
+#endif
 	get_current()->puts(s);
+#ifdef CONFIG_ENABLE_WRITE_LOCK
+	arch_write_unlock(&sgd->consol_lock_puts);
+#endif
 }
 
 /**
