@@ -57,6 +57,7 @@
 #define CONFIG_SYS_MALLOC_LEN		(CONFIG_ENV_SIZE + 1024 * 1024)
 
 /* Serial Port */
+#define CONFIG_CONS_INDEX      2
 #define CONFIG_SYS_NS16550_SERIAL
 #define CONFIG_SYS_NS16550_REG_SIZE	1
 #define CONFIG_SYS_NS16550_CLK          (get_serial_clock())
@@ -129,11 +130,11 @@
 /* I2C */
 #ifndef CONFIG_DM_I2C
 #define CONFIG_SYS_I2C
-#define CONFIG_SYS_I2C_MXC
-#define CONFIG_SYS_I2C_MXC_I2C1		/* enable I2C bus 1 */
-#define CONFIG_SYS_I2C_MXC_I2C2		/* enable I2C bus 2 */
-#define CONFIG_SYS_I2C_MXC_I2C3		/* enable I2C bus 3 */
-#define CONFIG_SYS_I2C_MXC_I2C4		/* enable I2C bus 4 */
+#define	CONFIG_I2C_BUS_CORE_ID_SET
+#define CONFIG_SYS_I2C_MXC_I2C0_COREID  2
+#define CONFIG_SYS_I2C_MXC_I2C1_COREID  2
+#define CONFIG_SYS_I2C_MXC_I2C2_COREID  3
+#define CONFIG_SYS_I2C_MXC_I2C3_COREID  1
 #else
 #define CONFIG_I2C_SET_DEFAULT_BUS_NUM
 #define CONFIG_I2C_DEFAULT_BUS_NUMBER 0
@@ -146,6 +147,7 @@
 
 #ifdef CONFIG_PCI
 #define CONFIG_PCI_SCAN_SHOW
+#define CONFIG_CMD_PCI
 #endif
 
 /* SATA */
