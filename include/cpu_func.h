@@ -15,11 +15,6 @@
  *
  * These should be moved to use the CPU uclass.
  */
-int cpu_status(u32 nr);
-int cpu_reset(u32 nr);
-int cpu_disable(u32 nr);
-int cpu_release(u32 nr, int argc, char * const argv[]);
-
 static inline int cpumask_next(int cpu, unsigned int mask)
 {
 	for (cpu++; !((1 << cpu) & mask); cpu++)
