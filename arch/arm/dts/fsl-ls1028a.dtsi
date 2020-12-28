@@ -327,4 +327,11 @@
 		compatible = "arm,sp805-wdt";
 		reg = <0x0 0xc000000 0x0 0x1000>;
 	};
+
+	sai4: sai@f130000 {
+		#sound-dai-cells = <0>;
+		compatible = "fsl,ls1028a-sai";
+		reg = <0x0 0xf130000 0x0 0x10000>;
+		status = "disabled";
+	};
 };

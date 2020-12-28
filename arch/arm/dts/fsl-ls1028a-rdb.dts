@@ -16,6 +16,18 @@
 	aliases {
 		spi0 = &fspi;
 	};
+
+	sound {
+		compatible = "fsl,audio-sgtl5000";
+		model = "ls1028a-sgtl5000";
+		audio-cpu = <&sai4>;
+		audio-codec = <&sgtl5000>;
+		audio-routing =
+			"LINE_IN", "Line In Jack",
+			"MIC_IN", "Mic Jack",
+			"Mic Jack", "Mic Bias",
+			"Headphone Jack", "HP_OUT";
+	};
 };
 
 &dspi0 {
@@ -63,6 +75,22 @@
 		reg = <0x77>;
 		#address-cells = <1>;
 		#size-cells = <0>;
+
+		i2c@1 {
+			#address-cells = <1>;
+			#size-cells = <0>;
+			reg = <0x1>;
+
+			sgtl5000: codec@a {
+				#sound-dai-cells = <0>;
+				compatible = "fsl,sgtl5000";
+				reg = <0xa>;
+				VDDA-supply = <1800>;
+				VDDIO-supply = <1800>;
+				sys_mclk = <25000000>;
+				sclk-strength = <3>;
+			};
+		};
 
 		i2c@3 {
 			#address-cells = <1>;
@@ -136,4 +164,8 @@
 	rdb_phy0: phy@2 {
 		reg = <2>;
 	};
+};
+
+&sai4 {
+	status = "okay";
 };
