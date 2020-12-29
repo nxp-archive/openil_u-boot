@@ -4,7 +4,9 @@
  * Copyright 2018 NXP
  */
 #include <common.h>
+#if defined(CONFIG_ARCH_IMX8M)
 #include <asm/arch/sys_proto.h>
+#endif
 #include <linux/errno.h>
 #include <asm/io.h>
 #include <stdbool.h>

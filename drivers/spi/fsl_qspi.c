@@ -16,7 +16,9 @@
 #include <watchdog.h>
 #include <wait_bit.h>
 #include "fsl_qspi.h"
+#if defined(CONFIG_ARCH_IMX8M)
 #include <asm/arch/sys_proto.h>
+#endif
 
 DECLARE_GLOBAL_DATA_PTR;
 
