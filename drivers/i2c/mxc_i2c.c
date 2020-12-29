@@ -27,7 +27,9 @@
 #include <dm.h>
 #include <dm/pinctrl.h>
 #include <fdtdec.h>
+#if defined(CONFIG_ARCH_IMX8M) || defined(CONFIG_ARCH_MX6)
 #include <asm/arch/sys_proto.h>
+#endif
 
 DECLARE_GLOBAL_DATA_PTR;
 
