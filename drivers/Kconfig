@@ -46,6 +46,8 @@ source "drivers/hwspinlock/Kconfig"
 
 source "drivers/i2c/Kconfig"
 
+source "drivers/flexcan/Kconfig"
+
 source "drivers/input/Kconfig"
 
 source "drivers/led/Kconfig"

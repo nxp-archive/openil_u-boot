@@ -61,6 +61,8 @@
 #include <linux/err.h>
 #include <efi_loader.h>
 #include <asm/interrupt-gic.h>
+#include <flexcan.h>
+#include <flextimer.h>
 #include <wdt.h>
 #if defined(CONFIG_GPIO_HOG)
 #include <asm/gpio.h>
@@ -1089,6 +1091,10 @@ init_fnc_t init_sequence_r_slave[] = {
 #ifdef CONFIG_FMAN_COREID_SET
 	initr_net,
 #endif
+#endif
+#if CONFIG_FS_FLEXCAN
+	flexcan_init,
+	flextimer_init,
 #endif
 	run_main_loop,
 };
