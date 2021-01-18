@@ -57,6 +57,10 @@ config IRQ_COREID_SET
 	bool "Enable IRQ for baremetal"
 	default n
 
+config ICC_COREID_SET
+	bool "Enable ICC for baremetal"
+	default y
+
 endif
 
 if ARM64

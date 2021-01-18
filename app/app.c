@@ -23,15 +23,27 @@ void core1_main(void)
 #ifdef CONFIG_GPIO_COREID_SET
 	test_gpio();
 #endif
+#ifdef CONFIG_ICC_COREID_SET
+	test_icc_func_init();
+#endif
+
 	return;
 }
 
 void core2_main(void)
 {
+#ifdef CONFIG_ICC_COREID_SET
+	test_icc_func_init();
+#endif
+
 	return;
 }
 
 void core3_main(void)
 {
+#ifdef CONFIG_ICC_COREID_SET
+	test_icc_func_init();
+#endif
+
 	return;
 }
