@@ -129,6 +129,20 @@ config CAN_COREID_SET
 	bool "Enable FlexCAN for baremetal"
 	default n
 
+config ENETC_COREID_SET
+	bool "Enable ENETC for baremetal"
+	default n
+
+if ENETC_COREID_SET
+config ENETC_ENETC1_COREID
+	int "The core Enetc1 assigned"
+	default "1"
+
+config ENETC_CTL_NUM
+	int "ENETC controller numbers"
+	default "1"
+endif
+
 endif
 
 if ARM64

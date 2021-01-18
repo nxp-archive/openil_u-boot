@@ -17,6 +17,11 @@
 /* before run this func, need connect network */
 int test_net(void)
 {
+#ifdef CONFIG_ENETC_COREID_SET
+	pci_init();
+	mdelay(1 * 1000);  /* avoid that baremetal sometimes hang  */
+	eth_initialize();
+#endif
 	net_ping_ip = string_to_ip(ping_ip);
 	net_ip = string_to_ip(ipaddr);
 
@@ -25,11 +30,11 @@ int test_net(void)
 		return CMD_RET_USAGE;
 
 	if (net_loop(PING) < 0) {
-		printf("ping failed; host %s is not alive\n", ipaddr);
+		printf("ping failed; host %s is not alive\n", ping_ip);
 		return CMD_RET_FAILURE;
 	}
 
-	printf("host %s is alive\n", ipaddr);
+	printf("host %s is alive\n", ping_ip);
 
 	return CMD_RET_SUCCESS;
 }

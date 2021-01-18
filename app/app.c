@@ -29,7 +29,7 @@ void core1_main(void)
 #ifdef CONFIG_QSPI_COREID_SET
 	test_qspi();
 #endif
-#ifdef CONFIG_FMAN_COREID_SET
+#if defined(CONFIG_FMAN_COREID_SET) || defined(CONFIG_ENETC_COREID_SET)
 	test_net();
 #endif
 
