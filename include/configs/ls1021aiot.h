@@ -154,6 +154,17 @@
 #define CONFIG_DM_SPI_FLASH
 #endif
 
+/* PCIe */
+#define CONFIG_PCIE1			/* PCIE controller 1 */
+#define CONFIG_PCIE2			/* PCIE controller 2 */
+#define FSL_PCIE_COMPAT			"fsl,ls1021a-pcie"
+#ifndef CONFIG_PCI
+#define CONFIG_PCI
+#endif
+#ifdef CONFIG_PCI
+#define CONFIG_PCI_SCAN_SHOW
+#endif
+
 #define CONFIG_CMD_PING
 #define CONFIG_CMDLINE_TAG
 
