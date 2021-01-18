@@ -21,6 +21,12 @@
 		sizeof(struct icc_ring))
 #define ICC_CORE_DESC_BASE(x) (ICC_CORE_MEM_BASE(x) + CONFIG_MAX_CPUS * \
 		sizeof(struct icc_ring)) /* the desc struct addr of core x */
+#ifdef	CONFIG_ARCH_LX2160A
+#define ICC_TRG_CORE (*(volatile unsigned *) \
+		(CONFIG_SYS_DDR_SDRAM_SHARE_BASE \
+		+ CONFIG_SYS_DDR_SDRAM_SHARE_SIZE - 8))
+#endif
+
 /*
  * The core x block memory base addr for icc data transfer.
  * The beginning 2M space of core x icc memory is for

@@ -80,3 +80,111 @@ void core3_main(void)
 
 	return;
 }
+
+void core4_main(void)
+{
+#ifdef CONFIG_ICC_COREID_SET
+	test_icc_func_init();
+#endif
+
+	return;
+}
+
+void core5_main(void)
+{
+#ifdef CONFIG_ICC_COREID_SET
+	test_icc_func_init();
+#endif
+
+	return;
+}
+
+void core6_main(void)
+{
+#ifdef CONFIG_ICC_COREID_SET
+	test_icc_func_init();
+#endif
+
+	return;
+}
+
+void core7_main(void)
+{
+#ifdef CONFIG_ICC_COREID_SET
+	test_icc_func_init();
+#endif
+
+	return;
+}
+
+void core8_main(void)
+{
+#ifdef CONFIG_ICC_COREID_SET
+	test_icc_func_init();
+#endif
+
+	return;
+}
+
+void core9_main(void)
+{
+#ifdef CONFIG_ICC_COREID_SET
+	test_icc_func_init();
+#endif
+
+	return;
+}
+
+void core10_main(void)
+{
+#ifdef CONFIG_ICC_COREID_SET
+	test_icc_func_init();
+#endif
+
+	return;
+}
+
+void core11_main(void)
+{
+#ifdef CONFIG_ICC_COREID_SET
+	test_icc_func_init();
+#endif
+
+	return;
+}
+
+void core12_main(void)
+{
+#ifdef CONFIG_ICC_COREID_SET
+	test_icc_func_init();
+#endif
+
+	return;
+}
+
+void core13_main(void)
+{
+#ifdef CONFIG_ICC_COREID_SET
+	test_icc_func_init();
+#endif
+
+	return;
+}
+
+void core14_main(void)
+{
+#ifdef CONFIG_ICC_COREID_SET
+	test_icc_func_init();
+#endif
+
+	return;
+}
+
+void core15_main(void)
+{
+#ifdef CONFIG_ICC_COREID_SET
+	test_icc_func_init();
+#endif
+
+	return;
+}

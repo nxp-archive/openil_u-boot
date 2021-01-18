@@ -750,6 +750,70 @@ static int run_main_loop(void)
 		core3_main();
 		for (;;)
 			;
+	} else if (coreid == 4) {
+		puts("Core[4] in the loop...\n");
+		core4_main();
+		for (;;)
+			;
+	} else if (coreid == 5) {
+		puts("Core[5] in the loop...\n");
+		core5_main();
+		for (;;)
+			;
+	} else if (coreid == 6) {
+		puts("Core[6] in the loop...\n");
+		core6_main();
+		for (;;)
+			;
+	} else if (coreid == 7) {
+		puts("Core[7] in the loop...\n");
+		core7_main();
+		for (;;)
+			;
+	} else if (coreid == 8) {
+		puts("Core[8] in the loop...\n");
+		core8_main();
+		for (;;)
+			;
+	} else if (coreid == 9) {
+		puts("Core[9] in the loop...\n");
+		core9_main();
+		for (;;)
+			;
+	} else if (coreid == 10) {
+		puts("Core[10] in the loop...\n");
+		core10_main();
+		for (;;)
+			;
+	} else if (coreid == 11) {
+		puts("Core[11] in the loop...\n");
+		core11_main();
+		for (;;)
+			;
+	} else if (coreid == 12) {
+		puts("Core[12] in the loop...\n");
+		core12_main();
+		for (;;)
+			;
+	} else if (coreid == 13) {
+		puts("Core[13] in the loop...\n");
+		core13_main();
+		for (;;)
+			;
+	} else if (coreid == 14) {
+		puts("Core[14] in the loop...\n");
+		core14_main();
+		for (;;)
+			;
+	} else if (coreid == 15) {
+		puts("Core[15] in the loop...\n");
+		core15_main();
+		for (;;)
+			;
+	} else {
+		puts("Core[*] in the loop...\n");
+		for (;;)
+			;
 	}
 
 	return 0;
@@ -1082,8 +1146,8 @@ init_fnc_t init_sequence_r_slave[] = {
 #ifndef CONFIG_ARCH_LS1028A
 	initr_gic_init,
 #endif
-	icc_init,
 #endif
+	icc_init,
 #ifdef CONFIG_CMD_NET
 	initr_ethaddr,
 #endif
