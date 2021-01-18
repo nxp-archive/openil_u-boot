@@ -13,3 +13,6 @@ obj-$(CONFIG_QSPI_COREID_SET)	+= test_qspi.o
 obj-$(CONFIG_USB_COREID_SET)	+= test_usb.o
 obj-$(CONFIG_PCIE_COREID_SET)	+= test_pcie.o
 obj-y += test_net.o
+obj-$(CONFIG_CAN_COREID_SET)	+= test_flexcan.o
+obj-$(CONFIG_CANFESTIVAL)	+= canfestival/src/
+obj-$(CONFIG_CANFESTIVAL)	+= canfestival/app/

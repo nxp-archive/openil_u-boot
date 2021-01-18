@@ -125,6 +125,10 @@ config PCIE_CTL_NUM
 	default "3"
 endif
 
+config CAN_COREID_SET
+	bool "Enable FlexCAN for baremetal"
+	default n
+
 endif
 
 if ARM64
