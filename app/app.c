@@ -10,9 +10,19 @@
 #include <malloc.h>
 #include <env.h>
 #include <linux/types.h>
+#include "test.h"
 
 void core1_main(void)
 {
+#ifdef CONFIG_I2C_COREID_SET
+	test_i2c();
+#endif
+#ifdef CONFIG_IRQ_COREID_SET
+	test_irq_init();
+#endif
+#ifdef CONFIG_GPIO_COREID_SET
+	test_gpio();
+#endif
 	return;
 }
 

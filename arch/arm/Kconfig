@@ -31,6 +31,32 @@ config GPIO_GPIO2_COREID
 	default 0
 endif
 
+config I2C_COREID_SET
+	bool "Enable I2C for baremetal"
+	default n
+
+if I2C_COREID_SET
+config SYS_I2C_MXC_I2C0_COREID
+	int "The core I2C0 assigned"
+	default 0
+
+config SYS_I2C_MXC_I2C1_COREID
+	int "The core I2C1 assigned"
+	default 0
+
+config SYS_I2C_MXC_I2C2_COREID
+	int "The core I2C2 ssigned"
+	default 0
+
+config SYS_I2C_MXC_I2C3_COREID
+	int "The core I2C3 assigned"
+	default 0
+endif
+
+config IRQ_COREID_SET
+	bool "Enable IRQ for baremetal"
+	default n
+
 endif
 
 if ARM64
