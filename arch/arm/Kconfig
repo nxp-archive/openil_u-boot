@@ -147,6 +147,16 @@ config SAI_COREID_SET
 	bool "Enable SAI for baremetal"
 	default n
 
+config IFC_COREID_SET
+	bool "Enable IFC for baremetal"
+	default n
+
+if IFC_COREID_SET
+config IFC_COREID
+	int "The core IFC assigned"
+	default "1"
+endif
+
 endif
 
 if ARM64
