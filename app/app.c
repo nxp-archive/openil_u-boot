@@ -33,6 +33,10 @@ void core1_main(void)
 	test_net();
 #endif
 
+#ifdef CONFIG_USB_COREID_SET
+	test_usb();
+#endif
+
 	return;
 }
 
@@ -42,6 +46,10 @@ void core2_main(void)
 	test_icc_func_init();
 #endif
 
+#ifdef CONFIG_USB_COREID_SET
+	test_usb();
+#endif
+
 	return;
 }
 
@@ -49,6 +57,10 @@ void core3_main(void)
 {
 #ifdef CONFIG_ICC_COREID_SET
 	test_icc_func_init();
+#endif
+
+#ifdef CONFIG_USB_COREID_SET
+	test_usb();
 #endif
 
 	return;

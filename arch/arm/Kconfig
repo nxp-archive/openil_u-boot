@@ -81,6 +81,28 @@ config FMAN_FMAN1_COREID
 	default "1"
 endif
 
+config USB_COREID_SET
+	bool "Enable USB for baremetal"
+	default n
+
+if USB_COREID_SET
+config USB_USB0_COREID
+	int "The core USB0 assigned"
+	default 0
+
+config USB_USB1_COREID
+	int "The core USB1 assigned"
+	default 0
+
+config USB_USB2_COREID
+	int "The core USB2 assigned"
+	default 0
+
+config USB_CTL_NUM
+	int "USB Controller numbers "
+	default 1
+endif
+
 endif
 
 if ARM64
