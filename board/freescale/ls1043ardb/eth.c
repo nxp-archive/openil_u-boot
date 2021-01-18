@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0+
 /*
  * Copyright 2015 Freescale Semiconductor, Inc.
+ * Copyright 2018-2021 NXP
  */
 #include <common.h>
 #include <asm/io.h>
@@ -69,8 +70,7 @@ int board_eth_init(bd_t *bis)
 	dev = miiphy_get_dev_by_name(DEFAULT_FM_TGEC_MDIO_NAME);
 	fm_info_set_mdio(FM1_10GEC1, dev);
 
-	cpu_eth_init(bis);
+	return cpu_eth_init(bis);
 #endif
 
-	return pci_eth_init(bis);
 }

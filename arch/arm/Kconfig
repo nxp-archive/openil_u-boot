@@ -71,6 +71,16 @@ config QSPI_QSPI0_COREID
 	default 1
 endif
 
+config FMAN_COREID_SET
+	bool "Enable FMAN for baremetal"
+	default n
+
+if FMAN_COREID_SET
+config FMAN_FMAN1_COREID
+	int "The coer FMAN1 assigned"
+	default "1"
+endif
+
 endif
 
 if ARM64
