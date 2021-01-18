@@ -36,6 +36,9 @@ void core1_main(void)
 #ifdef CONFIG_USB_COREID_SET
 	test_usb();
 #endif
+#ifdef CONFIG_PCIE_COREID_SET
+	test_pcie();
+#endif
 
 	return;
 }
@@ -48,6 +51,9 @@ void core2_main(void)
 
 #ifdef CONFIG_USB_COREID_SET
 	test_usb();
+#endif
+#ifdef CONFIG_PCIE_COREID_SET
+	test_pcie();
 #endif
 
 	return;

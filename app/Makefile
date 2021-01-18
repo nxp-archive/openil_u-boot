@@ -11,4 +11,5 @@ obj-$(CONFIG_IRQ_COREID_SET)	+= test_irq_init.o
 obj-$(CONFIG_ICC_COREID_SET)	+= test_icc.o
 obj-$(CONFIG_QSPI_COREID_SET)	+= test_qspi.o
 obj-$(CONFIG_USB_COREID_SET)	+= test_usb.o
+obj-$(CONFIG_PCIE_COREID_SET)	+= test_pcie.o
 obj-y += test_net.o
