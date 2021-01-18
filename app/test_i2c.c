@@ -13,6 +13,9 @@
 #elif defined(CONFIG_TARGET_LS1043ARDB) || defined(CONFIG_TARGET_LS1046ARDB)
 #define I2C_AUDIO_ADDR  0x40
 #define I2C_AUDIO_OFFSET0_DATA  0x39
+#else
+#define I2C_AUDIO_ADDR  0x40
+#define I2C_AUDIO_OFFSET0_DATA  0x39
 #endif
 
 
