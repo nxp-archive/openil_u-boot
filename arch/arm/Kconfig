@@ -143,6 +143,10 @@ config ENETC_CTL_NUM
 	default "1"
 endif
 
+config SAI_COREID_SET
+	bool "Enable SAI for baremetal"
+	default n
+
 endif
 
 if ARM64

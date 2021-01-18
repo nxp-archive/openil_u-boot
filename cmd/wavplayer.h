@@ -62,4 +62,5 @@ struct wavctrl {
 #define FACT_CHUNKID			0X74636166 /* fact */
 #define DATA_CHUNKID			0X61746164 /* data */
 
+void test_wavplay(void);
 #endif

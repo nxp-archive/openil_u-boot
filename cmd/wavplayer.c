@@ -99,6 +99,11 @@ static int do_demo(u8 *mav_file)
 	return 0;
 }
 
+void test_wavplay(void)
+{
+	do_demo(mav_file);
+}
+
 /* play sound from buffer */
 static int do_play(int argc, char *const argv[])
 {

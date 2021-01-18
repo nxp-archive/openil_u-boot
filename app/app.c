@@ -11,6 +11,7 @@
 #include <env.h>
 #include <linux/types.h>
 #include "test.h"
+#include "../cmd/wavplayer.h"
 
 void core1_main(void)
 {
@@ -42,6 +43,10 @@ void core1_main(void)
 
 #ifdef CONFIG_CAN_COREID_SET
 	test_flexcan();
+#endif
+
+#ifdef CONFIG_SAI_COREID_SET
+	test_wavplay();
 #endif
 
 	return;
