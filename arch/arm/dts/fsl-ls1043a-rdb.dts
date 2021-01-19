@@ -3,6 +3,7 @@
  * Device Tree Include file for Freescale Layerscape-1043A family SoC.
  *
  * Copyright (C) 2015, Freescale Semiconductor
+ * Copyright 2018-2021 NXP
  *
  * Mingkai Hu <Mingkai.hu@freescale.com>
  */
@@ -89,6 +90,10 @@
 			compatible = "fsl,ls1043ardb-cpld";
 			reg = <0x2 0x0 0x0000100>;
 		};
+};
+
+&gpio2 {
+	status = "okay";
 };
 
 &duart0 {

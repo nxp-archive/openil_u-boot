@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: GPL-2.0+
 /*
  * Copyright (c) 2013 Google, Inc
+ *
+ * Copyright 2018-2021 NXP
  */
 
 #include <common.h>
@@ -17,6 +19,7 @@
 #include <linux/ctype.h>
 
 DECLARE_GLOBAL_DATA_PTR;
+extern sgd_t *sgd;
 
 /**
  * gpio_to_device() - Convert global GPIO number to device, number
@@ -327,6 +330,19 @@ int gpio_request(unsigned gpio, const char *label)
 	ret = gpio_to_device(gpio, &desc);
 	if (ret)
 		return ret;
+#ifdef SHARED_GPIO_REQUEST_INFO
+	if (sgd->gpio_info[gpio/32] & (1 << (gpio % 32))) {
+		printf("error, GPIO[%d] has been requested\n", gpio);
+		return -1;
+	}
+#ifdef CONFIG_ENABLE_WRITE_LOCK
+	arch_write_lock(&sgd->lock_sgd);
+#endif
+	sgd->gpio_info[gpio/32] |= 1 << (gpio % 32);
+#ifdef CONFIG_ENABLE_WRITE_LOCK
+	arch_write_unlock(&sgd->lock_sgd);
+#endif
+#endif
 
 	return dm_gpio_request(&desc, label);
 }
