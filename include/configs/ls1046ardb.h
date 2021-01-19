@@ -1,23 +1,18 @@
 /* SPDX-License-Identifier: GPL-2.0+ */
 /*
  * Copyright 2016 Freescale Semiconductor
- * Copyright 2019 NXP
+ * Copyright 2019-2021 NXP
  */
 
 #ifndef __LS1046ARDB_H__
 #define __LS1046ARDB_H__
 
 #include "ls1046a_common.h"
+#include "ls1046ardb_config.h"
 
 #define CONFIG_ICC
 
-#define CONFIG_SYS_DDR_SDRAM_SLAVE_SIZE        (256 * 1024 * 1024)
-#define CONFIG_SYS_DDR_SDRAM_MASTER_SIZE       (512 * 1024 * 1024)
-#define CONFIG_SYS_DDR_SDRAM_SHARE_RESERVE_SIZE (16 * 1024 * 1024)
-#define CONFIG_SYS_DDR_SDRAM_SHARE_SIZE \
-	((256 * 1024 * 1024) - CONFIG_SYS_DDR_SDRAM_SHARE_RESERVE_SIZE)
 #define CONFIG_MASTER_CORE                     0
-#define CONFIG_SLAVE_FIRST_CORE			1
 
 #define CONFIG_SYS_DDR_SDRAM_SHARE_BASE \
 	(CONFIG_SYS_DDR_SDRAM_BASE + CONFIG_SYS_DDR_SDRAM_MASTER_SIZE \
