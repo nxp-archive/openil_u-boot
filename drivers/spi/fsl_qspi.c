@@ -971,6 +971,13 @@ static int fsl_qspi_probe(struct udevice *bus)
 	}
 #endif
 
+#ifdef CONFIG_QSPI_COREID_SET
+	if (get_core_id() != CONFIG_QSPI_QSPI0_COREID) {
+		printf("QSPI is not assigned on this core\n");
+		return;
+	}
+#endif
+
 	dm_spi_bus = bus->uclass_priv;
 
 	dm_spi_bus->max_hz = plat->speed_hz;

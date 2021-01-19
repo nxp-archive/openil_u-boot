@@ -26,6 +26,9 @@ void core1_main(void)
 #ifdef CONFIG_ICC_COREID_SET
 	test_icc_func_init();
 #endif
+#ifdef CONFIG_QSPI_COREID_SET
+	test_qspi();
+#endif
 
 	return;
 }
