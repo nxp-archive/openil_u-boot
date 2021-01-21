@@ -29,6 +29,10 @@ config GPIO_GPIO1_COREID
 config GPIO_GPIO2_COREID
 	int "The core GPIO2 assigned"
 	default 0
+
+config GPIO_GPIO5_COREID
+	int "The core GPIO5 assigned"
+	default 0
 endif
 
 config I2C_COREID_SET
