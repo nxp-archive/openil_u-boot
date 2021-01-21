@@ -335,6 +335,7 @@ void test_usb(void)
 	}
 #endif
 
+#ifdef CONFIG_USB_STORAGE
 	/* data read/write from/to USB mass storage device */
 	if (usb_stor_curr_dev < 0)
 		printf("no current device selected\n");
@@ -362,4 +363,5 @@ void test_usb(void)
 		printf("%ld blocks write: %s\n", n,
 			(n == cnt) ? "OK" : "ERROR");
 	}
+#endif
 }

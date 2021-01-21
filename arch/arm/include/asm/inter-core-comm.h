@@ -42,7 +42,13 @@
  * 0-7 are used by Linux SMP.
  */
 
+#ifdef CONFIG_ARCH_IMX8M
+#define ICC_SGI 9
+#define IRQ_SGI_TEST 10
+#else
 #define ICC_SGI 8
+#define IRQ_SGI_TEST 9
+#endif
 
 struct icc_desc {
 	unsigned long block_addr;	/* block address */

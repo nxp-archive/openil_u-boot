@@ -34,6 +34,9 @@
 #include <part.h>
 #include <flash.h>
 #include <image.h>
+#if defined(CONFIG_MP)
+#include <asm/arch/mp.h>
+#endif
 #include <log.h>
 #include <asm/u-boot.h> /* boot information for Linux kernel */
 #include <asm/global_data.h>	/* global data used for startup functions */

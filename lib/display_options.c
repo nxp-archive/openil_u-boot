@@ -42,6 +42,8 @@ char *display_options_get_banner(bool newlines, char *buf, int size)
 int display_options(void)
 {
 	char buf[DISPLAY_OPTIONS_BANNER_LENGTH];
+	uint32_t coreid = get_core_id();
+	printf("Baremetal Core ID:%d\r\n",coreid);
 
 	display_options_get_banner(true, buf, sizeof(buf));
 	printf("%s", buf);

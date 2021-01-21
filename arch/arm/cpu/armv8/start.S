@@ -147,6 +147,26 @@ pie_fixup_done:
 
 	/* Processor specific initialization */
 	bl	lowlevel_init
+#if defined(CONFIG_ARCH_IMX8M)
+#if defined(CONFIG_GICV2) || defined(CONFIG_GICV3)
+	mrs x0, mpidr_el1
+	and x0, x0, #0xffff
+	cmp x0, #CONFIG_SLAVE_FIRST_CORE
+	b.ne 1f
+
+	ldr	x0, =GICD_BASE
+	bl	gic_init_secure
+1:
+#if defined(CONFIG_GICV3)
+	ldr	x0, =GICR_BASE
+	bl	gic_init_secure_percpu
+#elif defined(CONFIG_GICV2)
+	ldr	x0, =GICD_BASE
+	ldr	x1, =GICC_BASE
+	bl	gic_init_secure_percpu
+#endif
+#endif
+#endif
 
 #if defined(CONFIG_ARMV8_SPIN_TABLE) && !defined(CONFIG_SPL_BUILD)
 	branch_if_master x0, x1, master_cpu
@@ -154,7 +174,6 @@ pie_fixup_done:
 	/* never return */
 #elif defined(CONFIG_ARMV8_MULTIENTRY)
 	branch_if_master x0, x1, master_cpu
-
 	/*
 	 * Slave CPUs
 	 */
@@ -162,11 +181,21 @@ slave_cpu:
 	wfe
 	ldr	x1, =CPU_RELEASE_ADDR
 	ldr	x0, [x1]
+#if defined(CONFIG_ARCH_IMX8M)
+	cbz	x0, slave_cpu_imx
+#else
 	cbz	x0, slave_cpu
+#endif
 	br	x0			/* branch to the given address */
 #endif /* CONFIG_ARMV8_MULTIENTRY */
+
+#if defined(CONFIG_ARCH_IMX8M)
+slave_cpu_imx:
+	bl	_main_slave
+#else
 master_cpu:
 	bl	_main
+#endif
 
 #ifdef CONFIG_SYS_RESET_SCTRL
 reset_sctrl:

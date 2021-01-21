@@ -226,6 +226,11 @@ static int print_cpuinfo(void)
 
 int dram_init_slave(void)
 {
+#ifdef CONFIG_ARCH_IMX8M
+	u32 coreid = get_core_id();
+
+	gd->ram_base = CONFIG_SYS_DDR_SDRAM_SLAVE_COREX_ADDR(coreid);
+#endif
 	gd->ram_size = CONFIG_SYS_DDR_SDRAM_SLAVE_SIZE;
 	return 0;
 }
@@ -266,12 +271,14 @@ static int show_dram_config(void)
 
 __weak int dram_init_banksize(void)
 {
+#ifndef CONFIG_ARCH_IMX8M
 #if defined(CONFIG_NR_DRAM_BANKS) && defined(CONFIG_SYS_SDRAM_BASE)
 	gd->bd->bi_dram[0].start = CONFIG_SYS_SDRAM_BASE +
 			CONFIG_SYS_DDR_SDRAM_MASTER_SIZE +
 			CONFIG_SYS_DDR_SDRAM_SLAVE_SIZE * (get_core_id() - 1);
 
 	gd->bd->bi_dram[0].size = get_effective_memsize();
+#endif
 #endif
 
 	return 0;
@@ -361,8 +368,10 @@ static int setup_dest_addr(void)
 	 * Ram is setup, size stored in gd !!
 	 */
 	debug("Ram size: %08lX\n", (ulong)gd->ram_size);
+#ifndef CONFIG_ARCH_IMX8M
 	if (get_core_id() == CONFIG_MASTER_CORE)
 		gd->ram_size = CONFIG_SYS_DDR_SDRAM_MASTER_SIZE;
+#endif
 #if defined(CONFIG_SYS_MEM_TOP_HIDE)
 	/*
 	 * Subtract specified amount of memory to hide so that it won't
@@ -379,14 +388,22 @@ static int setup_dest_addr(void)
 #ifdef CONFIG_SYS_SDRAM_BASE
 	if (get_core_id() == CONFIG_MASTER_CORE) {
 		gd->ram_top = CONFIG_SYS_SDRAM_BASE;
-	} else{
+	} else {
+#ifdef CONFIG_ARCH_IMX8M
+		u32 id = get_core_id();
+
+		gd->ram_top = CONFIG_SYS_DDR_SDRAM_SLAVE_COREX_RAMTOP_ADDR(id);
+#else
 		gd->ram_top = CONFIG_SYS_DDR_SDRAM_BASE +
 			CONFIG_SYS_DDR_SDRAM_MASTER_SIZE +
 			CONFIG_SYS_DDR_SDRAM_SLAVE_SIZE * (get_core_id() - 1);
+#endif
 	}
 #endif
+#ifndef CONFIG_ARCH_IMX8M
 	gd->ram_top += get_effective_memsize();
 	gd->ram_top = board_get_usable_ram_top(gd->mon_len);
+#endif
 	gd->relocaddr = gd->ram_top;
 	debug("Ram top: %08lX\n", (ulong)gd->ram_top);
 #if defined(CONFIG_MP) && (defined(CONFIG_MPC86xx) || defined(CONFIG_E500))

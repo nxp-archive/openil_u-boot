@@ -10,7 +10,9 @@
 #include <irq_func.h>
 #include <linux/compiler.h>
 #include <efi_loader.h>
+#ifndef CONFIG_ARCH_IMX8M
 #include <asm/arch/soc.h>
+#endif
 
 DECLARE_GLOBAL_DATA_PTR;
 
@@ -369,7 +371,9 @@ void do_irq(struct pt_regs *pt_regs, unsigned int esr)
 
 	irq_handle = (void (*)(int, int))g_gic_irq_cb[hw_irq];
 	if (irq_handle) {
-		irq_handle(hw_irq, src_coreid);
+		for(src_coreid = 0; src_coreid < CONFIG_MAX_CPUS; src_coreid++)
+			if(src_coreid != get_core_id())
+				irq_handle(hw_irq, src_coreid);
 	}
 
 	gic_end_int_v3(ack);
