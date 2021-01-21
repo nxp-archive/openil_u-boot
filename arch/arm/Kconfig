@@ -157,6 +157,16 @@ config IFC_COREID
 	default "1"
 endif
 
+config FEC_COREID_SET
+	bool "Enable FEC MXC for baremetal"
+	default n
+
+if FEC_COREID_SET
+config FEC_NIC0_COREID
+	int "The core FEC MXC assigned"
+	default "1"
+endif
+
 endif
 
 if ARM64

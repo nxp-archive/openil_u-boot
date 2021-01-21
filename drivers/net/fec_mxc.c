@@ -572,6 +572,7 @@ static int fec_open(struct eth_device *edev)
 	return 0;
 }
 
+static bool sfec_flag = true;
 #ifdef CONFIG_DM_ETH
 static int fecmxc_init(struct udevice *dev)
 #else
@@ -614,7 +615,7 @@ static int fec_init(struct eth_device *dev, bd_t *bd)
 	writel(0x00000000, &fec->eth->gaddr2);
 
 	/* Do not access reserved register */
-	if (!is_mx6ul() && !is_mx6ull() && !is_imx8() && !is_imx8m()) {
+	if (sfec_flag && !is_mx6ul() && !is_mx6ull() && !is_imx8() && !is_imx8m()) {
 		/* clear MIB RAM */
 		for (i = mib_ptr; i <= mib_ptr + 0xfc; i += 4)
 			writel(0, i);
@@ -622,6 +623,9 @@ static int fec_init(struct eth_device *dev, bd_t *bd)
 		/* FIFO receive start register */
 		writel(0x520, &fec->eth->r_fstart);
 	}
+#if defined(CONFIG_TARGET_IMX8MM_EVK) || defined(CONFIG_TARGET_IMX8MP_EVK)
+	sfec_flag = false;
+#endif
 
 	/* size and address of each buffer */
 	writel(FEC_MAX_PKT_SIZE, &fec->eth->emrbr);
