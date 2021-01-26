@@ -9,6 +9,10 @@ config ARM64
 	select PHYS_64BIT
 	select SYS_CACHE_SHIFT_6
 
+config BAREMETAL
+	bool "Enable baremetal"
+	default n
+
 if ARM64
 config POSITION_INDEPENDENT
 	bool "Generate position-independent pre-relocation code"
