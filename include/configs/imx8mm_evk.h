@@ -115,6 +115,85 @@
 		"nand read ${fdt_addr} 0x7000000 0x100000;"\
 		"booti ${loadaddr} - ${fdt_addr}"
 
+#elif defined(CONFIG_BAREMETAL)
+#define CONFIG_EXTRA_ENV_SETTINGS		\
+	CONFIG_MFG_ENV_SETTINGS \
+	JAILHOUSE_ENV \
+	"script=boot.scr\0" \
+	"image=Image\0" \
+	"bmimage=bm-u-boot.bin\0" \
+	"bm_addr=50200000\0" \
+	"startbm=dcache flush;cpu 1 release 50200000;sleep 6;cpu 2 release 50200000;sleep 2;cpu 3 release 50200000;sleep 2\0" \
+	"splashimage=0x50000000\0" \
+	"console=ttymxc1,115200\0" \
+	"fdt_addr=0x43000000\0"			\
+	"fdt_high=0xffffffffffffffff\0"		\
+	"boot_fit=no\0" \
+	"fdt_file=" CONFIG_DEFAULT_FDT_FILE "\0" \
+	"initrd_addr=0x43800000\0"		\
+	"initrd_high=0xffffffffffffffff\0" \
+	"mmcdev="__stringify(CONFIG_SYS_MMC_ENV_DEV)"\0" \
+	"mmcpart=" __stringify(CONFIG_SYS_MMC_IMG_LOAD_PART) "\0" \
+	"mmcroot=" CONFIG_MMCROOT " rootwait rw\0" \
+	"mmcautodetect=yes\0" \
+	"mmcargs=setenv bootargs ${jh_clk} console=${console} root=${mmcroot} maxcpus=1\0 " \
+	"loadbootscript=fatload mmc ${mmcdev}:${mmcpart} ${loadaddr} ${script};\0" \
+	"bootscript=echo Running bootscript from mmc ...; " \
+		"source\0" \
+	"loadbmimage=fatload mmc ${mmcdev}:${mmcpart} ${bm_addr} ${bmimage}\0" \
+	"loadimage=fatload mmc ${mmcdev}:${mmcpart} ${loadaddr} ${image}\0" \
+	"loadfdt=fatload mmc ${mmcdev}:${mmcpart} ${fdt_addr} ${fdt_file}\0" \
+	"mmcboot=echo Booting from mmc ...; " \
+		"run mmcargs; " \
+		"if test ${boot_fit} = yes || test ${boot_fit} = try; then " \
+			"bootm ${loadaddr}; " \
+		"else " \
+			"if run loadfdt; then " \
+			   "if run startbm; then " \
+			   "else " \
+				"echo WARN: Cannot run the Baremetal image; " \
+			   "fi; " \
+				"booti ${loadaddr} - ${fdt_addr}; " \
+			"else " \
+				"echo WARN: Cannot load the DT; " \
+			"fi; " \
+		"fi;\0" \
+	"netargs=setenv bootargs ${jh_clk} console=${console} " \
+		"root=/dev/nfs " \
+		"ip=dhcp nfsroot=${serverip}:${nfsroot},v3,tcp\0" \
+	"netboot=echo Booting from net ...; " \
+		"run netargs;  " \
+		"if test ${ip_dyn} = yes; then " \
+			"setenv get_cmd dhcp; " \
+		"else " \
+			"setenv get_cmd tftp; " \
+		"fi; " \
+		"${get_cmd} ${loadaddr} ${image}; " \
+		"if test ${boot_fit} = yes || test ${boot_fit} = try; then " \
+			"bootm ${loadaddr}; " \
+		"else " \
+			"if ${get_cmd} ${fdt_addr} ${fdt_file}; then " \
+				"booti ${loadaddr} - ${fdt_addr}; " \
+			"else " \
+				"echo WARN: Cannot load the DT; " \
+			"fi; " \
+		"fi;\0"
+
+#define CONFIG_BOOTCOMMAND \
+	   "mmc dev ${mmcdev}; if mmc rescan; then " \
+		   "if run loadbootscript; then " \
+			   "run bootscript; " \
+		   "else " \
+			   "if run loadbmimage; then " \
+			   "else " \
+				"echo WARN: Cannot load the Baremetal image; " \
+			   "fi; " \
+			   "if run loadimage; then " \
+				   "run mmcboot; " \
+			   "else run netboot; " \
+			   "fi; " \
+		   "fi; " \
+	   "fi;"
 #else
 #define CONFIG_EXTRA_ENV_SETTINGS		\
 	CONFIG_MFG_ENV_SETTINGS \
@@ -216,6 +295,30 @@
 #define CONFIG_SYS_MEMTEST_START	PHYS_SDRAM
 #define CONFIG_SYS_MEMTEST_END		(CONFIG_SYS_MEMTEST_START + (PHYS_SDRAM_SIZE >> 1))
 
+#define CONFIG_MAX_CPUS 4
+
+#define IMX_SRC_BASE            0x30390000
+#define IMX_GPC_BASE            0x303a0000
+
+#define SRC_GPR_CX_START_ADDRL_MASK 0x3fffff
+#define SRC_GPR_CX_START_ADDRH_MASK 0xffff
+#define SRC_GPR_CX_START_ADDRH_SHIFT 22
+#define SRC_A53RCR1_ENABLE_CORES_MASK 0xf
+
+#define IMX8M_SRC_A53RCR0         0x4
+#define IMX8M_SRC_A53RCR1         0x8
+#define IMX8M_SRC_M4RCR           0xc
+#define IMX8M_SRC_OTG1PHY_SCR         0x20
+#define IMX8M_SRC_OTG2PHY_SCR         0x24
+#define IMX8M_SRC_GPR1_OFFSET         0x74
+
+#define IMX8M_LPCR_A53_AD         0x4
+
+#define IMX8M_SRC_SCR_M4_ENABLE_MASK      BIT(3)
+#define IMX8M_SRC_SCR_M4C_NON_SCLR_RST_MASK   BIT(0)
+#define COREx_WFI_PDN(core_id)      (1 << ((core_id) < 2 ? (core_id) * 2 : ((core_id) - 2) * 2 + 16))
+#define COREx_PGC_PCR(core_id)      (0x800 + (core_id) * 0x40)
+#define CPU_PGC_UP_TRG          0xF0
 #define CONFIG_MXC_UART_BASE		UART2_BASE_ADDR
 
 /* Monitor Command Prompt */
