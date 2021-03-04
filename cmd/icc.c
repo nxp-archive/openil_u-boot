@@ -35,12 +35,26 @@ static void do_icc_irq_register(void)
 
 static void do_icc_irq_set(unsigned long core_mask, unsigned long irq)
 {
+	unsigned int dest_core = 0;
+	int mycoreid = get_core_id();
+	int i;
+
+	for (i = 0; i < CONFIG_MAX_CPUS; i++) {
+		if (((core_mask >> i) & 0x1) && (i != mycoreid))
+			dest_core |= 0x1 << i;
+	}
+
+	if (!dest_core) {
+		printf("dest_core error\n");
+		return;
+	}
+
 	if (irq > 15) {
 		printf("Interrupt id num: %lu is invalid, SGI[0 - 15]\n", irq);
 		return;
 	};
 
-	icc_set_sgi(core_mask, irq);
+	icc_set_sgi(dest_core, irq);
 }
 
 static void do_icc_perf(unsigned long core_mask, unsigned long counts)
@@ -56,6 +70,11 @@ static void do_icc_perf(unsigned long core_mask, unsigned long counts)
 	for (i = 0; i < CONFIG_MAX_CPUS; i++) {
 		if (((core_mask >> i) & 0x1) && (i != mycoreid))
 			dest_core |= 0x1 << i;
+	}
+
+	if (!dest_core) {
+		printf("dest_core error\n");
+		return;
 	}
 
 	if (counts > ICC_CORE_BLOCK_COUNT * ICC_BLOCK_UNIT_SIZE) {
