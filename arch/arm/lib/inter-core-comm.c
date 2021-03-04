@@ -133,7 +133,7 @@ void icc_set_sgi(int core_mask, unsigned int hw_irq)
 {
 #if defined(CONFIG_GICV3)
 #ifdef	CONFIG_ARCH_LX2160A
-	static unsigned long i, cluster, mask, val;
+	unsigned long i, cluster, mask, val;
 
 	ICC_TRG_CORE = mycoreid;
 	for (i = 0; i < 16; i++) {
