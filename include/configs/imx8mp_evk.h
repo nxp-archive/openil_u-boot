@@ -168,6 +168,10 @@
 	   "fi;"
 #endif
 
+#ifdef CONFIG_EXTRA_ENV_SETTINGS
+#undef CONFIG_EXTRA_ENV_SETTINGS
+#endif
+
 /* Link Definitions */
 #define CONFIG_LOADADDR			0x40480000
 

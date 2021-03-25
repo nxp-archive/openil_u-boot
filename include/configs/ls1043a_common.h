@@ -335,6 +335,10 @@
 #endif
 #endif
 
+#ifdef CONFIG_EXTRA_ENV_SETTINGS
+#undef CONFIG_EXTRA_ENV_SETTINGS
+#endif
+
 /* Monitor Command Prompt */
 #define CONFIG_SYS_CBSIZE		512	/* Console I/O Buffer Size */
 
